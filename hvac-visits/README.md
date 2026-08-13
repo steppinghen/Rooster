@@ -27,11 +27,12 @@ insert into allowed_emails (email, site) values ('someone@example.com', 'hvac-vi
 
 `site = '*'` grants access to every rooster site at once.
 
-## Before this works
+## Setup status
 
-1. Fill in `auth-config.js` with your personal Supabase URL + anon key
-2. Run `_shared/schema.sql` in that project
-3. Add the deployed URL to Supabase → Authentication → URL Configuration → Redirect URLs
+- [x] `auth-config.js` wired to the personal Supabase project
+- [ ] Run `_shared/schema.sql` in that project — **required**, the gate denies everyone until `is_email_allowed()` exists
+- [ ] Add your email to `allowed_emails`
+- [ ] Add redirect URLs in Supabase → Authentication → URL Configuration (`http://localhost:8890/**` for local testing, plus the deployed URL)
 
 ## Notes
 

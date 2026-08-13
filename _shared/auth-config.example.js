@@ -2,17 +2,20 @@
  * ROOSTER — AUTH CONFIG TEMPLATE
  * Copy to <site>/auth-config.js and fill in. One per gated site.
  *
- * This file IS committed and IS publicly readable. That's fine:
- * the Supabase anon key is a publishable key, designed to ship in
- * client code. Its power is bounded by your RLS policies.
+ * This file IS committed and IS publicly readable. That's fine: the
+ * publishable key is designed to ship in client code, and its reach
+ * is bounded by your RLS policies.
  *
- * NEVER put the service_role key here. It bypasses RLS entirely.
+ * NEVER put the secret key (sb_secret_… / service_role) here.
+ * It bypasses RLS entirely.
  * ----------------------------------------------------------- */
 
 window.ROOSTER_AUTH = {
-  // Supabase → Project Settings → API
-  supabaseUrl:     'https://YOUR-PROJECT.supabase.co',
-  supabaseAnonKey: 'YOUR-ANON-KEY',
+  // Supabase → Project Settings → API Keys
+  supabaseUrl:            'https://YOUR-PROJECT.supabase.co',
+  supabasePublishableKey: 'sb_publishable_YOUR-KEY',
+
+  // Legacy configs may use `supabaseAnonKey` instead — still honoured.
 
   // Must match allowed_emails.site (see _shared/schema.sql)
   site:  'my-site',

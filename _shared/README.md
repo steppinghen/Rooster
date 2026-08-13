@@ -23,7 +23,7 @@ Edit `my-site/auth-config.js` (set `site:` to match the folder name), then in `<
 
 ```html
 <link rel="stylesheet" href="vendor/auth-overlay.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.99.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
 <script src="auth-config.js"></script>
 <script src="vendor/auth-overlay.js"></script>
 ```

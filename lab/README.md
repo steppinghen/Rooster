@@ -42,7 +42,7 @@ The gate is **per page**, not per site. `lab/index.html` loads the overlay; a su
 
 ```html
 <link rel="stylesheet" href="../vendor/auth-overlay.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.99.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
 <script src="../auth-config.js"></script>
 <script src="../vendor/auth-overlay.js"></script>
 ```
@@ -54,3 +54,10 @@ Note the `../` — paths are relative to the subfolder. Without these, the exper
 ```sql
 insert into allowed_emails (email, site) values ('someone@example.com', 'lab');
 ```
+
+## Setup status
+
+- [x] `auth-config.js` wired to the personal Supabase project
+- [ ] Run `_shared/schema.sql` in that project — **required**, the gate denies everyone until `is_email_allowed()` exists
+- [ ] Add your email to `allowed_emails`
+- [ ] Add redirect URLs in Supabase → Authentication → URL Configuration (`http://localhost:8891/**` for local testing, plus the deployed URL)

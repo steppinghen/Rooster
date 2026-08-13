@@ -6,7 +6,7 @@ Personal portfolio, migrating off WordPress to static HTML/CSS. **Placeholder �
 |---|---|
 | **URL** | _not deployed yet_ |
 | **Gated** | No — public |
-| **Indexed** | No — `X-Robots-Tag: noindex` **(remove before launch, see below)** |
+| **Indexed** | No — `X-Robots-Tag: noindex`, intentional |
 | **Dev port** | 8888 |
 
 ## Run locally
@@ -32,15 +32,8 @@ Also needed:
 
 Hand-written semantic HTML + one stylesheet. No framework, no build step — same as the other sites here. If it grows past ~10 near-identical pages, that's the point to reconsider a static site generator, not before.
 
-## Before launch — remove noindex
+## noindex is intentional
 
-Every rooster site ships `noindex` by default. A portfolio you want found needs that deleted from `portfolio/netlify.toml`:
+This site is deliberately kept out of search results, like every site in the monorepo. Nothing to undo — migrated pages should carry the same `<meta name="robots" content="noindex, nofollow">` tag.
 
-```toml
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Robots-Tag = "noindex, ..."   # ← delete this block
-```
-
-Also drop `<meta name="robots" content="noindex, nofollow">` from each page's `<head>`. Both have to go — either one alone keeps you out of search results.
+If that ever changes, it has to come out of **two** places: the `[[headers]]` block in `netlify.toml` and the `<meta>` tag on every page. Either one alone keeps it unindexed.

@@ -117,11 +117,22 @@ The `noindex` header *is* site-wide, so an ungated experiment still stays out of
 
 Carried over from the original. It's safe here because the allow-list is checked before the magic link is ever sent — but the ordering *is* the safeguard. If you refactor `handleLogin()`, keep the check first, or the endpoint becomes an open account-creation form.
 
-## The anon key is fine to commit; the service_role key is not
+## The publishable key is fine to commit; the secret key is not
 
-`supabaseAnonKey` is designed to ship in client code — its reach is whatever RLS allows. That's why RLS has to actually be on: with policies disabled, that same public key reads every table.
+Supabase renamed these. The old `anon` JWT is now the **publishable key** (`sb_publishable_…`), and `service_role` is now the **secret key** (`sb_secret_…`). Same split as before:
 
-`service_role` bypasses RLS entirely. It never belongs in this repo, in any file, on any branch. Server-side only, and `.env*` is gitignored for exactly this reason.
+- **Publishable** — designed to ship in client code. Its reach is whatever RLS allows. That's why RLS has to actually be on: with policies disabled, that same public key reads every table.
+- **Secret** — bypasses RLS entirely. Never belongs in this repo, in any file, on any branch. Server-side only, and `.env*` is gitignored for exactly this reason.
+
+Two knock-on effects of the rename worth knowing:
+
+`supabaseAnonKey` still works in `auth-config.js` as a fallback, so an old config won't break — but new sites should use `supabasePublishableKey`.
+
+The publishable key is **not a JWT**, unlike the old anon key. That looks like it should break `Authorization: Bearer <key>`, which is what the ported code sends. It doesn't — Supabase's gateway accepts the publishable key in both `apikey` and `Authorization`. Verified against the live project; don't "fix" it.
+
+## Roles in SQL are still `anon` and `authenticated`
+
+The key rename didn't rename the Postgres roles. `grant execute on function … to anon` in `schema.sql` is still correct — a request carrying the publishable key resolves to the `anon` role, and one carrying a signed-in user's JWT resolves to `authenticated`.
 
 ## Don't point personal sites at the work Supabase project
 

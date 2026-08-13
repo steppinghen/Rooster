@@ -52,11 +52,13 @@ Ported as-is: `localhost` and `127.0.0.1` skip auth entirely. `?forceauth=1` opt
 
 The bypass is genuinely convenient — no email round-trip to see a change. But it means the default local experience never exercises login, so auth breakage stays invisible until production. The escape hatch is the compromise; use it before every deploy of a gated site.
 
-## 2026-08-12 — `noindex` on every site, including the public ones
+## 2026-08-12 — `noindex` on every site — permanent, all four
 
-The brief said every site, so every site has it.
+Every site carries `X-Robots-Tag: noindex` plus a `<meta name="robots">` tag. **Confirmed intentional, including `portfolio` and `dad-contracting`.**
 
-Flagging the tension: `portfolio` and `dad-contracting` are public sites whose whole point is being found. Shipping them with `noindex` and forgetting is a genuinely easy mistake — a contracting business invisible to search is worse than no site. Removal instructions are in both READMEs and in `gotchas.md`, in both places it has to be removed (`netlify.toml` **and** the `<meta>` tag).
+I queried this initially on the grounds that a portfolio and a local-business site normally want to be found; the answer was that it's deliberate for all four. So this is the standing default, not a pre-launch placeholder — new sites get it too, and nothing here is waiting to have it removed.
+
+If a site ever *should* be indexed, it has to come out of both places (`netlify.toml` and the page `<meta>` tag) — either one alone keeps it out of search results.
 
 ## 2026-08-12 — Headers in `netlify.toml`, not `_headers`
 
@@ -78,8 +80,20 @@ Hand-written HTML + one stylesheet per site.
 
 These are small static sites; a build step is another thing to break and to keep current. Revisit if a site passes ~10 near-duplicate pages, where templating starts earning its keep.
 
+## 2026-08-12 — Config field is `supabasePublishableKey`
+
+Supabase renamed the client-side key: the legacy `anon` JWT is now the **publishable key** (`sb_publishable_…`), a short opaque string rather than a JWT. The config field matches the current name; `supabaseAnonKey` is still read as a fallback so an older config doesn't silently produce a blank gate.
+
+Verified against the live project before wiring, because the format change looked like it should break the ported code — `Authorization: Bearer <key>` worked with the old key precisely *because* it was a JWT. It turns out Supabase's gateway accepts the publishable key in both `apikey` and `Authorization: Bearer`, so the ported header pattern needed no change. Recorded because the reasoning is non-obvious and the next person will wonder.
+
+The SQL is unaffected: the publishable key still resolves to the `anon` Postgres role, so `grant execute … to anon` is still what governs access.
+
+## 2026-08-12 — supabase-js pinned to 2.112.3
+
+The original comms-platform page loads 2.99.0. Bumped for the gated sites, since the new key format is only sensibly supported on current releases, and a pinned version means a CDN update can't silently change behaviour.
+
 ## 2026-08-12 — Separate Supabase project from work
 
-`auth-config.js` files ship with `YOUR-PROJECT` placeholders, awaiting a **personal** Supabase project.
+Gated sites point at the personal project `csbjszhlzdxeoqafggbw`.
 
-The comms-platform config points at the MBA/work project (`ppwlcnjgiuglonzyqqir`). That instance is work infrastructure under a BAA — personal side projects must not authenticate against it or share its user table. Cross-wiring a personal repo into work infrastructure is the kind of thing that's trivial to do and unpleasant to unwind.
+The comms-platform config points at the MBA/work project (`ppwlcnjgiuglonzyqqir`), and copying it here would have been the path of least resistance. That instance is work infrastructure under a BAA — personal side projects must not authenticate against it or share its user table. Cross-wiring a personal repo into work infrastructure is trivial to do and unpleasant to unwind.

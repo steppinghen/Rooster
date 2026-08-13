@@ -6,7 +6,7 @@ Simple static marketing site for Dad's contracting business.
 |---|---|
 | **URL** | _not deployed yet_ |
 | **Gated** | No — public |
-| **Indexed** | No — `X-Robots-Tag: noindex` **(remove before launch)** |
+| **Indexed** | No — `X-Robots-Tag: noindex`, intentional |
 | **Dev port** | 8889 |
 
 ## Run locally
@@ -24,8 +24,8 @@ Scaffold with placeholder copy. Needs real content before it goes anywhere:
 - [ ] Photos of past work → `assets/`
 - [ ] License / insurance details if they should be shown
 
-## Before launch — remove noindex
+## noindex is intentional
 
-A local business site that isn't indexed is invisible to the customers it's for. Delete the `[[headers]]` block from `netlify.toml` **and** the `<meta name="robots">` tag from `index.html`.
+This site is deliberately kept out of search results, like every site in the monorepo. Nothing to undo before launch — the site is meant to be shared by link, not found by search.
 
-Worth doing at the same time: real `<title>` and `<meta name="description">`, plus [LocalBusiness structured data](https://developers.google.com/search/docs/appearance/structured-data/local-business) — that's what surfaces hours and phone number in search results.
+If that ever changes, it has to come out of **two** places: the `[[headers]]` block in `netlify.toml` and the `<meta name="robots">` tag in `index.html`. Either one alone keeps it unindexed.

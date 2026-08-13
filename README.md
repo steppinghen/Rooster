@@ -6,13 +6,13 @@ Personal projects monorepo. One GitHub repo, several independent Netlify sites �
 
 | Folder | What it is | URL | Gated | Indexed | Dev port |
 |---|---|---|---|---|---|
-| [`portfolio/`](portfolio/) | Portfolio, migrating off WordPress | _tbd_ | No | No\* | 8888 |
-| [`dad-contracting/`](dad-contracting/) | Contracting business site | _tbd_ | No | No\* | 8889 |
+| [`portfolio/`](portfolio/) | Portfolio, migrating off WordPress | _tbd_ | No | No | 8888 |
+| [`dad-contracting/`](dad-contracting/) | Contracting business site | _tbd_ | No | No | 8889 |
 | [`hvac-visits/`](hvac-visits/) | Visit-tracking tool | _tbd_ | **Yes** | No | 8890 |
 | [`lab/`](lab/) | Experiments playground | _tbd_ | **Yes** | No | 8891 |
 | [`_shared/`](_shared/) | Library — copied from, never deployed | — | — | — | — |
 
-\* Every site ships `noindex` today. The two public sites need it removed before launch — see their READMEs.
+**No site is indexed, by design.** `X-Robots-Tag: noindex` plus a `robots` meta tag on every site, public ones included — these are shared by link, not found by search. New sites inherit it.
 
 ## Conventions
 

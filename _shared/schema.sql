@@ -46,6 +46,8 @@ as $$
   );
 $$;
 
+-- The roles are still `anon` / `authenticated` despite the key rename:
+-- a request carrying the publishable key resolves to `anon`.
 revoke all on function public.is_email_allowed(text, text) from public;
 grant execute on function public.is_email_allowed(text, text) to anon, authenticated;
 
@@ -54,8 +56,8 @@ grant execute on function public.is_email_allowed(text, text) to anon, authentic
 -- MODE 'table' — the original comms-platform behaviour
 -- =============================================================
 -- Only if you set allowListMode: 'table' in auth-config.js.
--- WARNING: this policy makes every allowed email publicly readable
--- by anyone holding the anon key (which ships in your page source).
+-- WARNING: this policy makes every allowed email publicly readable by
+-- anyone holding the publishable key (which ships in your page source).
 -- Uncomment only if you accept that.
 --
 -- create policy "anon can read allow-list"

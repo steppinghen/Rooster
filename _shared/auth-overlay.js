@@ -7,19 +7,23 @@
  *
  * USAGE — in <head>, in this order:
  *   <link rel="stylesheet" href="auth-overlay.css">
- *   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.99.0"></script>
+ *   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
  *   <script src="auth-config.js"></script>
  *   <script src="auth-overlay.js"></script>
  *
  * auth-config.js defines:
  *   window.ROOSTER_AUTH = {
- *     supabaseUrl:     'https://xxxx.supabase.co',
- *     supabaseAnonKey: 'eyJ...',          // publishable, safe in client code
- *     site:            'hvac-visits',     // matches allowed_emails.site
- *     title:           'HVAC Visits',     // shown on the login card
- *     allowedEmails:   [],                // optional, see README — PUBLIC if used
- *     showBadge:       true               // signed-in badge + sign-out button
+ *     supabaseUrl:            'https://xxxx.supabase.co',
+ *     supabasePublishableKey: 'sb_publishable_...', // safe in client code
+ *     site:                   'hvac-visits',  // matches allowed_emails.site
+ *     title:                  'HVAC Visits',  // shown on the login card
+ *     allowedEmails:          [],             // optional — PUBLIC if used
+ *     showBadge:              true            // badge + sign-out button
  *   };
+ *
+ * Supabase renamed the client-side key: the legacy `anon` JWT is now the
+ * "publishable key" (sb_publishable_…). `supabaseAnonKey` is still read as
+ * a fallback so older configs keep working.
  *
  * The gate FAILS CLOSED: page content stays hidden until an allowed
  * session is confirmed. See gotchas.md — this is a UX gate, not a
@@ -29,6 +33,11 @@
   'use strict';
 
   var CFG = window.ROOSTER_AUTH || {};
+
+  // New-style publishable key, falling back to the legacy anon key name.
+  // Both are publishable — bounded by RLS, safe to ship in page source.
+  var KEY = CFG.supabasePublishableKey || CFG.supabaseAnonKey;
+
   var LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]', '0.0.0.0'];
   var HIDE_CLASS = 'rooster-auth-pending';
   var _client = null;
@@ -52,7 +61,7 @@
       if (typeof supabase === 'undefined' || !supabase.createClient) {
         throw new Error('supabase-js did not load (check the CDN <script> tag).');
       }
-      _client = supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
+      _client = supabase.createClient(CFG.supabaseUrl, KEY);
     }
     return _client;
   }
@@ -85,8 +94,8 @@
 
     var site = CFG.site || '';
     var headers = {
-      apikey: CFG.supabaseAnonKey,
-      Authorization: 'Bearer ' + CFG.supabaseAnonKey
+      apikey: KEY,
+      Authorization: 'Bearer ' + KEY
     };
 
     // Two modes, both defined in _shared/schema.sql:
@@ -265,10 +274,10 @@
       return;
     }
 
-    if (!CFG.supabaseUrl || !CFG.supabaseAnonKey) {
+    if (!CFG.supabaseUrl || !KEY) {
       buildOverlay();
       document.getElementById('roosterLoginOverlay').style.display = 'flex';
-      configError('supabaseUrl / supabaseAnonKey missing from auth-config.js');
+      configError('supabaseUrl / supabasePublishableKey missing from auth-config.js');
       return;
     }
 
