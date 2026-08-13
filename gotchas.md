@@ -117,6 +117,34 @@ The `noindex` header *is* site-wide, so an ungated experiment still stays out of
 
 Carried over from the original. It's safe here because the allow-list is checked before the magic link is ever sent — but the ordering *is* the safeguard. If you refactor `handleLogin()`, keep the check first, or the endpoint becomes an open account-creation form.
 
+## New Netlify free teams ship with SSO protection ON
+
+A freshly created site on the Rooster team returns **HTTP 401, title "Login Redirect"** to the public, even after a successful production deploy. Nothing wrong with the deploy — Netlify now enables SSO site protection by default on new free accounts.
+
+Confirmed on the site object:
+
+```
+sso_login: True              ← inherited by the site
+account_sso_login: True      ← the actual source, team-level
+account_sso_login_context: all
+has_password: False
+```
+
+Because the source is **account-level**, it hits every site on the team — deploying more sites just produces more 401s.
+
+Fix in the UI: **app.netlify.com → Rooster team → Team settings → Access & security → Site protection**, set to off/public. (Per-site `sso_login: false` via `netlify api updateSite` may also work, but the team setting can override it.)
+
+Two reasons this matters beyond the 401:
+
+1. **It double-gates `hvac-visits` and `lab`.** Visitors would face Netlify's SSO wall *before* the magic-link overlay, and only Netlify team members could get past it — so allow-listed users who aren't on the team can't reach the tool at all. The Supabase gate can't work until this is off.
+2. **It hides the `noindex` header.** The 401 is served by Netlify's auth layer, so `curl -I` shows no `X-Robots-Tag` and the site looks misconfigured when it isn't.
+
+Check before assuming a deploy failed:
+
+```bash
+netlify api getSite --data '{"site_id":"<id>"}' | grep -i sso
+```
+
 ## The publishable key is fine to commit; the secret key is not
 
 Supabase renamed these. The old `anon` JWT is now the **publishable key** (`sb_publishable_…`), and `service_role` is now the **secret key** (`sb_secret_…`). Same split as before:

@@ -239,7 +239,11 @@
         email: email,
         options: {
           shouldCreateUser: true, // pre-verified by the allow-list check above
-          emailRedirectTo: location.origin + location.pathname
+          // location.search is preserved deliberately: on localhost the
+          // magic link must come back to ?forceauth=1, or the local dev
+          // bypass fires on return and shows a fake 'local-dev' session
+          // instead of the real one you were trying to test.
+          emailRedirectTo: location.origin + location.pathname + location.search
         }
       });
       if (error) throw error;

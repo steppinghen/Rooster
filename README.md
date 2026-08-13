@@ -89,3 +89,22 @@ rooster/
 ├── hvac-visits/
 └── lab/
 ```
+
+## Netlify sites
+
+Created under the **Rooster** team (`rooster-nc`), each folder linked to its own site.
+
+| Folder | Site | URL | Deployed |
+|---|---|---|---|
+| `portfolio/` | `rooster-portfolio` | https://rooster-portfolio.netlify.app | ✅ prod |
+| `dad-contracting/` | `rooster-dad` | https://rooster-dad.netlify.app | not yet |
+| `hvac-visits/` | `rooster-hvac` | https://rooster-hvac.netlify.app | not yet |
+| `lab/` | `rooster-lab` | https://rooster-lab.netlify.app | not yet |
+
+**Team-wide SSO protection is currently ON**, so deployed sites return 401 to the public. It must be turned off before the remaining sites are worth deploying — see `gotchas.md`. No custom domains or DNS are configured.
+
+Deploy a site (production, costs credits — do it deliberately):
+
+```bash
+cd <folder> && netlify deploy --prod --dir . --no-build
+```
