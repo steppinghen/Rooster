@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Lab</title>
+
+<!-- Auth gate — load order matters: css, supabase, config, overlay -->
+<link rel="stylesheet" href="vendor/auth-overlay.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.99.0"></script>
+<script src="auth-config.js"></script>
+<script src="vendor/auth-overlay.js"></script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <h1>Lab</h1>
+  <p class="sub">Experiments and half-finished ideas. Gated, noindexed, no promises.</p>
+</header>
+
+<main class="wrap">
+
+  <!-- ── EXPERIMENT INDEX ──────────────────────────────────────
+       Add a subfolder with its own index.html, then add a row here.
+       Each experiment is just a folder — no build, no registration:
+
+       <a class="exp" href="canvas-tests/">
+         <span class="exp-name">canvas-tests</span>
+         <span class="exp-desc">Playing with OffscreenCanvas</span>
+       </a>
+  ─────────────────────────────────────────────────────────── -->
+
+  <div class="exp-list">
+    <p class="empty">
+      No experiments yet. Create a subfolder with an <code>index.html</code>,
+      then add a link in <code>lab/index.html</code>.
+    </p>
+  </div>
+
+</main>
+
+</body>
+</html>

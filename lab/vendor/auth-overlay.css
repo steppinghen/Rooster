@@ -1,0 +1,161 @@
+/* =============================================================
+ * ROOSTER — AUTH OVERLAY STYLES
+ * Ported from comms-platform/comms.css (login overlay only).
+ * Namespaced .rooster-* so it can't collide with host page styles.
+ * ============================================================= */
+
+#roosterLoginOverlay {
+  --r-bg:        #EEF0F6;
+  --r-surface:   #FFFFFF;
+  --r-border:    rgba(0, 0, 0, 0.07);
+  --r-text:      #111827;
+  --r-text-sub:  #6B7280;
+  --r-blue:      #4F8EF7;
+  --r-green:     #22C55E;
+  --r-red:       #F25B5B;
+  --r-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+  display: none; /* JS flips to flex */
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000; /* above almost anything the host page sets */
+  background: var(--r-bg);
+  font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding: 20px;
+}
+
+.rooster-login-card {
+  background: var(--r-surface);
+  border-radius: 16px;
+  box-shadow: var(--r-shadow-lg);
+  padding: 48px 44px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.rooster-login-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.rooster-login-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--r-blue);
+  flex: none;
+}
+
+.rooster-login-text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--r-blue);
+}
+
+.rooster-login-sub {
+  font-size: 0.9rem;
+  color: var(--r-text-sub);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.rooster-login-inp {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--r-border);
+  border-radius: 9px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--r-text);
+  background: var(--r-surface);
+  outline: none;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.rooster-login-inp:focus  { border-color: var(--r-blue); }
+.rooster-login-inp:disabled { background: #F4F6FC; color: var(--r-text-sub); }
+
+.rooster-login-btn {
+  width: 100%;
+  padding: 11px;
+  background: var(--r-blue);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+
+.rooster-login-btn:hover:not(:disabled) { filter: brightness(1.05); }
+.rooster-login-btn:disabled { opacity: 0.6; cursor: default; }
+
+.rooster-login-msg {
+  font-size: 0.82rem;
+  min-height: 18px;
+  line-height: 1.4;
+}
+
+.rooster-login-msg-error   { color: var(--r-red); }
+.rooster-login-msg-success { color: var(--r-green); }
+
+/* ── Gate ────────────────────────────────────────────────────
+ * While auth is pending or denied, hide everything except the
+ * overlay itself. Fails closed: if JS never runs, nothing leaks.
+ * The <html> class is set synchronously by auth-overlay.js, so
+ * gated content is never painted. */
+html.rooster-auth-pending body > *:not(#roosterLoginOverlay) {
+  display: none !important;
+}
+
+html.rooster-auth-pending body {
+  background: #EEF0F6;
+}
+
+/* ── Signed-in badge ────────────────────────────────────────── */
+#roosterAuthBadge {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  z-index: 2147482999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px 7px 13px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  color: #6B7280;
+}
+
+.rooster-badge-btn {
+  border: none;
+  background: #EEF0F6;
+  color: #111827;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rooster-badge-btn:hover { background: #E2E6F0; }
+
+@media (max-width: 480px) {
+  .rooster-login-card { padding: 36px 24px; }
+  #roosterAuthBadge   { bottom: 10px; right: 10px; }
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>HVAC Visits</title>
+
+<!-- Auth gate — load order matters: css, supabase, config, overlay -->
+<link rel="stylesheet" href="vendor/auth-overlay.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.99.0"></script>
+<script src="auth-config.js"></script>
+<script src="vendor/auth-overlay.js"></script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Everything below is hidden until an allowed session is confirmed. -->
+<header class="site-header">
+  <h1>HVAC Visits</h1>
+  <p class="sub">Visit tracking</p>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <h2>Scaffold</h2>
+    <p>The gate is wired and working. Replace this section with the actual tool.</p>
+    <p class="muted">Signed in as <span id="whoami">—</span></p>
+  </section>
+</main>
+
+<script>
+  // Start app work here — fires once auth is confirmed.
+  document.addEventListener('rooster:authed', function (e) {
+    document.getElementById('whoami').textContent = e.detail.email;
+  });
+</script>
+
+</body>
+</html>

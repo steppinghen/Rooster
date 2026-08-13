@@ -1,0 +1,30 @@
+# =============================================================
+# Portfolio — Netlify site config
+# One folder = one Netlify site. In the Netlify UI set:
+#   Base directory:      portfolio
+#   Publish directory:   portfolio
+#   Build command:       (empty — static)
+# =============================================================
+
+[build]
+  publish = "."
+  command = ""
+
+# Local preview: `netlify dev` from inside portfolio/ (or
+# `npm run dev:portfolio` from the repo root).
+[dev]
+  framework  = "#static"
+  publish    = "."
+  port       = 8888
+  autoLaunch = false
+  # Netlify's internal static server defaults to 3999 for EVERY site,
+  # so without a unique port here the second site you start dies with
+  # EADDRINUSE. Pinning both ports is what lets sites run side by side.
+  staticServerPort = 3991
+
+# ── noindex — see _shared/noindex-headers ────────────────────
+# Applied to every path so nothing here reaches Google.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive, nosnippet, noimageindex"

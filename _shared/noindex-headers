@@ -1,0 +1,46 @@
+# =============================================================
+# ROOSTER — NOINDEX HEADER SNIPPET
+# =============================================================
+# Keeps a site out of Google (and any crawler that honours
+# X-Robots-Tag). Copy ONE of the two forms below into each site.
+#
+# Rooster uses FORM A (netlify.toml) everywhere — one file per
+# site, headers and dev config in the same place. Form B is here
+# for reference / for hosts that only read a _headers file.
+#
+# Do NOT use both in the same site: Netlify applies both files and
+# reconciling them later is a guessing game.
+
+
+# ── FORM A — netlify.toml ────────────────────────────────────
+# Paste into the site's netlify.toml:
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive, nosnippet, noimageindex"
+
+
+# ── FORM B — _headers ────────────────────────────────────────
+# Paste into a plain-text file named `_headers` in the publish dir:
+#
+#   /*
+#     X-Robots-Tag: noindex, nofollow, noarchive, nosnippet, noimageindex
+
+
+# ── What the directives do ───────────────────────────────────
+#   noindex        don't show this page in search results
+#   nofollow       don't follow links from this page
+#   noarchive      no cached copy
+#   nosnippet      no text/preview snippet in results
+#   noimageindex   don't index images hosted here
+#
+# ── Why a header and not robots.txt ──────────────────────────
+# robots.txt blocks CRAWLING, not INDEXING. A URL that's linked
+# from elsewhere can still appear in results while disallowed —
+# and because the crawler is blocked, it never reads the noindex.
+# The header is what actually removes a page. Leave the site
+# crawlable so the header can be seen.
+#
+# ── Verify after deploy ──────────────────────────────────────
+#   curl -sI https://<site>.netlify.app | grep -i x-robots-tag
