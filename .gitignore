@@ -1,0 +1,78 @@
+# ---- Dependencies ----
+node_modules/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# ---- Environment / secrets ----
+# The Supabase anon key is publishable and may live in client code.
+# Everything below is for service keys, tokens, and other secrets — never commit.
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+secrets.json
+service-account*.json
+
+# ---- Build output ----
+dist/
+build/
+out/
+.output/
+.vercel/
+.next/
+.nuxt/
+.svelte-kit/
+.astro/
+.cache/
+.parcel-cache/
+.turbo/
+*.tsbuildinfo
+
+# ---- Netlify ----
+.netlify/
+
+# ---- Supabase ----
+.branches/
+.temp/
+supabase/.temp/
+
+# ---- Logs ----
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ---- Testing / coverage ----
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# ---- Editors / tooling ----
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+.eslintcache
+.stylelintcache
+
+# ---- OS ----
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+Desktop.ini
