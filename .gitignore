@@ -68,6 +68,8 @@ blob-report/
 .idea/
 *.swp
 *.swo
+*.bak
+*.sb-*
 .eslintcache
 .stylelintcache
 

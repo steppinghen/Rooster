@@ -2,40 +2,748 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex, nofollow">
-<title>HVAC Visits</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Rounds — contractor visits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- Auth gate — load order matters: css, supabase, config, overlay -->
+<!-- ============================================================= -->
+<!-- AUTH GATE — load order matters: css, supabase, config, overlay. -->
+<!-- Do NOT add `defer`: auth-overlay.js stamps .rooster-auth-pending -->
+<!-- onto <html> as it parses, so gated content never paints.         -->
+<!-- Deferring it would flash the Rounds app before the gate engages. -->
+<!--                                                                  -->
+<!-- The overlay hides every direct child of <body> until an allowed   -->
+<!-- session is confirmed; it does NOT target #appShell by id, so the  -->
+<!-- wrapper below needs no display:none of its own.                   -->
+<!-- ============================================================= -->
 <link rel="stylesheet" href="vendor/auth-overlay.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
 <script src="auth-config.js"></script>
 <script src="vendor/auth-overlay.js"></script>
 
-<link rel="stylesheet" href="style.css">
+<style>
+  :root{
+    --ink:#16232b; --bg:#eef2f3; --surface:#ffffff; --muted:#5f7079; --border:#dbe3e6;
+    --teal:#1f7a8c; --teal-soft:#e3f0f2;
+    --amber:#c67d10; --amber-soft:#fbeed3;
+    --red:#cf4b3e; --red-soft:#f8e0dc;
+    --radius:16px; --shadow:0 1px 2px rgba(22,35,43,.06),0 6px 18px rgba(22,35,43,.06); --tap:56px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.4}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  select{font-family:inherit}
+  :focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:8px}
+  a{color:inherit}
+
+  .app{max-width:480px;margin:0 auto;min-height:100dvh;background:var(--bg);display:flex;flex-direction:column;position:relative;box-shadow:0 0 0 1px var(--border)}
+
+  @media(min-width:900px){
+    body{background:#dde5e7;padding:28px 0}
+    .app{max-width:1120px;min-height:calc(100dvh - 56px);border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(22,35,43,.16)}
+    .split{display:grid;grid-template-columns:400px 1fr;flex:1;min-height:0}
+    .pane-list{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--bg);min-height:0}
+    .pane-detail{overflow-y:auto;background:var(--bg)}
+    .mobile-only{display:none !important}
+    .fab-add{display:none !important}
+  }
+  @media(max-width:899px){
+    .desktop-only{display:none !important}
+    .split{display:flex;flex-direction:column;flex:1;min-height:0}
+    .pane-detail{display:contents}
+    .detail-placeholder{display:none !important}
+  }
+
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:max(14px,env(safe-area-inset-top)) 18px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:20}
+  .brand{display:flex;align-items:center;gap:9px}
+  .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(150deg,var(--teal),#155c6a);display:grid;place-items:center;flex:none}
+  .mark svg{width:18px;height:18px}
+  .brand b{font-family:'Archivo';font-weight:800;font-size:19px;letter-spacing:-.01em}
+  .brand span{color:var(--muted);font-size:12px;font-weight:500;display:block;margin-top:-3px}
+  .topbar .spacer{flex:1}
+  .desktop-add{display:none}
+  @media(min-width:900px){.desktop-add{display:flex;align-items:center;gap:8px;background:var(--ink);color:#fff;font-family:'Archivo';font-weight:700;font-size:14px;padding:10px 16px;border-radius:11px}.desktop-add svg{width:18px;height:18px}}
+
+  .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:92px}
+  @media(min-width:900px){.scroll{padding-bottom:20px}}
+
+  .view{display:none}
+  .view.active{display:block;animation:fade .2s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.view.active{animation:none}}
+
+  .summary{padding:20px 18px 8px}
+  .summary h1{font-family:'Archivo';font-weight:800;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+  .readout{display:flex;gap:10px;margin-top:12px}
+  .stat{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;position:relative;overflow:hidden}
+  .stat .n{font-family:'Archivo';font-weight:800;font-size:32px;line-height:1;letter-spacing:-.02em}
+  .stat .l{font-size:12px;color:var(--muted);margin-top:5px;font-weight:500}
+  .stat .bar{position:absolute;left:0;top:0;bottom:0;width:5px}
+  .stat.hot .n{color:var(--red)} .stat.hot .bar{background:var(--red)}
+  .stat.due .n{color:var(--amber)} .stat.due .bar{background:var(--amber)}
+  .stat.cool .n{color:var(--teal)} .stat.cool .bar{background:var(--teal)}
+
+  /* territory picker */
+  .terrpick{padding:14px 18px 2px}
+  .terrpick .sel{position:relative;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:0 14px}
+  .terrpick .sel svg.pin{width:19px;height:19px;color:var(--teal);flex:none}
+  .terrpick select{appearance:none;-webkit-appearance:none;border:none;background:none;flex:1;font-size:16px;font-weight:600;color:var(--ink);padding:14px 0;outline:none;cursor:pointer}
+  .terrpick .sel svg.chev{width:18px;height:18px;color:var(--muted);flex:none;pointer-events:none}
+  .terrpick .cnt{font-size:12px;color:var(--muted);padding:8px 4px 0;font-weight:500}
+
+  .sectionhdr{display:flex;align-items:center;gap:8px;padding:16px 18px 6px}
+  .sectionhdr .lbl{font-family:'Archivo';font-weight:700;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
+  .sectionhdr .spacer{flex:1}
+  .hint-swipe{font-size:12px;color:#9aa8ad;font-weight:500;display:flex;align-items:center;gap:5px}
+  .hint-swipe svg{width:15px;height:15px}
+
+  .searchbar{padding:16px 18px 4px}
+  .searchbox{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:12px 14px}
+  .searchbox svg{width:20px;height:20px;color:var(--muted);flex:none}
+  .searchbox input{flex:1;border:none;outline:none;font-size:16px;font-family:inherit;background:none;color:var(--ink)}
+  .segrow{display:flex;gap:8px;padding:12px 18px 4px}
+  .seg{flex:1;padding:10px 0;text-align:center;font-weight:600;font-size:14px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:11px}
+  .seg[aria-pressed="true"]{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+  .list{padding:4px 12px 8px}
+  .swipe{position:relative;margin:8px 0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  .swipe-actions{position:absolute;inset:0;display:flex;justify-content:flex-end}
+  .swipe-actions button{width:50%;max-width:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;font-weight:700;font-size:13px}
+  .swipe-actions svg{width:22px;height:22px}
+  .sa-visit{background:var(--teal)} .sa-update{background:#3a4d57}
+  .card{position:relative;z-index:2;display:flex;align-items:stretch;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;width:100%;text-align:left;min-height:var(--tap);transition:transform .18s ease;will-change:transform}
+  .card:active{filter:brightness(.985)}
+  .card.selected{border-color:var(--teal);box-shadow:0 0 0 2px var(--teal-soft)}
+  .gauge{width:7px;flex:none}
+  .gauge.hot{background:var(--red)} .gauge.due{background:var(--amber)} .gauge.cool{background:var(--teal)} .gauge.churn{background:#c9d2d5}
+  .card-body{flex:1;padding:13px 14px 13px 15px;min-width:0}
+  .card-topline{display:flex;align-items:center;gap:8px}
+  .card-name{font-family:'Archivo';font-weight:700;font-size:17px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;flex:1;min-width:0}
+  .terr-tag{font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:3px 7px;border-radius:6px;flex:none;text-transform:uppercase}
+  .card-person{font-size:13px;color:var(--ink);font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-person .title{color:var(--muted);font-weight:500}
+  .card-sub{font-size:12px;color:var(--muted);margin-top:3px}
+  .card-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding:14px 16px 14px 6px;flex:none;border-left:1px solid var(--border)}
+  .badge-n{font-family:'Archivo';font-weight:800;font-size:22px;line-height:1;letter-spacing:-.02em}
+  .badge-l{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  .hot .badge-n{color:var(--red)} .due .badge-n{color:var(--amber)} .cool .badge-n{color:var(--teal)}
+  .emptynote{text-align:center;color:var(--muted);font-size:14px;padding:40px 24px;line-height:1.6}
+
+  .tabbar{position:absolute;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+  @media(min-width:900px){.tabbar{position:static}}
+  .tab{flex:1;padding:10px 0 12px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted)}
+  .tab svg{width:25px;height:25px}
+  .tab span{font-size:11px;font-weight:600}
+  .tab[aria-selected="true"]{color:var(--teal)}
+
+  .detail-head{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 18px 18px}
+  .backrow{display:flex;align-items:center;gap:6px;margin-bottom:14px}
+  .back{display:flex;align-items:center;gap:5px;color:var(--muted);font-weight:600;font-size:14px;padding:6px 8px 6px 4px;border-radius:8px}
+  .back:hover{color:var(--ink)} .back svg{width:20px;height:20px}
+  .backrow .spacer{flex:1}
+  .status-pill{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px 11px;border-radius:20px}
+  .status-pill.hot{background:var(--red-soft);color:var(--red)}
+  .status-pill.due{background:var(--amber-soft);color:#8a5606}
+  .status-pill.cool{background:var(--teal-soft);color:#155c6a}
+  .status-pill.churn{background:#eceff0;color:var(--muted)}
+  .detail-name{font-family:'Archivo';font-weight:800;font-size:25px;letter-spacing:-.02em;line-height:1.1}
+  .detail-person{font-size:16px;font-weight:600;margin-top:8px}
+  .detail-person .title{color:var(--muted);font-weight:500}
+  .detail-freq{color:var(--muted);font-size:13px;margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .detail-terr{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--teal);background:var(--teal-soft);padding:3px 8px;border-radius:6px;text-transform:uppercase}
+
+  .cta-row{display:flex;gap:10px;padding:16px 18px 4px}
+  .cta{flex:1;height:60px;border-radius:15px;display:flex;align-items:center;justify-content:center;gap:9px;font-family:'Archivo';font-weight:700;font-size:16px}
+  .cta svg{width:22px;height:22px}
+  .cta-visit{background:var(--teal);color:#fff;box-shadow:0 8px 22px rgba(31,122,140,.28)}
+  .cta-update{background:var(--surface);color:var(--ink);border:1px solid var(--border);box-shadow:var(--shadow)}
+  .cta:active{transform:scale(.985)}
+
+  .section{padding:18px 18px 4px}
+  .section-title{font-family:'Archivo';font-weight:700;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center}
+  .section-title .spacer{flex:1}
+  .section-title a{color:var(--teal);text-transform:none;letter-spacing:0;font-weight:600;font-size:13px;font-family:'Inter'}
+
+  .field{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .field-row{display:flex;align-items:center;gap:12px;padding:14px 16px;min-height:var(--tap);text-decoration:none;color:inherit}
+  .field-row + .field-row{border-top:1px solid var(--border)}
+  .field-row .k{font-size:14px;color:var(--muted);width:76px;flex:none;font-weight:500}
+  .field-row .v{font-size:15px;font-weight:500;flex:1;min-width:0;word-break:break-word}
+  .field-row.link .v{color:var(--teal);font-weight:600}
+  .field-row .go{color:var(--muted);flex:none} .field-row .go svg{width:20px;height:20px;display:block}
+  .field-row .derived{font-size:11px;font-weight:700;color:#9aa8ad;letter-spacing:.03em;text-transform:uppercase;flex:none}
+
+  .stepper{display:flex;align-items:center;border:1px solid var(--border);border-radius:11px;overflow:hidden;flex:none}
+  .stepper button{width:44px;height:44px;font-size:22px;font-weight:600;color:var(--teal);display:grid;place-items:center}
+  .stepper button:active{background:var(--teal-soft)}
+  .stepper .val{min-width:96px;text-align:center;font-family:'Archivo';font-weight:700;font-size:15px;line-height:1.15}
+  .stepper .val small{display:block;font-family:'Inter';font-weight:500;font-size:11px;color:var(--muted)}
+
+  .toggle{position:relative;width:52px;height:31px;border-radius:20px;background:#cdd6d9;flex:none;transition:background .18s}
+  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:25px;height:25px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
+  .toggle[aria-pressed="true"]{background:var(--teal)}
+  .toggle[aria-pressed="true"]::after{transform:translateX(21px)}
+  @media(prefers-reduced-motion:reduce){.toggle,.toggle::after{transition:none}}
+
+  .timeline{padding:2px 18px 24px}
+  .tl{display:flex;gap:12px;padding:2px 0}
+  .tl-rail{display:flex;flex-direction:column;align-items:center;flex:none;width:26px}
+  .tl-dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;flex:none;z-index:2}
+  .tl-dot svg{width:14px;height:14px;color:#fff}
+  .tl-dot.visit{background:var(--teal)} .tl-dot.update{background:#3a4d57}
+  .tl-line{width:2px;flex:1;background:var(--border);margin:2px 0}
+  .tl-body{flex:1;padding-bottom:16px}
+  .tl-kind{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+  .tl-kind.visit{color:var(--teal)} .tl-kind.update{color:#3a4d57}
+  .tl-when{font-size:12px;color:var(--muted);margin-left:8px;font-weight:500}
+  .tl-txt{font-size:14px;margin-top:5px;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 13px}
+  .tl-empty{color:var(--muted);text-align:center;font-size:14px;border:1px dashed var(--border);border-radius:13px;padding:18px}
+
+  .form{padding:18px}
+  .form h2{font-family:'Archivo';font-weight:800;font-size:22px;letter-spacing:-.01em;margin-bottom:4px}
+  .form p.hint{color:var(--muted);font-size:14px;margin-bottom:18px}
+  .grouplbl{font-family:'Archivo';font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:20px 0 10px}
+  .inp{margin-bottom:14px}
+  .inp label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+  .inp input,.inp textarea{width:100%;padding:15px 16px;font-size:16px;font-family:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:13px}
+  .inp input:focus,.inp textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+  .inp textarea{min-height:110px;resize:vertical}
+  .inp .opt{color:#9aa8ad;font-weight:500}
+  .two{display:flex;gap:10px}.two .inp{flex:1}
+  .ac{position:relative}
+  .ac-list{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--border);border-radius:13px;box-shadow:0 12px 30px rgba(22,35,43,.16);z-index:40;overflow:hidden;display:none}
+  .ac-list.show{display:block}
+  .ac-item{display:flex;align-items:center;gap:11px;padding:13px 14px;cursor:pointer;border-bottom:1px solid var(--border)}
+  .ac-item:last-child{border-bottom:none}
+  .ac-item:hover{background:var(--teal-soft)}
+  .ac-item svg{width:18px;height:18px;color:var(--muted);flex:none}
+  .ac-item .main{font-size:15px;font-weight:600}
+  .ac-item .sub{font-size:12px;color:var(--muted)}
+  .ac-foot{padding:8px 14px;font-size:11px;color:#9aa8ad;display:flex;align-items:center;gap:6px}
+  .terr-derived{display:none;align-items:center;gap:10px;background:var(--teal-soft);border:1px solid #bcdbe1;border-radius:12px;padding:12px 14px;margin-top:-4px;margin-bottom:14px}
+  .terr-derived.show{display:flex}
+  .terr-derived svg{width:20px;height:20px;color:var(--teal);flex:none}
+  .terr-derived .t{font-size:13px;color:#155c6a}
+  .terr-derived .t b{font-family:'Archivo';font-weight:700}
+  .form-actions{display:flex;gap:10px;margin-top:22px}
+  .btn-primary{flex:1;height:56px;border-radius:14px;background:var(--teal);color:#fff;font-family:'Archivo';font-weight:700;font-size:16px}
+  .btn-primary:active{transform:scale(.985)}
+  .btn-ghost{height:56px;padding:0 20px;border-radius:14px;color:var(--muted);font-weight:600;border:1px solid var(--border)}
+  .kindtoggle{display:flex;border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:18px}
+  .kindtoggle button{flex:1;padding:14px 8px;font-weight:700;font-size:14px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px}
+  .kindtoggle button svg{width:20px;height:20px}
+  .kindtoggle button[aria-pressed="true"]{background:var(--teal);color:#fff}
+  .kindtoggle button:nth-child(2)[aria-pressed="true"]{background:#3a4d57}
+  .kindnote{font-size:13px;color:var(--muted);margin:-8px 0 16px;padding:0 2px}
+
+  .mapcanvas{position:relative;height:340px;background:linear-gradient(0deg,rgba(31,122,140,.05),rgba(31,122,140,.05)),repeating-linear-gradient(0deg,transparent 0 39px,#dfe7e9 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,#dfe7e9 39px 40px),#eef4f5;border-bottom:1px solid var(--border);overflow:hidden}
+  @media(min-width:900px){.mapcanvas{height:460px}}
+  .road{position:absolute;background:#fff;box-shadow:0 0 0 1px #e0e8ea}
+  .pin{position:absolute;transform:translate(-50%,-100%);z-index:2;cursor:pointer}
+  .pin svg{width:30px;height:38px;filter:drop-shadow(0 3px 4px rgba(22,35,43,.28))}
+  .pin.hot svg .p{fill:var(--red)} .pin.due svg .p{fill:var(--amber)} .pin.cool svg .p{fill:var(--teal)}
+  .youare{position:absolute;width:20px;height:20px;transform:translate(-50%,-50%);z-index:3}
+  .youare::before{content:"";position:absolute;inset:0;border-radius:50%;background:#2b7de0;box-shadow:0 0 0 4px rgba(43,125,224,.25),0 0 0 8px rgba(43,125,224,.12)}
+  .maplegend{display:flex;gap:16px;padding:14px 18px 4px;flex-wrap:wrap}
+  .leg{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--muted)}
+  .leg i{width:11px;height:11px;border-radius:3px}
+  .nearme{margin:14px 18px;padding:16px;border:1px dashed var(--border);border-radius:15px;display:flex;align-items:center;gap:14px;background:var(--surface)}
+  .nearme .ic{width:44px;height:44px;border-radius:12px;background:var(--teal-soft);display:grid;place-items:center;flex:none;color:var(--teal)}
+  .nearme .ic svg{width:24px;height:24px}
+  .nearme .t{font-family:'Archivo';font-weight:700;font-size:15px}
+  .nearme .d{font-size:13px;color:var(--muted);margin-top:2px}
+  .nearme .soon{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--amber);background:var(--amber-soft);padding:5px 9px;border-radius:20px;flex:none}
+
+  .detail-placeholder{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:400px;color:var(--muted);text-align:center;padding:40px}
+  .detail-placeholder svg{width:56px;height:56px;color:#c4ced1;margin-bottom:16px}
+  .detail-placeholder b{font-family:'Archivo';font-size:17px;color:var(--ink)}
+  .detail-placeholder p{font-size:14px;margin-top:6px;max-width:260px}
+
+  .demobar{background:var(--ink);color:#cfe0e4;font-size:12px;text-align:center;padding:7px 14px;font-weight:500}
+  .demobar b{color:#fff}
+  .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:13px 20px;border-radius:14px;font-weight:600;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.25s;z-index:60;display:flex;align-items:center;gap:9px}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast svg{width:19px;height:19px;color:#7ee0c0}
+  @media(prefers-reduced-motion:reduce){.toast{transition:opacity .01s}.card{transition:none}}
+</style>
 </head>
 <body>
 
-<!-- Everything below is hidden until an allowed session is confirmed. -->
-<header class="site-header">
-  <h1>HVAC Visits</h1>
-  <p class="sub">Visit tracking</p>
-</header>
+<!-- ===== APP (revealed by the gate after auth) ===== -->
+<div id="appShell"><div class="app" id="mainApp">
+  <div class="demobar">Prototype with <b>sample contractors</b> — territory auto-set from address. Swipe a card; resize for desktop.</div>
 
-<main class="wrap">
-  <section class="card">
-    <h2>Scaffold</h2>
-    <p>The gate is wired and working. Replace this section with the actual tool.</p>
-    <p class="muted">Signed in as <span id="whoami">—</span></p>
-  </section>
-</main>
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v6m0 0a3 3 0 100 6 3 3 0 000-6zm0 6v9M6 8H4m4 4H4m16-4h-2m2 4h-2" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div><b>Rounds</b><span id="topSub">Your rotation</span></div>
+    </div>
+    <div class="spacer"></div>
+    <button class="desktop-add" onclick="openAdd()"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Add contractor</button>
+  </div>
+
+  <div class="split">
+    <div class="pane-list">
+    <div class="scroll" id="scroll">
+
+      <section class="view active" id="view-today">
+        <div class="summary">
+          <h1>Today · Thu Aug 7</h1>
+          <div class="readout">
+            <div class="stat hot"><span class="bar"></span><div class="n" id="sHot">0</div><div class="l">Overdue</div></div>
+            <div class="stat due"><span class="bar"></span><div class="n" id="sDue">0</div><div class="l">Due now</div></div>
+            <div class="stat cool"><span class="bar"></span><div class="n" id="sCool">0</div><div class="l">On track</div></div>
+          </div>
+        </div>
+        <div class="terrpick">
+          <div class="sel">
+            <svg class="pin" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/></svg>
+            <select id="todayTerr" onchange="renderToday()"></select>
+            <svg class="chev" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="cnt" id="todayCnt"></div>
+        </div>
+        <div class="sectionhdr"><span class="lbl">Who to see</span><span class="spacer"></span><span class="hint-swipe mobile-only"><svg viewBox="0 0 24 24" fill="none"><path d="M14 7l-5 5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>swipe to log</span></div>
+        <div class="list" id="todayList"></div>
+      </section>
+
+      <section class="view" id="view-contractors">
+        <div class="searchbar"><div class="searchbox"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input id="search" placeholder="Search name or contact" oninput="renderContractors()"></div></div>
+        <div class="terrpick" style="padding-top:10px">
+          <div class="sel">
+            <svg class="pin" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/></svg>
+            <select id="rosterTerr" onchange="renderContractors()"></select>
+            <svg class="chev" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+        <div class="segrow"><button class="seg" id="segActive" aria-pressed="true" onclick="setSeg('active')">Active</button><button class="seg" id="segChurn" aria-pressed="false" onclick="setSeg('churned')">Churned</button></div>
+        <div class="list" id="rosterList"></div>
+      </section>
+
+      <section class="view" id="view-map">
+        <div class="mapcanvas" id="mapcanvas">
+          <div class="road" style="left:0;right:0;top:120px;height:8px"></div>
+          <div class="road" style="left:0;right:0;top:230px;height:6px"></div>
+          <div class="road" style="top:0;bottom:0;left:140px;width:8px"></div>
+          <div class="road" style="top:0;bottom:0;left:270px;width:6px"></div>
+          <div class="youare" style="left:200px;top:175px" title="You are here"></div>
+        </div>
+        <div class="maplegend">
+          <span class="leg"><i style="background:var(--red)"></i>Overdue</span>
+          <span class="leg"><i style="background:var(--amber)"></i>Due now</span>
+          <span class="leg"><i style="background:var(--teal)"></i>On track</span>
+          <span class="leg"><i style="background:#2b7de0;border-radius:50%"></i>You</span>
+        </div>
+        <div class="nearme"><div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/></svg></div><div><div class="t">Who's near me?</div><div class="d">Finish your route early — see the closest contractors worth a stop.</div></div><div class="soon">Next up</div></div>
+      </section>
+
+      <section class="view" id="view-add-mobile"></section>
+      <section class="view" id="view-log-mobile"></section>
+
+    </div>
+
+    <nav class="tabbar" role="tablist">
+      <button class="tab" id="tab-today" role="tab" aria-selected="true" onclick="show('today')"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Today</span></button>
+      <button class="tab" id="tab-contractors" role="tab" aria-selected="false" onclick="show('contractors')"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="2"/><path d="M3.5 19a5.5 5.5 0 0111 0M16 6.5a3 3 0 010 5.8M20.5 19a5 5 0 00-4-4.9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Contractors</span></button>
+      <button class="tab" id="tab-map" role="tab" aria-selected="false" onclick="show('map')"><svg viewBox="0 0 24 24" fill="none"><path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4zM9 4v13M15 6.5v13" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Map</span></button>
+    </nav>
+    </div>
+
+    <div class="pane-detail">
+      <section class="view active" id="view-detail">
+        <div class="detail-placeholder desktop-only" id="detailPlaceholder">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="10" r="2" stroke="currentColor" stroke-width="1.6"/></svg>
+          <b>Pick a contractor</b>
+          <p>Select someone from the list to see their history and log a visit.</p>
+        </div>
+        <div id="detailBody"></div>
+      </section>
+      <section class="view" id="view-add"></section>
+      <section class="view" id="view-log"></section>
+    </div>
+  </div>
+
+  <button class="fab-add" id="fabAdd" onclick="openAdd()" style="position:absolute;right:18px;bottom:calc(84px + env(safe-area-inset-bottom));height:54px;padding:0 20px 0 16px;border-radius:28px;background:var(--ink);color:#fff;font-family:'Archivo';font-weight:700;font-size:15px;display:none;align-items:center;gap:8px;z-index:25;box-shadow:0 8px 24px rgba(22,35,43,.28)"><svg viewBox="0 0 24 24" fill="none" style="width:20px;height:20px"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Add contractor</button>
+
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="toastMsg"></span></div>
+</div></div><!-- /appShell -->
 
 <script>
-  // Start app work here — fires once auth is confirmed.
-  document.addEventListener('rooster:authed', function (e) {
-    document.getElementById('whoami').textContent = e.detail.email;
-  });
-</script>
+const TODAY=new Date('2026-08-07T09:00:00'); const DAY=86400000;
+const isDesktop=()=>window.matchMedia('(min-width:900px)').matches;
+function daysAgo(n){return new Date(TODAY-n*DAY);}
+function fmt(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function fmtLong(d){return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
 
+/* ===== TERRITORY: two-table lookup, exactly like the sheet ===== */
+// Raleigh handled by zip; every other city by name.
+const RALEIGH_ZIPS={
+  '27603':'RALEIGH-S','27606':'RALEIGH-S','27610':'RALEIGH-S','27529':'RALEIGH-S',
+  '27604':'RALEIGH-N','27609':'RALEIGH-N','27612':'RALEIGH-N','27613':'RALEIGH-N','27614':'RALEIGH-N','27615':'RALEIGH-N','27616':'RALEIGH-N','27617':'RALEIGH-N','27618':'RALEIGH-N',
+  '27607':'WEST' // Cooper Dr / west Raleigh, folded into WEST per the correction
+};
+const CITY_TERR={
+  'CARY':'WEST','APEX':'WEST','MORRISVILLE':'WEST','NEW HILL':'WEST',
+  'FUQUAY VARINA':'SOUTH','FUQUAY-VARINA':'SOUTH','HOLLY SPRINGS':'SOUTH','WILLOW SPRING':'SOUTH','LILLINGTON':'SOUTH',
+  'WAKE FOREST':'NORTH','YOUNGSVILLE':'NORTH','ROLESVILLE':'NORTH','FRANKLINTON':'NORTH',
+  'GARNER':'SOUTHEAST','CLAYTON':'SOUTHEAST','ANGIER':'SOUTHEAST','BENSON':'SOUTHEAST','COATS':'SOUTHEAST','SMITHFIELD':'SOUTHEAST',
+  'LOUISBURG':'FAR NORTH','CREEDMOOR':'FAR NORTH','HENDERSON':'FAR NORTH','KITTRELL':'FAR NORTH','BUNN':'FAR NORTH',
+  'WENDELL':'EAST','ZEBULON':'EAST','KNIGHTDALE':'EAST','MIDDLESEX':'EAST',
+  'DURHAM':'DURHAM','CHAPEL HILL':'DURHAM','PITTSBORO':'DURHAM','MONCURE':'DURHAM','HILLSBOROUGH':'DURHAM',
+  'SANFORD':'SANFORD'
+};
+// display order for dropdowns
+const TERR_ORDER=['RALEIGH-N','RALEIGH-S','NORTH','SOUTH','SOUTHEAST','EAST','FAR NORTH','WEST','DURHAM','SANFORD'];
+function deriveTerritory(addr){
+  if(!addr) return 'OUT OF RANGE';
+  const zipM=addr.match(/\b(\d{5})\b/); const zip=zipM?zipM[1]:null;
+  // city = the token before ", NC"
+  const cityM=addr.match(/,\s*([A-Za-z .-]+?),?\s*NC/i);
+  const city=cityM?cityM[1].trim().toUpperCase():'';
+  if(city==='RALEIGH' && zip && RALEIGH_ZIPS[zip]) return RALEIGH_ZIPS[zip];
+  if(zip && RALEIGH_ZIPS[zip] && !city) return RALEIGH_ZIPS[zip];
+  if(CITY_TERR[city]) return CITY_TERR[city];
+  if(zip && RALEIGH_ZIPS[zip]) return RALEIGH_ZIPS[zip];
+  return 'OUT OF RANGE';
+}
+
+let ID=100;
+let contractors=[
+  mk('Oak City Mechanical',['Dave','Whitfield','Owner','dave@oakcitymech.com'],'(919) 555-0182','2650 Discovery Dr, Raleigh, NC 27616',7,10,[['visit',10,'Wants a weekly face. Asked about the new variable-speed units.']]),
+  mk('Bull City Heating & Cooling',['Mike','Alvarez','Service Manager','mike@bullcityhc.com'],'(919) 555-0143','905 W Main St, Durham, NC 27701',14,26,[['update',6,"Mike's out until the 20th — hold the filter reorder call till then."],['visit',26,'Good long visit. Walked the new product line.']]),
+  mk('Southern Cross HVAC',['Renee','Baker','Owner','renee@southerncrosshvac.com'],'(919) 555-0119','206 N Main St, Fuquay-Varina, NC 27526',14,21,[['visit',21,'Owner leaning our way on the maintenance contract.']]),
+  mk('Cardinal Comfort Systems',['Tom','Rigsbee','Purchasing','tom@cardinalcomfort.com'],'(919) 555-0148','118 SW Maynard Rd, Cary, NC 27511',7,9,[]),
+  mk('Wake Air Pros',['Greg','Sturdivant','Owner','greg@wakeairpros.com'],'(919) 555-0166','1100 Forestville Rd, Wake Forest, NC 27587',30,41,[['update',12,'Slow to pay last quarter — check with billing before the next call.']]),
+  mk('Piedmont HVAC Supply',['Angela','Fuentes','Branch Manager','angela@piedmonthvac.com'],'(919) 555-0175','809 S Salem St, Apex, NC 27502',14,12,[['visit',12,'Interested in the coil promo.']]),
+  mk('Neuse River Heating',['Carl','Denton','Owner',''],'(919) 555-0137','512 E Main St, Clayton, NC 27520',30,18,[]),
+  mk('Trinity Climate Control',['Priya','Nair','Operations','priya@trinityclimate.com'],'(984) 555-0159','2800 Slater Rd, Morrisville, NC 27560',30,33,[['visit',33,'New buyer, still building the relationship.']]),
+  mk('Falls Lake Air',['Jim','Overby','Owner',''],'(919) 555-0128','7500 Six Forks Rd, Raleigh, NC 27615',60,44,[]),
+  mk('Cape Fear Comfort',['Sara','Kimball','Service Manager','sara@capefearcomfort.com'],'(919) 555-0193','300 S Main St, Holly Springs, NC 27540',14,3,[['visit',3,'Just serviced. Very happy — referral likely.']]),
+  mk('Quitman Trail Mechanical',['Roy','Beasley','Owner','roy@quitmanmech.com'],'(919) 555-0210','5620 Quitman Trail, Raleigh, NC 27610',30,36,[['visit',36,'Big shop. Worth the drive south.']]),
+  mk('Knightdale Air & Heat',['Dana','Pope','Service Manager','dana@knightdaleair.com'],'(919) 555-0231','120 Main St, Knightdale, NC 27545',30,8,[]),
+];
+(function(){let c=mk('Research Triangle Cooling',['Neil','Ford','Purchasing','neil@rtcooling.com'],'(919) 555-0101','4021 Cornwallis Rd, Durham, NC 27709',30,50,[['update',20,'Went with another supplier for now.']]);c.churned=true;contractors.push(c);})();
+
+function mk(name,contact,phone,addr,freq,lastAgo,entries){
+  const notes=(entries||[]).map(e=>({kind:e[0],when:daysAgo(e[1]),txt:e[2]}));
+  const [first,last,title,email]=contact;
+  return {id:++ID,name,first,last,title,email,phone,addr,territory:deriveTerritory(addr),freq,lastVisit:daysAgo(lastAgo),churned:false,notes};
+}
+
+function daysSince(c){return Math.floor((TODAY-c.lastVisit)/DAY);}
+function overdueBy(c){return daysSince(c)-c.freq;}
+function statusClass(c){const o=overdueBy(c);return o>7?'hot':o>=0?'due':'cool';}
+function statusLabel(c){const o=overdueBy(c);
+  if(o>7)return{n:o,l:'days over'};
+  if(o>=0)return{n:o===0?'today':o,l:o===0?'due':'days over'};
+  return{n:Math.abs(o),l:'days left'};}
+function statusText(c){const o=overdueBy(c);
+  if(o>7)return `${o} days overdue`;
+  if(o>0)return `${o} day${o>1?'s':''} overdue`;
+  if(o===0)return 'Due today';
+  return `Due in ${Math.abs(o)} days`;}
+function freqWord(f){return ({7:'Weekly',14:'Every 2 weeks',30:'Monthly',60:'Every 2 months',90:'Quarterly'})[f]||`Every ${f} days`;}
+function lastTouch(c){const d=daysSince(c);return d===0?'today':d===1?'yesterday':`${d} days ago`;}
+function personLine(c){if(!c.first&&!c.last)return '';const nm=[c.first,c.last].filter(Boolean).join(' ');return c.title?`${nm} <span class="title">· ${c.title}</span>`:nm;}
+function activeTerritories(){const set=new Set(contractors.filter(c=>!c.churned).map(c=>c.territory));return TERR_ORDER.filter(t=>set.has(t)).concat([...set].filter(t=>!TERR_ORDER.includes(t)).sort());}
+
+function fillTerrSelects(){
+  const terrs=activeTerritories();
+  ['todayTerr','rosterTerr'].forEach(id=>{
+    const sel=document.getElementById(id); const cur=sel.value||'ALL';
+    sel.innerHTML=`<option value="ALL">All territories</option>`+terrs.map(t=>`<option value="${t}">${t}</option>`).join('');
+    sel.value=[...sel.options].some(o=>o.value===cur)?cur:'ALL';
+  });
+}
+
+function cardHTML(c,{swipe=false}={}){
+  const s=c.churned?'churn':statusClass(c);
+  const sub=c.churned?`Churned · last touch ${fmt(c.lastVisit)}`:`${freqWord(c.freq)} · last touch ${lastTouch(c)}`;
+  const person=personLine(c);
+  const right=c.churned?'':(()=>{const sl=statusLabel(c);return `<div class="card-right"><span class="badge-n">${sl.n}</span><span class="badge-l">${sl.l}</span></div>`;})();
+  const inner=`<button class="card ${s}" data-cid="${c.id}" onclick="openDetail(${c.id})">
+      <span class="gauge ${s}"></span>
+      <div class="card-body">
+        <div class="card-topline"><span class="card-name">${c.name}</span><span class="terr-tag">${c.territory}</span></div>
+        ${person?`<div class="card-person">${person}</div>`:''}
+        <div class="card-sub">${sub}</div>
+      </div>
+      ${right}
+    </button>`;
+  if(!swipe) return `<div class="swipe">${inner}</div>`;
+  return `<div class="swipe" data-id="${c.id}"><div class="swipe-actions">
+      <button class="sa-visit" onclick="quickLog(${c.id},'visit')"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Log visit</button>
+      <button class="sa-update" onclick="quickLog(${c.id},'update')"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Add update</button>
+    </div>${inner}</div>`;
+}
+
+function renderToday(){
+  const terr=document.getElementById('todayTerr').value||'ALL';
+  let act=contractors.filter(c=>!c.churned);
+  if(terr!=='ALL') act=act.filter(c=>c.territory===terr);
+  sHot.textContent=act.filter(c=>overdueBy(c)>7).length;
+  sDue.textContent=act.filter(c=>{const o=overdueBy(c);return o>=0&&o<=7;}).length;
+  sCool.textContent=act.filter(c=>overdueBy(c)<0).length;
+  const cnt=document.getElementById('todayCnt');
+  cnt.textContent = terr==='ALL' ? `${act.length} active across all territories` : `${act.length} in ${terr}`;
+  const rows=act.slice().sort((a,b)=>overdueBy(b)-overdueBy(a));
+  const el=document.getElementById('todayList');
+  el.innerHTML = rows.length ? rows.map(c=>cardHTML(c,{swipe:true})).join('')
+    : `<p class="emptynote">No active contractors in ${terr}. Pick another territory up top.</p>`;
+  attachSwipe(); markSelected();
+}
+let seg='active';
+function setSeg(s){seg=s;segActive.setAttribute('aria-pressed',s==='active');segChurn.setAttribute('aria-pressed',s==='churned');renderContractors();}
+function renderContractors(){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const terr=document.getElementById('rosterTerr').value||'ALL';
+  let rows=contractors.filter(c=> seg==='churned'?c.churned:!c.churned)
+    .filter(c=>terr==='ALL'||c.territory===terr)
+    .filter(c=>(c.name+' '+c.first+' '+c.last).toLowerCase().includes(q));
+  rows.sort((a,b)=>a.name.localeCompare(b.name));
+  const el=document.getElementById('rosterList');
+  if(!rows.length){el.innerHTML=`<p class="emptynote">${seg==='churned'?"No churned contractors here.":'No matches. Try a different name or territory, or add them.'}</p>`;return;}
+  el.innerHTML=rows.map(c=>cardHTML(c,{swipe:false})).join('');
+  markSelected();
+}
+function markSelected(){document.querySelectorAll('.card').forEach(el=>el.classList.toggle('selected', isDesktop()&&currentId&&el.dataset.cid==currentId));}
+
+function attachSwipe(){
+  document.querySelectorAll('#todayList .swipe').forEach(wrap=>{
+    const card=wrap.querySelector('.card'); let startX=0,dx=0,open=false,dragging=false; const MAX=170;
+    const reset=()=>{card.style.transform='';open=false;};
+    card.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;dragging=true;card.style.transition='none';},{passive:true});
+    card.addEventListener('touchmove',e=>{if(!dragging)return;dx=e.touches[0].clientX-startX+(open?-MAX:0);if(dx>0)dx=0;if(dx<-MAX)dx=-MAX;card.style.transform=`translateX(${dx}px)`;},{passive:true});
+    card.addEventListener('touchend',()=>{dragging=false;card.style.transition='';if(dx<-MAX/2){card.style.transform=`translateX(${-MAX}px)`;open=true;}else reset();});
+  });
+}
+function quickLog(id,kind){currentId=id;if(kind==='visit'){const c=contractors.find(x=>x.id===id);c.lastVisit=new Date(TODAY);c.notes.push({kind:'visit',when:new Date(TODAY),txt:''});renderToday();toast('Visit logged for '+c.name);}else{openLog('update');}}
+
+let currentId=null, cameFrom='today';
+function openDetail(id){
+  currentId=id;
+  const c=contractors.find(x=>x.id===id);
+  const s=c.churned?'churn':statusClass(c);
+  const pill=c.churned?`<span class="status-pill churn">Churned</span>`:`<span class="status-pill ${s}">${statusText(c)}</span>`;
+  const mapsUrl='https://maps.apple.com/?q='+encodeURIComponent(c.addr);
+  const callNum=(c.phone||'').replace(/[^\d+]/g,'');
+  const person=personLine(c);
+
+  const shown=c.notes.slice().reverse(); const cap=4;
+  const visible=shown.slice(0,cap); const moreCount=shown.length-cap;
+  const tlItem=(n,last)=>`<div class="tl"><div class="tl-rail"><div class="tl-dot ${n.kind}"><svg viewBox="0 0 24 24" fill="none">${n.kind==='visit'?'<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>':'<path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>'}</svg></div>${last?'':'<div class="tl-line"></div>'}</div><div class="tl-body"><div><span class="tl-kind ${n.kind}">${n.kind==='visit'?'Visit':'Update'}</span><span class="tl-when">${fmtLong(n.when)}</span></div>${n.txt?`<div class="tl-txt">${n.txt}</div>`:''}</div></div>`;
+  const timeline=shown.length
+    ? visible.map((n,i)=>tlItem(n,i===visible.length-1 && moreCount<=0)).join('')+(moreCount>0?`<div class="section-title" style="padding-top:6px"><span class="spacer"></span><a href="#" onclick="expandTimeline(event)">Show all ${shown.length}</a></div>`:'')
+    : `<div class="tl-empty">No history yet. Log a visit or add an update to start tracking.</div>`;
+
+  const emailRow=c.email?`<a class="field-row link" href="mailto:${c.email}"><span class="k">Email</span><span class="v">${c.email}</span><span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7l9 6 9-6M4 6h16a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span></a>`:'';
+
+  document.getElementById('detailBody').innerHTML=`
+    <div class="detail-head">
+      <div class="backrow">
+        <button class="back mobile-only" onclick="backFromDetail()"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+        <span class="spacer"></span>${pill}
+      </div>
+      <div class="detail-name">${c.name}</div>
+      ${person?`<div class="detail-person">${person}</div>`:''}
+      <div class="detail-freq"><span class="detail-terr">${c.territory}</span>${freqWord(c.freq)} · last touch ${lastTouch(c)}</div>
+    </div>
+    ${c.churned?'':`<div class="cta-row">
+      <button class="cta cta-visit" onclick="openLog('visit')"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Log visit</button>
+      <button class="cta cta-update" onclick="openLog('update')"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>Add update</button>
+    </div>`}
+    <div class="section">
+      <div class="section-title">Contact</div>
+      <div class="field">
+        <a class="field-row link" href="tel:${callNum}"><span class="k">Call</span><span class="v">${c.phone||'—'}</span><span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-3 2a11 11 0 005 5l2-3 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span></a>
+        ${emailRow}
+        <a class="field-row link" href="${mapsUrl}" target="_blank" rel="noopener"><span class="k">Address</span><span class="v">${c.addr||'—'}</span><span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.7"/></svg></span></a>
+        <div class="field-row"><span class="k">Territory</span><span class="v">${c.territory}</span><span class="derived">Auto from address</span></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Visit every</div>
+      <div class="field"><div class="field-row"><span class="k" style="width:auto">How often</span><span class="spacer" style="flex:1"></span>
+        <div class="stepper"><button onclick="bumpFreq(-1)" aria-label="Less often">−</button><div class="val"><span id="freqVal">${freqWord(c.freq)}</span><small><span id="freqDays">${c.freq}</span> days</small></div><button onclick="bumpFreq(1)" aria-label="More often">+</button></div>
+      </div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Rotation</div>
+      <div class="field"><div class="field-row"><span class="k" style="width:auto">${c.churned?'Churned — hidden from Today':'Active in rotation'}</span><span class="spacer" style="flex:1"></span><button class="toggle" aria-pressed="${!c.churned}" onclick="toggleChurn()" aria-label="Toggle rotation"></button></div></div>
+    </div>
+    <div class="section"><div class="section-title">History<span class="spacer"></span><a href="#" onclick="editContractor(event)">Edit details</a></div></div>
+    <div class="timeline" id="timeline">${timeline}</div>
+  `;
+  const ph=document.getElementById('detailPlaceholder'); if(ph)ph.style.display='none';
+  document.getElementById('detailBody').style.display='block';
+  if(isDesktop()){ setDetailView('detail'); } else { showDetailMobile(); }
+  markSelected();
+}
+function showDetailMobile(){document.querySelectorAll('#view-today,#view-contractors,#view-map,#view-add-mobile,#view-log-mobile').forEach(v=>v.classList.remove('active'));document.getElementById('view-detail').classList.add('active');document.getElementById('topSub').textContent='Contractor';updateFab();}
+function backFromDetail(){document.getElementById('view-detail').classList.remove('active');show(cameFrom);}
+function expandTimeline(e){e.preventDefault();const c=contractors.find(x=>x.id===currentId);const shown=c.notes.slice().reverse();document.getElementById('timeline').innerHTML=shown.map((n,i)=>`<div class="tl"><div class="tl-rail"><div class="tl-dot ${n.kind}"><svg viewBox="0 0 24 24" fill="none">${n.kind==='visit'?'<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>':'<path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>'}</svg></div>${i===shown.length-1?'':'<div class="tl-line"></div>'}</div><div class="tl-body"><div><span class="tl-kind ${n.kind}">${n.kind==='visit'?'Visit':'Update'}</span><span class="tl-when">${fmtLong(n.when)}</span></div>${n.txt?`<div class="tl-txt">${n.txt}</div>`:''}</div></div>`).join('');}
+const FREQS=[7,14,21,30,45,60,90];
+function bumpFreq(dir){const c=contractors.find(x=>x.id===currentId);let i=FREQS.indexOf(c.freq);if(i<0)i=FREQS.findIndex(f=>f>=c.freq);i=Math.min(FREQS.length-1,Math.max(0,i+dir));c.freq=FREQS[i];document.getElementById('freqVal').textContent=freqWord(c.freq);document.getElementById('freqDays').textContent=c.freq;renderToday();}
+function toggleChurn(){const c=contractors.find(x=>x.id===currentId);c.churned=!c.churned;toast(c.churned?'Moved out of rotation':'Back in rotation');fillTerrSelects();openDetail(currentId);renderToday();renderContractors();}
+
+let logKind='visit';
+function logFormHTML(){
+  return `<div class="form">
+    <button class="back mobile-only" id="logBack" style="margin-bottom:14px"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+    <h2 id="logTitle">Log a visit</h2><p class="hint" id="logFor"></p>
+    <div class="kindtoggle">
+      <button id="kVisit" aria-pressed="true" onclick="setKind('visit')"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Log visit</button>
+      <button id="kUpdate" aria-pressed="false" onclick="setKind('update')"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Add update</button>
+    </div>
+    <p class="kindnote" id="kindNote">A visit resets the clock and moves them down your list.</p>
+    <div class="inp" id="dateWrap"><label for="vDate">When</label><input id="vDate" type="date"></div>
+    <div class="inp"><label id="noteLabel">Notes <span class="opt">— optional</span></label><textarea id="vNote" placeholder="What came up? Anything to follow on?"></textarea></div>
+    <div class="form-actions"><button class="btn-ghost" id="logCancel">Cancel</button><button class="btn-primary" id="logSave" onclick="saveLog()">Save visit</button></div>
+  </div>`;
+}
+function setKind(k){logKind=k;kVisit.setAttribute('aria-pressed',k==='visit');kUpdate.setAttribute('aria-pressed',k==='update');document.getElementById('logTitle').textContent=k==='visit'?'Log a visit':'Add an update';document.getElementById('kindNote').textContent=k==='visit'?'A visit resets the clock and moves them down your list.':"An update is just a note — it doesn't change when they're next due.";document.getElementById('dateWrap').style.display=k==='visit'?'block':'none';document.getElementById('noteLabel').innerHTML=k==='visit'?'Notes <span class="opt">— optional</span>':'Note';document.getElementById('logSave').textContent=k==='visit'?'Save visit':'Save update';}
+function openLog(kind){
+  const c=contractors.find(x=>x.id===currentId);
+  const host=isDesktop()?document.getElementById('view-log'):document.getElementById('view-log-mobile');
+  host.innerHTML=logFormHTML();
+  document.getElementById('logFor').textContent='for '+c.name;
+  document.getElementById('vDate').value=TODAY.toISOString().slice(0,10);
+  document.getElementById('vNote').value='';
+  setKind(kind||'visit');
+  const lb=document.getElementById('logBack'); if(lb)lb.onclick=()=>openDetail(currentId);
+  document.getElementById('logCancel').onclick=()=>openDetail(currentId);
+  if(isDesktop())setDetailView('log'); else {document.querySelectorAll('#view-today,#view-contractors,#view-map,#view-detail,#view-add-mobile').forEach(v=>v.classList.remove('active'));document.getElementById('view-log-mobile').classList.add('active');document.getElementById('scroll').scrollTop=0;}
+}
+function saveLog(){
+  const c=contractors.find(x=>x.id===currentId);
+  const note=document.getElementById('vNote').value.trim();
+  if(logKind==='visit'){const d=new Date(document.getElementById('vDate').value+'T09:00:00');c.lastVisit=d;c.notes.push({kind:'visit',when:d,txt:note});toast('Visit logged for '+c.name);}
+  else{if(!note){document.getElementById('vNote').focus();toast('Add a note first');return;}c.notes.push({kind:'update',when:new Date(TODAY),txt:note});toast('Update added');}
+  renderToday();renderContractors();openDetail(currentId);
+}
+
+let editingId=null;
+const AC_DB=[
+  ['118 SW Maynard Rd','Cary, NC 27511'],['2650 Discovery Dr','Raleigh, NC 27616'],['905 W Main St','Durham, NC 27701'],
+  ['206 N Main St','Fuquay-Varina, NC 27526'],['809 S Salem St','Apex, NC 27502'],['512 E Main St','Clayton, NC 27520'],
+  ['2800 Slater Rd','Morrisville, NC 27560'],['7500 Six Forks Rd','Raleigh, NC 27615'],['300 S Main St','Holly Springs, NC 27540'],
+  ['1100 Forestville Rd','Wake Forest, NC 27587'],['5620 Quitman Trail','Raleigh, NC 27610'],['120 Main St','Knightdale, NC 27545'],
+  ['1218 Cooper Dr','Raleigh, NC 27607'],['400 W Williams St','Apex, NC 27502'],['225 S Main St','Zebulon, NC 27597']
+];
+function addFormHTML(){
+  return `<div class="form">
+    <button class="back mobile-only" onclick="closeAdd()" style="margin-bottom:14px"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
+    <h2 id="addTitle">Add a contractor</h2><p class="hint">Business name is enough to start. Fill in the rest whenever.</p>
+    <div class="inp"><label for="cName">Business name</label><input id="cName" placeholder="e.g. Cardinal Comfort Systems"></div>
+
+    <div class="grouplbl">Primary contact</div>
+    <div class="two"><div class="inp"><label for="cFirst">First name</label><input id="cFirst" placeholder="Dave"></div><div class="inp"><label for="cLast">Last name</label><input id="cLast" placeholder="Whitfield"></div></div>
+    <div class="inp"><label for="cTitle">Title <span class="opt">— optional</span></label><input id="cTitle" placeholder="Owner"></div>
+    <div class="inp"><label for="cEmail">Email <span class="opt">— optional</span></label><input id="cEmail" type="email" inputmode="email" placeholder="dave@company.com"></div>
+
+    <div class="grouplbl">Location</div>
+    <div class="inp"><label for="cPhone">Phone</label><input id="cPhone" type="tel" inputmode="tel" placeholder="(919) 555-0148"></div>
+    <div class="inp ac"><label for="cAddr">Address <span class="opt">— start typing, pick a match</span></label>
+      <input id="cAddr" autocomplete="off" placeholder="Start typing an address…" oninput="acInput(this.value)" onblur="setTimeout(acHide,150)">
+      <div class="ac-list" id="acList"></div>
+    </div>
+    <div class="terr-derived" id="terrDerived">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/></svg>
+      <div class="t">Territory: <b id="terrDerivedVal">—</b> <span style="color:#5f7079">· set automatically from the address</span></div>
+    </div>
+
+    <div class="form-actions"><button class="btn-ghost" onclick="closeAdd()">Cancel</button><button class="btn-primary" onclick="saveContractor()">Save contractor</button></div>
+    <p class="hint" style="margin-top:14px">You'll set how often to visit on their page.</p>
+  </div>`;
+}
+function acInput(v){
+  const list=document.getElementById('acList'); const q=v.trim().toLowerCase();
+  updateDerivedTerr(v);
+  if(q.length<2){acHide();return;}
+  const hits=AC_DB.filter(a=>(a[0]+' '+a[1]).toLowerCase().includes(q)).slice(0,5);
+  if(!hits.length){acHide();return;}
+  list.innerHTML=hits.map(a=>`<div class="ac-item" onmousedown="acPick('${a[0]}, ${a[1]}')" ontouchstart="acPick('${a[0]}, ${a[1]}')"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.7"/></svg><div><div class="main">${a[0]}</div><div class="sub">${a[1]}</div></div></div>`).join('')
+    +`<div class="ac-foot"><svg viewBox="0 0 24 24" fill="none" style="width:13px;height:13px"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>Address, map pin &amp; territory captured automatically</div>`;
+  list.classList.add('show');
+}
+function updateDerivedTerr(addr){
+  const box=document.getElementById('terrDerived'); if(!box)return;
+  const t=deriveTerritory(addr);
+  if(addr && addr.match(/,\s*NC/i)){document.getElementById('terrDerivedVal').textContent=t;box.classList.add('show');}
+  else box.classList.remove('show');
+}
+function acPick(full){document.getElementById('cAddr').value=full;acHide();updateDerivedTerr(full);toast('Address set · territory '+deriveTerritory(full));}
+function acHide(){const l=document.getElementById('acList');if(l)l.classList.remove('show');}
+function openAdd(){editingId=null;mountAdd();const t=document.getElementById('addTitle');if(t)t.textContent='Add a contractor';}
+function mountAdd(){
+  const host=isDesktop()?document.getElementById('view-add'):document.getElementById('view-add-mobile');
+  host.innerHTML=addFormHTML();
+  if(isDesktop())setDetailView('add');
+  else {document.querySelectorAll('#view-today,#view-contractors,#view-map,#view-detail,#view-log-mobile').forEach(v=>v.classList.remove('active'));document.getElementById('view-add-mobile').classList.add('active');document.getElementById('scroll').scrollTop=0;document.getElementById('topSub').textContent='Contractor details';}
+}
+function closeAdd(){ if(editingId){openDetail(editingId);} else if(isDesktop()){setDetailView('detail');} else {show('contractors');} }
+function editContractor(e){
+  if(e)e.preventDefault();
+  editingId=currentId; const c=contractors.find(x=>x.id===currentId);
+  mountAdd();
+  document.getElementById('addTitle').textContent='Edit contractor';
+  cName.value=c.name;cFirst.value=c.first||'';cLast.value=c.last||'';cTitle.value=c.title||'';cEmail.value=c.email||'';cPhone.value=c.phone||'';cAddr.value=c.addr||'';
+  updateDerivedTerr(c.addr||'');
+}
+function saveContractor(){
+  const name=cName.value.trim();
+  if(!name){cName.focus();cName.style.borderColor='var(--red)';toast('Add a business name');return;}
+  const addr=cAddr.value.trim();
+  const data={name,first:cFirst.value.trim(),last:cLast.value.trim(),title:cTitle.value.trim(),email:cEmail.value.trim(),phone:cPhone.value.trim()||'—',addr,territory:deriveTerritory(addr)};
+  if(editingId){Object.assign(contractors.find(x=>x.id===editingId),data);toast('Saved changes');const id=editingId;editingId=null;fillTerrSelects();renderToday();renderContractors();openDetail(id);return;}
+  const c={id:++ID,...data,freq:14,lastVisit:daysAgo(15),churned:false,notes:[]};
+  contractors.push(c);toast(name+' added · '+data.territory);fillTerrSelects();renderToday();renderContractors();openDetail(c.id);
+}
+
+function renderMap(){
+  const canvas=document.getElementById('mapcanvas');canvas.querySelectorAll('.pin').forEach(p=>p.remove());
+  const w=canvas.clientWidth||360,ht=canvas.clientHeight||340;
+  contractors.filter(c=>!c.churned&&c.addr).forEach(c=>{
+    const h=[...c.name].reduce((a,ch)=>a+ch.charCodeAt(0),0);
+    const x=30+(h*37)%(w-60), y=30+(h*53)%(ht-60); const s=statusClass(c);
+    const pin=document.createElement('div');pin.className='pin '+s;pin.style.left=x+'px';pin.style.top=y+'px';pin.title=c.name+' · '+c.territory+' · '+statusText(c);
+    pin.innerHTML='<svg viewBox="0 0 24 30"><path class="p" d="M12 0C5.4 0 0 5.2 0 11.6 0 20 12 30 12 30s12-10 12-18.4C24 5.2 18.6 0 12 0z"/><circle cx="12" cy="11.5" r="4.5" fill="#fff"/></svg>';
+    pin.onclick=()=>openDetail(c.id);canvas.appendChild(pin);
+  });
+}
+
+function show(view){
+  document.querySelectorAll('#view-today,#view-contractors,#view-map,#view-add-mobile,#view-log-mobile,#view-detail').forEach(v=>v.classList.remove('active'));
+  const target=document.getElementById('view-'+view); if(target)target.classList.add('active');
+  document.getElementById('scroll').scrollTop=0;
+  if(['today','contractors','map'].includes(view))cameFrom=view;
+  const tabFor={today:'today',contractors:'contractors',map:'map'};
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
+  if(tabFor[view])document.getElementById('tab-'+tabFor[view]).setAttribute('aria-selected','true');
+  document.getElementById('topSub').textContent=({today:'Your rotation',contractors:'All contractors',map:'Territory map'})[view]||'';
+  if(view==='today')renderToday();
+  if(view==='contractors')renderContractors();
+  if(view==='map')renderMap();
+  if(isDesktop()){document.getElementById('view-detail').classList.add('active');}
+  updateFab();
+}
+function setDetailView(which){['detail','add','log'].forEach(v=>document.getElementById('view-'+v).classList.remove('active'));document.getElementById('view-'+which).classList.add('active');const pd=document.querySelector('.pane-detail'); if(pd)pd.scrollTop=0;}
+function updateFab(){document.getElementById('fabAdd').style.display=(!isDesktop()&&document.getElementById('view-contractors').classList.contains('active'))?'flex':'none';}
+
+let toastT;function toast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1900);}
+
+window.addEventListener('resize',()=>{markSelected();updateFab();});
+
+// ── BOOT ── auth is handled by the hvac-visits gate; no login screen lives here.
+function boot(){
+  fillTerrSelects();
+  renderToday();
+  if(isDesktop()){ renderContractors(); document.getElementById('view-detail').classList.add('active'); }
+}
+boot();
+</script>
 </body>
 </html>

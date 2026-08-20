@@ -1,0 +1,5 @@
+# Editor backups and temp files. Kept out of git AND out of the
+# publish directory — Netlify uploads whatever sits in this folder,
+# so a stray .bak would deploy as a public URL.
+*.bak
+*.sb-*
