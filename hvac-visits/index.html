@@ -44,11 +44,37 @@
   @media(min-width:900px){
     body{background:#dde5e7;padding:28px 0}
     .app{max-width:1120px;min-height:calc(100dvh - 56px);border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(22,35,43,.16)}
-    .split{display:grid;grid-template-columns:400px 1fr;flex:1;min-height:0}
+    /* nav | list | detail */
+    .split{display:grid;grid-template-columns:200px 400px 1fr;flex:1;min-height:0}
     .pane-list{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--bg);min-height:0}
     .pane-detail{overflow-y:auto;background:var(--bg)}
     .mobile-only{display:none !important}
     .fab-add{display:none !important}
+    /* the bottom tab bar is a phone control; desktop uses .sidenav */
+    .tabbar{display:none !important}
+    /* Was never shown: the base .detail-placeholder{display:none} rule sits
+       LATER in the sheet, and a media query adds no specificity — so this
+       needs the extra class to win. */
+    .pane-detail .detail-placeholder{display:flex}
+    /* Map gets the whole content area — pane-detail is removed from the
+       grid entirely so the list pane can span the remaining column. */
+    .split[data-desk="map"]{grid-template-columns:200px 1fr}
+    .split[data-desk="map"] .pane-detail{display:none}
+    .split[data-desk="map"] .pane-list{border-right:none}
+    /* sign-out badge moves out of its floating position into the header */
+    .topbar #roosterAuthBadge{position:static;bottom:auto;right:auto;box-shadow:none;background:var(--bg);border:1px solid var(--border);backdrop-filter:none}
+  }
+  /* ── persistent desktop side navigation ───────────────────────── */
+  .sidenav{display:none}
+  @media(min-width:900px){
+    .sidenav{display:flex;flex-direction:column;gap:3px;padding:14px 10px;background:var(--surface);border-right:1px solid var(--border);min-height:0}
+    .snav-lbl{padding:4px 12px 8px;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#9fb0b6}
+    .snav{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:11px;color:var(--muted);font-size:14px;font-weight:600;text-align:left}
+    .snav svg{width:20px;height:20px;flex:none}
+    .snav:hover{background:var(--bg);color:var(--ink)}
+    .snav[aria-current="true"]{background:var(--teal-soft);color:var(--teal)}
+    .snav .cnt{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted)}
+    .snav[aria-current="true"] .cnt{color:var(--teal)}
   }
   @media(max-width:899px){
     .desktop-only{display:none !important}
@@ -114,6 +140,26 @@
   .swipe-actions button{width:50%;max-width:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff;font-weight:700;font-size:13px}
   .swipe-actions svg{width:22px;height:22px}
   .sa-visit{background:var(--teal)} .sa-update{background:#3a4d57}
+  /* ── Desktop quick actions ─────────────────────────────────────
+     There is no swipe gesture with a mouse, so the same two buttons the
+     mobile swipe reveals are surfaced on hover instead. Identical markup
+     and identical handlers (quickLog) — only the reveal differs.
+     :focus-within is included so they are keyboard-reachable too. */
+  @media(min-width:900px){
+    .swipe-actions{inset:auto 12px auto auto;top:50%;transform:translateY(-50%);z-index:3;gap:7px;opacity:0;pointer-events:none;transition:opacity .12s ease}
+    .swipe:hover .swipe-actions,.swipe:focus-within .swipe-actions{opacity:1;pointer-events:auto}
+    .swipe-actions button{width:auto;max-width:none;flex-direction:row;gap:6px;padding:7px 11px;border-radius:10px;font-size:12px;box-shadow:0 3px 10px rgba(22,35,43,.22)}
+    /* Fade the row content out behind the pills. Paints above .card (same
+       z-index, later in tree order) but below .swipe-actions (z-index 3),
+       so the labels stay legible over long company names. */
+    .swipe::after{content:'';position:absolute;inset:1px 1px 1px auto;width:265px;background:linear-gradient(90deg,rgba(255,255,255,0) 0%,var(--surface) 42%);opacity:0;transition:opacity .12s ease;pointer-events:none;z-index:2;border-radius:0 var(--radius) var(--radius) 0}
+    .swipe:hover::after,.swipe:focus-within::after{opacity:1}
+    .swipe-actions button:hover{filter:brightness(1.08)}
+    .swipe-actions svg{width:16px;height:16px}
+    /* the status badge sits exactly where the pills land — swap it out */
+    .card-right{transition:opacity .12s ease}
+    .swipe:hover .card-right,.swipe:focus-within .card-right{opacity:0}
+  }
   .card{position:relative;z-index:2;display:flex;align-items:stretch;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;width:100%;text-align:left;min-height:var(--tap);transition:transform .18s ease;will-change:transform}
   .card:active{filter:brightness(.985)}
   .card.selected{border-color:var(--teal);box-shadow:0 0 0 2px var(--teal-soft)}
@@ -291,13 +337,19 @@
     <button class="desktop-add" onclick="openAdd()"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Add contractor</button>
   </div>
 
-  <div class="split">
+  <div class="split" data-desk="today">
+    <nav class="sidenav" aria-label="Sections">
+      <div class="snav-lbl">Rounds</div>
+      <button class="snav" id="snav-today" aria-current="true" onclick="show('today')"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Today<span class="cnt" id="navCntToday"></span></button>
+      <button class="snav" id="snav-contractors" aria-current="false" onclick="show('contractors')"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="2"/><path d="M3.5 19a5.5 5.5 0 0111 0M16 6.5a3 3 0 010 5.8M20.5 19a5 5 0 00-4-4.9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Contractors<span class="cnt" id="navCntAll"></span></button>
+      <button class="snav" id="snav-map" aria-current="false" onclick="show('map')"><svg viewBox="0 0 24 24" fill="none"><path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4zM9 4v13M15 6.5v13" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Map</button>
+    </nav>
     <div class="pane-list">
     <div class="scroll" id="scroll">
 
       <section class="view active" id="view-today">
         <div class="summary">
-          <h1>Today · Thu Aug 7</h1>
+          <h1 id="todayHead">Today</h1>
           <div class="readout">
             <div class="stat hot"><span class="bar"></span><div class="n" id="sHot">0</div><div class="l">Overdue</div></div>
             <div class="stat due"><span class="bar"></span><div class="n" id="sDue">0</div><div class="l">Due now</div></div>
@@ -541,9 +593,13 @@ async function loadData(){
     contractors=(c.data||[]).map(r=>rowToContractor(r,vBy[r.id],uBy[r.id]));
     TODAY=new Date(); dataLoaded=true; buildAcDb();
     setDataState(contractors.length?'ok':'empty');
+    renderTodayHead(); renderNavCounts();
     if(currentId&&!contractors.some(x=>x.id===currentId)) currentId=null;
     fillTerrSelects(); renderToday();
-    if(isDesktop()){renderContractors(); document.getElementById('view-detail').classList.add('active');}
+    if(document.getElementById('view-map').classList.contains('active')) renderMap();
+    if(isDesktop()&&!document.getElementById('view-map').classList.contains('active')){
+      renderContractors(); document.getElementById('view-detail').classList.add('active');
+    } else if(isDesktop()){ renderContractors(); }
     if(currentId) openDetail(currentId);
   }catch(err){
     console.error('[rounds] load failed:',err);
@@ -597,6 +653,23 @@ function lastTouch(c){const d=daysSince(c);if(d===null)return'never';return d===
 function personLine(c){return c.contact?esc(c.contact):'';}
 function activeTerritories(){const set=new Set(contractors.filter(c=>!c.churned).map(c=>c.territory));return TERR_ORDER.filter(t=>set.has(t)).concat([...set].filter(t=>!TERR_ORDER.includes(t)).sort());}
 
+function renderTodayHead(){
+  const h=document.getElementById('todayHead');
+  if(h) h.textContent='Today · '+TODAY.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+function renderNavCounts(){
+  const a=contractors.filter(c=>!c.churned);
+  const t=document.getElementById('navCntToday'); const all=document.getElementById('navCntAll');
+  if(t) t.textContent=dataLoaded?String(a.filter(c=>{const o=overdueBy(c);return o!==null&&o>=0;}).length||''):'';
+  if(all) all.textContent=dataLoaded?String(contractors.length||''):'';
+}
+// The gate appends its sign-out badge to <body> as a floating pill. Move the
+// node into the header; CSS un-floats it at >=900px and leaves it floating on
+// mobile, so the phone layout is untouched. The gate itself is not modified.
+function placeAuthBadge(){
+  const b=document.getElementById('roosterAuthBadge'), bar=document.querySelector('.topbar');
+  if(b&&bar&&b.parentElement!==bar) bar.appendChild(b);
+}
 function fillTerrSelects(){
   const terrs=activeTerritories();
   ['todayTerr','rosterTerr'].forEach(id=>{
@@ -943,13 +1016,21 @@ function show(view){
   document.getElementById('scroll').scrollTop=0;
   if(['today','contractors','map'].includes(view))cameFrom=view;
   const tabFor={today:'today',contractors:'contractors',map:'map'};
+  // mobile bottom tabs
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
   if(tabFor[view])document.getElementById('tab-'+tabFor[view]).setAttribute('aria-selected','true');
+  // desktop side nav + pane geometry (data-desk drives the grid: map is full width)
+  document.querySelectorAll('.snav').forEach(b=>b.setAttribute('aria-current','false'));
+  if(tabFor[view]){
+    const sn=document.getElementById('snav-'+tabFor[view]); if(sn)sn.setAttribute('aria-current','true');
+    const split=document.querySelector('.split'); if(split)split.setAttribute('data-desk',view);
+  }
   document.getElementById('topSub').textContent=({today:'Your rotation',contractors:'All contractors',map:'Territory map'})[view]||'';
   if(view==='today')renderToday();
   if(view==='contractors')renderContractors();
-  if(view==='map')renderMap();
-  if(isDesktop()){document.getElementById('view-detail').classList.add('active');}
+  // Today/Contractors keep master-detail; Map owns the whole pane.
+  if(isDesktop()&&view!=='map'){document.getElementById('view-detail').classList.add('active');}
+  if(view==='map')renderMap(); // after data-desk so clientWidth is the final width
   updateFab();
 }
 function setDetailView(which){['detail','add','log'].forEach(v=>document.getElementById('view-'+v).classList.remove('active'));document.getElementById('view-'+which).classList.add('active');const pd=document.querySelector('.pane-detail'); if(pd)pd.scrollTop=0;}
@@ -957,20 +1038,25 @@ function updateFab(){document.getElementById('fabAdd').style.display=(!isDesktop
 
 let toastT;function toast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1900);}
 
-window.addEventListener('resize',()=>{markSelected();updateFab();});
+window.addEventListener('resize',()=>{
+  markSelected();updateFab();
+  if(document.getElementById('view-map').classList.contains('active'))renderMap();
+});
 
 /* ── BOOT ──────────────────────────────────────────────────────────
    Data loads on `rooster:authed`, which the gate fires once a session
    is confirmed — never on page load, so queries always carry a JWT.
    The shell renders immediately with a loading state.               */
 function boot(){
+  renderTodayHead();
   fillTerrSelects();
-  renderToday();
-  if(isDesktop()){ renderContractors(); document.getElementById('view-detail').classList.add('active'); }
+  show('today');           // sets tabs, side nav, and pane geometry together
+  if(isDesktop()) renderContractors();
 }
 boot();
 setDataState('loading');
-document.addEventListener('rooster:authed',function(){ loadData(); });
+document.addEventListener('rooster:authed',function(){ placeAuthBadge(); loadData(); });
+setTimeout(placeAuthBadge,600); // safety net if the badge lands late
 </script>
 </body>
 </html>
