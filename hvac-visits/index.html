@@ -461,6 +461,26 @@
     .scroll{min-height:0}                        /* flex:1 + overflow-y:auto already */
     .pane-detail{min-height:0}                   /* overflow-y:auto already */
   }
+
+  /* ══ MOBILE: PIN THE BOTTOM BAR TO THE VIEWPORT (<900px only) ══════
+     .tabbar was position:absolute with bottom:0, resolved against .app
+     — which is min-height:100dvh and grows with the list. With 30 rows
+     the bar rendered at y=3101 in a 717px viewport, i.e. at the end of
+     the content instead of on screen. The FAB had the same defect.
+     Both are now fixed to the viewport. .app is max-width:480px and
+     centred, so the bar is centred to match rather than spanning a wide
+     tablet viewport, and the FAB keeps its 18px gutter from the app's
+     right edge at any width. */
+  @media(max-width:899px){
+    .tabbar{position:fixed;bottom:0;left:50%;right:auto;
+            transform:translateX(-50%);width:100%;max-width:480px}
+    /* the FAB carries an inline position:absolute, so this needs !important */
+    .fab-add{position:fixed !important;
+             right:max(18px, calc((100vw - 480px) / 2 + 18px)) !important;
+             bottom:calc(84px + env(safe-area-inset-bottom)) !important}
+    /* clear the fixed bar so the last contractor isn't hidden under it */
+    .scroll{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+  }
 </style>
 </head>
 <body>
