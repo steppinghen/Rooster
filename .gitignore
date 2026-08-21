@@ -80,3 +80,11 @@ blob-report/
 ._*
 Thumbs.db
 Desktop.ini
+
+# ---- Real business data (PII) ----
+# Source workbooks and transformed exports of the contractor book of
+# business. Kept local: they are not needed to build or run any site,
+# and they must never sit in a publish directory (Netlify uploads the
+# whole folder) or in a repo whose visibility might change.
+_db/**/*.xlsx
+_db/**/*_transformed.csv

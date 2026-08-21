@@ -262,8 +262,14 @@
   .detail-placeholder b{font-family:'Archivo';font-size:17px;color:var(--ink)}
   .detail-placeholder p{font-size:14px;margin-top:6px;max-width:260px}
 
-  .demobar{background:var(--ink);color:#cfe0e4;font-size:12px;text-align:center;padding:7px 14px;font-weight:500}
-  .demobar b{color:#fff}
+  .databar{font-size:12px;text-align:center;padding:8px 14px;font-weight:500;line-height:1.45}
+  .databar.load{background:var(--ink);color:#cfe0e4}
+  .databar.warn{background:var(--amber-soft);color:#7a4d05}
+  .databar.err{background:var(--red-soft);color:#8e2a20}
+  .databar b{font-weight:700}
+  .databar button{margin-left:8px;border:1px solid currentColor;border-radius:7px;padding:2px 9px;font-size:11px;font-weight:700;color:inherit}
+  .terr-tag.callonly{background:var(--amber-soft);color:#7a4d05}
+  .mapnote{padding:6px 16px 0;font-size:11.5px;color:var(--muted);text-align:center}
   .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:13px 20px;border-radius:14px;font-weight:600;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.25s;z-index:60;display:flex;align-items:center;gap:9px}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .toast svg{width:19px;height:19px;color:#7ee0c0}
@@ -274,7 +280,7 @@
 
 <!-- ===== APP (revealed by the gate after auth) ===== -->
 <div id="appShell"><div class="app" id="mainApp">
-  <div class="demobar">Prototype with <b>sample contractors</b> — territory auto-set from address. Swipe a card; resize for desktop.</div>
+  <div class="databar" id="dataBar" hidden></div>
 
   <div class="topbar">
     <div class="brand">
@@ -337,6 +343,7 @@
           <span class="leg"><i style="background:var(--teal)"></i>On track</span>
           <span class="leg"><i style="background:#2b7de0;border-radius:50%"></i>You</span>
         </div>
+        <div class="mapnote" id="mapNote"></div>
         <div class="nearme"><div class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="2"/></svg></div><div><div class="t">Who's near me?</div><div class="d">Finish your route early — see the closest contractors worth a stop.</div></div><div class="soon">Next up</div></div>
       </section>
 
@@ -372,18 +379,26 @@
 </div></div><!-- /appShell -->
 
 <script>
-const TODAY=new Date('2026-08-07T09:00:00'); const DAY=86400000;
+/* ===================================================================
+   ROUNDS — live data from Supabase.
+   The auth gate (vendor/auth-overlay.js) owns the client and session;
+   we reuse it via window.roosterAuth.client(). We never call
+   createClient() here — a second GoTrueClient in the same page races
+   on token refresh. Every read is owner-scoped by RLS.
+   Data loads on `rooster:authed`, never on page load.
+   =================================================================== */
+let TODAY=new Date(); const DAY=86400000;
 const isDesktop=()=>window.matchMedia('(min-width:900px)').matches;
-function daysAgo(n){return new Date(TODAY-n*DAY);}
+function dayStart(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function fmt(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
 function fmtLong(d){return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 
 /* ===== TERRITORY: two-table lookup, exactly like the sheet ===== */
-// Raleigh handled by zip; every other city by name.
 const RALEIGH_ZIPS={
-  '27603':'RALEIGH-S','27606':'RALEIGH-S','27610':'RALEIGH-S','27529':'RALEIGH-S',
-  '27604':'RALEIGH-N','27609':'RALEIGH-N','27612':'RALEIGH-N','27613':'RALEIGH-N','27614':'RALEIGH-N','27615':'RALEIGH-N','27616':'RALEIGH-N','27617':'RALEIGH-N','27618':'RALEIGH-N',
-  '27607':'WEST' // Cooper Dr / west Raleigh, folded into WEST per the correction
+  '27601':'RALEIGH-S','27605':'RALEIGH-S','27603':'RALEIGH-S','27606':'RALEIGH-S','27610':'RALEIGH-S','27529':'RALEIGH-S',
+  '27604':'RALEIGH-N','27608':'RALEIGH-N','27609':'RALEIGH-N','27612':'RALEIGH-N','27613':'RALEIGH-N','27614':'RALEIGH-N','27615':'RALEIGH-N','27616':'RALEIGH-N','27617':'RALEIGH-N','27618':'RALEIGH-N',
+  '27607':'WEST'
 };
 const CITY_TERR={
   'CARY':'WEST','APEX':'WEST','MORRISVILLE':'WEST','NEW HILL':'WEST',
@@ -395,116 +410,252 @@ const CITY_TERR={
   'DURHAM':'DURHAM','CHAPEL HILL':'DURHAM','PITTSBORO':'DURHAM','MONCURE':'DURHAM','HILLSBOROUGH':'DURHAM',
   'SANFORD':'SANFORD'
 };
-// display order for dropdowns
-const TERR_ORDER=['RALEIGH-N','RALEIGH-S','NORTH','SOUTH','SOUTHEAST','EAST','FAR NORTH','WEST','DURHAM','SANFORD'];
+const TERR_ORDER=['RALEIGH-N','RALEIGH-S','NORTH','SOUTH','SOUTHEAST','EAST','FAR NORTH','WEST','DURHAM','SANFORD','RALEIGH-UNASSIGNED','OUT OF RANGE'];
+function addrBits(addr){
+  // Parse by comma segments, not loose regex. Two traps this avoids:
+  //   - a bare \d{5} match grabs PO Box / street numbers ("PO BOX 12061")
+  //   - a lazy city match ate "MO" out of "MONCURE" because the NC in
+  //     MO-NC-URE satisfied the state token.
+  const out={city:'',state:'',zip:null};
+  if(!addr) return out;
+  const parts=String(addr).split(',').map(x=>x.trim()).filter(Boolean);
+  let si=-1;
+  for(let i=parts.length-1;i>=0;i--){
+    const m=parts[i].match(/^([A-Za-z]{2})(?:\s+(\d{5}))?(?:-\d{4})?$/);
+    if(m){si=i;out.state=m[1].toUpperCase();if(m[2])out.zip=m[2];break;}
+  }
+  if(si>0) out.city=parts[si-1].toUpperCase();
+  if(si===-1){
+    // No "ST" / "ST 12345" segment — try "CITY ST ZIP" in the last segment.
+    const tail=parts[parts.length-1]||'';
+    const m=tail.match(/^(.+?)\s+([A-Za-z]{2})\s+(\d{5})(?:-\d{4})?$/);
+    if(m){out.city=m[1].trim().toUpperCase();out.state=m[2].toUpperCase();out.zip=m[3];}
+    else if(parts.length>=2) out.city=parts[parts.length-2].toUpperCase();
+  }
+  // Zip always comes from the LAST 5-digit run, never the first.
+  if(!out.zip){const zs=String(addr).match(/\b\d{5}\b/g); if(zs) out.zip=zs[zs.length-1];}
+  return out;
+}
 function deriveTerritory(addr){
   if(!addr) return 'OUT OF RANGE';
-  const zipM=addr.match(/\b(\d{5})\b/); const zip=zipM?zipM[1]:null;
-  // city = the token before ", NC"
-  const cityM=addr.match(/,\s*([A-Za-z .-]+?),?\s*NC/i);
-  const city=cityM?cityM[1].trim().toUpperCase():'';
-  if(city==='RALEIGH' && zip && RALEIGH_ZIPS[zip]) return RALEIGH_ZIPS[zip];
-  if(zip && RALEIGH_ZIPS[zip] && !city) return RALEIGH_ZIPS[zip];
-  if(CITY_TERR[city]) return CITY_TERR[city];
-  if(zip && RALEIGH_ZIPS[zip]) return RALEIGH_ZIPS[zip];
+  const b=addrBits(addr);
+  // The lookup tables are NC-only. An out-of-state address that happens to
+  // share an NC city name (CLAYTON, GA) is not in the rotation.
+  if(b.state && b.state!=='NC') return 'OUT OF RANGE';
+  // Raleigh is zip-driven; a Raleigh address whose zip isn't in the table is
+  // RALEIGH-UNASSIGNED (a known-city gap), not OUT OF RANGE (unknown city).
+  if(b.city==='RALEIGH') return (b.zip&&RALEIGH_ZIPS[b.zip])?RALEIGH_ZIPS[b.zip]:'RALEIGH-UNASSIGNED';
+  if(CITY_TERR[b.city]) return CITY_TERR[b.city];
+  if(b.zip&&RALEIGH_ZIPS[b.zip]) return RALEIGH_ZIPS[b.zip];
   return 'OUT OF RANGE';
 }
 
-let ID=100;
-let contractors=[
-  mk('Oak City Mechanical',['Dave','Whitfield','Owner','dave@oakcitymech.com'],'(919) 555-0182','2650 Discovery Dr, Raleigh, NC 27616',7,10,[['visit',10,'Wants a weekly face. Asked about the new variable-speed units.']]),
-  mk('Bull City Heating & Cooling',['Mike','Alvarez','Service Manager','mike@bullcityhc.com'],'(919) 555-0143','905 W Main St, Durham, NC 27701',14,26,[['update',6,"Mike's out until the 20th — hold the filter reorder call till then."],['visit',26,'Good long visit. Walked the new product line.']]),
-  mk('Southern Cross HVAC',['Renee','Baker','Owner','renee@southerncrosshvac.com'],'(919) 555-0119','206 N Main St, Fuquay-Varina, NC 27526',14,21,[['visit',21,'Owner leaning our way on the maintenance contract.']]),
-  mk('Cardinal Comfort Systems',['Tom','Rigsbee','Purchasing','tom@cardinalcomfort.com'],'(919) 555-0148','118 SW Maynard Rd, Cary, NC 27511',7,9,[]),
-  mk('Wake Air Pros',['Greg','Sturdivant','Owner','greg@wakeairpros.com'],'(919) 555-0166','1100 Forestville Rd, Wake Forest, NC 27587',30,41,[['update',12,'Slow to pay last quarter — check with billing before the next call.']]),
-  mk('Piedmont HVAC Supply',['Angela','Fuentes','Branch Manager','angela@piedmonthvac.com'],'(919) 555-0175','809 S Salem St, Apex, NC 27502',14,12,[['visit',12,'Interested in the coil promo.']]),
-  mk('Neuse River Heating',['Carl','Denton','Owner',''],'(919) 555-0137','512 E Main St, Clayton, NC 27520',30,18,[]),
-  mk('Trinity Climate Control',['Priya','Nair','Operations','priya@trinityclimate.com'],'(984) 555-0159','2800 Slater Rd, Morrisville, NC 27560',30,33,[['visit',33,'New buyer, still building the relationship.']]),
-  mk('Falls Lake Air',['Jim','Overby','Owner',''],'(919) 555-0128','7500 Six Forks Rd, Raleigh, NC 27615',60,44,[]),
-  mk('Cape Fear Comfort',['Sara','Kimball','Service Manager','sara@capefearcomfort.com'],'(919) 555-0193','300 S Main St, Holly Springs, NC 27540',14,3,[['visit',3,'Just serviced. Very happy — referral likely.']]),
-  mk('Quitman Trail Mechanical',['Roy','Beasley','Owner','roy@quitmanmech.com'],'(919) 555-0210','5620 Quitman Trail, Raleigh, NC 27610',30,36,[['visit',36,'Big shop. Worth the drive south.']]),
-  mk('Knightdale Air & Heat',['Dana','Pope','Service Manager','dana@knightdaleair.com'],'(919) 555-0231','120 Main St, Knightdale, NC 27545',30,8,[]),
-];
-(function(){let c=mk('Research Triangle Cooling',['Neil','Ford','Purchasing','neil@rtcooling.com'],'(919) 555-0101','4021 Cornwallis Rd, Durham, NC 27709',30,50,[['update',20,'Went with another supplier for now.']]);c.churned=true;contractors.push(c);})();
 
-function mk(name,contact,phone,addr,freq,lastAgo,entries){
-  const notes=(entries||[]).map(e=>({kind:e[0],when:daysAgo(e[1]),txt:e[2]}));
-  const [first,last,title,email]=contact;
-  return {id:++ID,name,first,last,title,email,phone,addr,territory:deriveTerritory(addr),freq,lastVisit:daysAgo(lastAgo),churned:false,notes};
+/* ===== DATA LAYER ===== */
+let contractors=[], currentOwnerId=null, dataLoaded=false, AC_DB=[];
+const EMAIL_RE=/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/;
+
+function sbClient(){
+  if(!window.roosterAuth||typeof window.roosterAuth.client!=='function')
+    throw new Error('Auth gate not loaded — no Supabase client available.');
+  return window.roosterAuth.client();
+}
+function addrString(r){
+  const tail=[r.state,r.zip].filter(Boolean).join(' ');
+  return [r.street_address,r.city,tail].filter(Boolean).join(', ');
+}
+function parseAddr(addr){
+  const out={street_address:'',city:'',state:'NC',zip:''};
+  if(!addr) return out;
+  const zipM=addr.match(/\b(\d{5})\b/); if(zipM) out.zip=zipM[1];
+  const stM=addr.match(/,\s*([A-Za-z]{2})\s*\d{5}/); if(stM) out.state=stM[1].toUpperCase();
+  const parts=addr.split(',').map(s=>s.trim()).filter(Boolean);
+  if(parts[0]) out.street_address=parts[0];
+  if(parts[1]) out.city=parts[1].toUpperCase();
+  return out;
+}
+function rowToContractor(r,visits,updates){
+  // visits + updates merged into one timeline, oldest first (the detail
+  // view reverses it for newest-first display).
+  const notes=[]
+    .concat((visits||[]).map(v=>({kind:'visit',when:new Date(v.visited_on+'T09:00:00'),txt:v.note||''})))
+    .concat((updates||[]).map(u=>({kind:'update',when:new Date(u.created_at),txt:u.note||''})))
+    .sort((a,b)=>a.when-b.when);
+  const contact=(r.contact||'').trim();
+  const em=contact.match(EMAIL_RE);
+  const lat=r.lat==null?null:Number(r.lat), lng=r.lng==null?null:Number(r.lng);
+  return {
+    id:r.id, legacy:r.legacy_id||'', name:r.company||'(unnamed)',
+    contact, email:em?em[0]:'', phone:r.phone||'',
+    addr:addrString(r), city:r.city||'', zip:r.zip||'',
+    territory:r.territory||'OUT OF RANGE',
+    freq:r.target_days||60,
+    lastVisit:r.last_visited?new Date(r.last_visited+'T09:00:00'):null, // NULL = calm start
+    churned:r.status==='churned',
+    visitable:r.visitable||'VISIT',
+    callOnly:(r.visitable||'VISIT')==='CALL ONLY',
+    starred:!!r.starred,
+    lat:Number.isFinite(lat)?lat:null, lng:Number.isFinite(lng)?lng:null,
+    notes
+  };
+}
+function buildAcDb(){
+  const seen=new Set(); AC_DB=[];
+  contractors.forEach(c=>{
+    if(!c.addr) return;
+    const parts=c.addr.split(',').map(s=>s.trim());
+    const street=parts[0]||''; const rest=parts.slice(1).join(', ');
+    const k=street+'|'+rest;
+    if(street&&rest&&!seen.has(k)){seen.add(k);AC_DB.push([street,rest]);}
+  });
+}
+function setDataState(state,msg){
+  const bar=document.getElementById('dataBar'); if(!bar) return;
+  const bypass=window.roosterAuth&&window.roosterAuth.isLocalBypass&&window.roosterAuth.isLocalBypass();
+  if(state==='loading'){bar.hidden=false;bar.className='databar load';bar.innerHTML='Loading contractors…';}
+  else if(state==='error'){bar.hidden=false;bar.className='databar err';
+    bar.innerHTML=`<b>Couldn't load your contractors.</b> ${esc(msg||'')} <button onclick="loadData()">Retry</button>`;}
+  else if(state==='empty'){bar.hidden=false;bar.className='databar warn';
+    bar.innerHTML=bypass
+      ? `No rows returned. On localhost the gate <b>bypasses auth</b>, so there is no session and RLS returns nothing. Open <b>?forceauth=1</b> and sign in to see real data.`
+      : `No contractors for this account yet. Rows are owner-scoped by RLS.`;}
+  else {bar.hidden=true;bar.innerHTML='';}
+}
+async function loadData(){
+  setDataState('loading');
+  try{
+    const sb=sbClient();
+    const {data:{user}}=await sb.auth.getUser();
+    currentOwnerId=user?user.id:null;
+    const [c,v,u]=await Promise.all([
+      sb.from('contractors').select('*').order('company',{ascending:true}),
+      sb.from('visits').select('*'),
+      sb.from('updates').select('*')
+    ]);
+    if(c.error) throw c.error;
+    if(v.error) throw v.error;
+    if(u.error) throw u.error;
+    const vBy={},uBy={};
+    (v.data||[]).forEach(x=>{(vBy[x.contractor_id]=vBy[x.contractor_id]||[]).push(x);});
+    (u.data||[]).forEach(x=>{(uBy[x.contractor_id]=uBy[x.contractor_id]||[]).push(x);});
+    contractors=(c.data||[]).map(r=>rowToContractor(r,vBy[r.id],uBy[r.id]));
+    TODAY=new Date(); dataLoaded=true; buildAcDb();
+    setDataState(contractors.length?'ok':'empty');
+    if(currentId&&!contractors.some(x=>x.id===currentId)) currentId=null;
+    fillTerrSelects(); renderToday();
+    if(isDesktop()){renderContractors(); document.getElementById('view-detail').classList.add('active');}
+    if(currentId) openDetail(currentId);
+  }catch(err){
+    console.error('[rounds] load failed:',err);
+    dataLoaded=false;
+    setDataState('error',err.message||String(err));
+    const el=document.getElementById('todayList'); if(el) el.innerHTML='';
+  }
+}
+async function mutate(fn,okMsg){
+  try{ await fn(); toast(okMsg); await loadData(); }
+  catch(err){ console.error('[rounds] write failed:',err); toast('Save failed — '+(err.message||'try again')); }
+}
+function persistVisit(id,dateStr,note){
+  const sb=sbClient();
+  return sb.from('visits').insert({owner_id:currentOwnerId,contractor_id:id,visited_on:dateStr,note:note||null})
+    .then(r=>{if(r.error)throw r.error;
+      return sb.from('contractors').update({last_visited:dateStr}).eq('id',id);})
+    .then(r=>{if(r.error)throw r.error;});
+}
+function persistUpdate(id,note){ // never touches last_visited
+  return sbClient().from('updates').insert({owner_id:currentOwnerId,contractor_id:id,note:note})
+    .then(r=>{if(r.error)throw r.error;});
+}
+function persistChurn(id,churned){
+  return sbClient().from('contractors').update({status:churned?'churned':'active'}).eq('id',id)
+    .then(r=>{if(r.error)throw r.error;});
+}
+function persistFreq(id,days){
+  return sbClient().from('contractors').update({target_days:days}).eq('id',id)
+    .then(r=>{if(r.error)throw r.error;});
 }
 
-function daysSince(c){return Math.floor((TODAY-c.lastVisit)/DAY);}
-function overdueBy(c){return daysSince(c)-c.freq;}
-function statusClass(c){const o=overdueBy(c);return o>7?'hot':o>=0?'due':'cool';}
+/* ===== STATUS MATH — NULL last_visited = calm start, never overdue ===== */
+function daysSince(c){if(!c.lastVisit)return null;return Math.round((dayStart(TODAY)-dayStart(c.lastVisit))/DAY);}
+function overdueBy(c){const d=daysSince(c);return d===null?null:d-c.freq;}
+function sortKey(c){const o=overdueBy(c);return o===null?-1e9:o;}
+function statusClass(c){const o=overdueBy(c);if(o===null)return'cool';return o>7?'hot':o>=0?'due':'cool';}
 function statusLabel(c){const o=overdueBy(c);
+  if(o===null)return{n:'—',l:'not yet'};
   if(o>7)return{n:o,l:'days over'};
   if(o>=0)return{n:o===0?'today':o,l:o===0?'due':'days over'};
   return{n:Math.abs(o),l:'days left'};}
 function statusText(c){const o=overdueBy(c);
+  if(o===null)return 'Not visited yet';
   if(o>7)return `${o} days overdue`;
   if(o>0)return `${o} day${o>1?'s':''} overdue`;
   if(o===0)return 'Due today';
   return `Due in ${Math.abs(o)} days`;}
-function freqWord(f){return ({7:'Weekly',14:'Every 2 weeks',30:'Monthly',60:'Every 2 months',90:'Quarterly'})[f]||`Every ${f} days`;}
-function lastTouch(c){const d=daysSince(c);return d===0?'today':d===1?'yesterday':`${d} days ago`;}
-function personLine(c){if(!c.first&&!c.last)return '';const nm=[c.first,c.last].filter(Boolean).join(' ');return c.title?`${nm} <span class="title">· ${c.title}</span>`:nm;}
+function freqWord(f){return ({7:'Weekly',14:'Every 2 weeks',21:'Every 3 weeks',30:'Monthly',45:'Every 6 weeks',60:'Every 2 months',90:'Quarterly'})[f]||`Every ${f} days`;}
+function lastTouch(c){const d=daysSince(c);if(d===null)return'never';return d===0?'today':d===1?'yesterday':`${d} days ago`;}
+function personLine(c){return c.contact?esc(c.contact):'';}
 function activeTerritories(){const set=new Set(contractors.filter(c=>!c.churned).map(c=>c.territory));return TERR_ORDER.filter(t=>set.has(t)).concat([...set].filter(t=>!TERR_ORDER.includes(t)).sort());}
 
 function fillTerrSelects(){
   const terrs=activeTerritories();
   ['todayTerr','rosterTerr'].forEach(id=>{
-    const sel=document.getElementById(id); const cur=sel.value||'ALL';
-    sel.innerHTML=`<option value="ALL">All territories</option>`+terrs.map(t=>`<option value="${t}">${t}</option>`).join('');
+    const sel=document.getElementById(id); if(!sel)return; const cur=sel.value||'ALL';
+    sel.innerHTML=`<option value="ALL">All territories</option>`+terrs.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
     sel.value=[...sel.options].some(o=>o.value===cur)?cur:'ALL';
   });
 }
 
 function cardHTML(c,{swipe=false}={}){
   const s=c.churned?'churn':statusClass(c);
-  const sub=c.churned?`Churned · last touch ${fmt(c.lastVisit)}`:`${freqWord(c.freq)} · last touch ${lastTouch(c)}`;
+  const sub=c.churned?`Churned · last touch ${c.lastVisit?fmt(c.lastVisit):'never'}`:`${freqWord(c.freq)} · last touch ${lastTouch(c)}`;
   const person=personLine(c);
-  const right=c.churned?'':(()=>{const sl=statusLabel(c);return `<div class="card-right"><span class="badge-n">${sl.n}</span><span class="badge-l">${sl.l}</span></div>`;})();
-  const inner=`<button class="card ${s}" data-cid="${c.id}" onclick="openDetail(${c.id})">
+  const right=c.churned?'':(()=>{const sl=statusLabel(c);return `<div class="card-right"><span class="badge-n">${esc(sl.n)}</span><span class="badge-l">${esc(sl.l)}</span></div>`;})();
+  const callTag=c.callOnly?`<span class="terr-tag callonly">CALL ONLY</span>`:'';
+  const inner=`<button class="card ${s}" data-cid="${esc(c.id)}" onclick="openDetail('${esc(c.id)}')">
       <span class="gauge ${s}"></span>
       <div class="card-body">
-        <div class="card-topline"><span class="card-name">${c.name}</span><span class="terr-tag">${c.territory}</span></div>
+        <div class="card-topline"><span class="card-name">${esc(c.name)}</span><span class="terr-tag">${esc(c.territory)}</span>${callTag}</div>
         ${person?`<div class="card-person">${person}</div>`:''}
         <div class="card-sub">${sub}</div>
       </div>
       ${right}
     </button>`;
   if(!swipe) return `<div class="swipe">${inner}</div>`;
-  return `<div class="swipe" data-id="${c.id}"><div class="swipe-actions">
-      <button class="sa-visit" onclick="quickLog(${c.id},'visit')"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Log visit</button>
-      <button class="sa-update" onclick="quickLog(${c.id},'update')"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Add update</button>
+  return `<div class="swipe" data-id="${esc(c.id)}"><div class="swipe-actions">
+      <button class="sa-visit" onclick="quickLog('${esc(c.id)}','visit')"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Log visit</button>
+      <button class="sa-update" onclick="quickLog('${esc(c.id)}','update')"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Add update</button>
     </div>${inner}</div>`;
 }
 
 function renderToday(){
-  const terr=document.getElementById('todayTerr').value||'ALL';
+  const el=document.getElementById('todayList'); if(!el)return;
+  const terrSel=document.getElementById('todayTerr');
+  const terr=(terrSel&&terrSel.value)||'ALL';
+  if(!dataLoaded){el.innerHTML=`<p class="emptynote">Loading…</p>`;return;}
   let act=contractors.filter(c=>!c.churned);
   if(terr!=='ALL') act=act.filter(c=>c.territory===terr);
-  sHot.textContent=act.filter(c=>overdueBy(c)>7).length;
-  sDue.textContent=act.filter(c=>{const o=overdueBy(c);return o>=0&&o<=7;}).length;
-  sCool.textContent=act.filter(c=>overdueBy(c)<0).length;
+  sHot.textContent=act.filter(c=>{const o=overdueBy(c);return o!==null&&o>7;}).length;
+  sDue.textContent=act.filter(c=>{const o=overdueBy(c);return o!==null&&o>=0&&o<=7;}).length;
+  sCool.textContent=act.filter(c=>{const o=overdueBy(c);return o===null||o<0;}).length;
   const cnt=document.getElementById('todayCnt');
   cnt.textContent = terr==='ALL' ? `${act.length} active across all territories` : `${act.length} in ${terr}`;
-  const rows=act.slice().sort((a,b)=>overdueBy(b)-overdueBy(a));
-  const el=document.getElementById('todayList');
+  const rows=act.slice().sort((a,b)=>sortKey(b)-sortKey(a));
   el.innerHTML = rows.length ? rows.map(c=>cardHTML(c,{swipe:true})).join('')
-    : `<p class="emptynote">No active contractors in ${terr}. Pick another territory up top.</p>`;
+    : `<p class="emptynote">${terr==='ALL'?'No active contractors yet.':'No active contractors in '+esc(terr)+'. Pick another territory up top.'}</p>`;
   attachSwipe(); markSelected();
 }
 let seg='active';
 function setSeg(s){seg=s;segActive.setAttribute('aria-pressed',s==='active');segChurn.setAttribute('aria-pressed',s==='churned');renderContractors();}
 function renderContractors(){
+  const el=document.getElementById('rosterList'); if(!el)return;
+  if(!dataLoaded){el.innerHTML=`<p class="emptynote">Loading…</p>`;return;}
   const q=(document.getElementById('search').value||'').toLowerCase();
   const terr=document.getElementById('rosterTerr').value||'ALL';
   let rows=contractors.filter(c=> seg==='churned'?c.churned:!c.churned)
     .filter(c=>terr==='ALL'||c.territory===terr)
-    .filter(c=>(c.name+' '+c.first+' '+c.last).toLowerCase().includes(q));
+    .filter(c=>(c.name+' '+c.contact+' '+c.city).toLowerCase().includes(q));
   rows.sort((a,b)=>a.name.localeCompare(b.name));
-  const el=document.getElementById('rosterList');
   if(!rows.length){el.innerHTML=`<p class="emptynote">${seg==='churned'?"No churned contractors here.":'No matches. Try a different name or territory, or add them.'}</p>`;return;}
   el.innerHTML=rows.map(c=>cardHTML(c,{swipe:false})).join('');
   markSelected();
@@ -520,12 +671,19 @@ function attachSwipe(){
     card.addEventListener('touchend',()=>{dragging=false;card.style.transition='';if(dx<-MAX/2){card.style.transform=`translateX(${-MAX}px)`;open=true;}else reset();});
   });
 }
-function quickLog(id,kind){currentId=id;if(kind==='visit'){const c=contractors.find(x=>x.id===id);c.lastVisit=new Date(TODAY);c.notes.push({kind:'visit',when:new Date(TODAY),txt:''});renderToday();toast('Visit logged for '+c.name);}else{openLog('update');}}
+function quickLog(id,kind){
+  currentId=id;
+  if(kind==='visit'){
+    const c=contractors.find(x=>x.id===id); if(!c)return;
+    const d=dayStart(new Date()).toISOString().slice(0,10);
+    mutate(()=>persistVisit(id,d,''),'Visit logged for '+c.name);
+  } else openLog('update');
+}
 
 let currentId=null, cameFrom='today';
 function openDetail(id){
   currentId=id;
-  const c=contractors.find(x=>x.id===id);
+  const c=contractors.find(x=>x.id===id); if(!c)return;
   const s=c.churned?'churn':statusClass(c);
   const pill=c.churned?`<span class="status-pill churn">Churned</span>`:`<span class="status-pill ${s}">${statusText(c)}</span>`;
   const mapsUrl='https://maps.apple.com/?q='+encodeURIComponent(c.addr);
@@ -534,12 +692,20 @@ function openDetail(id){
 
   const shown=c.notes.slice().reverse(); const cap=4;
   const visible=shown.slice(0,cap); const moreCount=shown.length-cap;
-  const tlItem=(n,last)=>`<div class="tl"><div class="tl-rail"><div class="tl-dot ${n.kind}"><svg viewBox="0 0 24 24" fill="none">${n.kind==='visit'?'<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>':'<path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>'}</svg></div>${last?'':'<div class="tl-line"></div>'}</div><div class="tl-body"><div><span class="tl-kind ${n.kind}">${n.kind==='visit'?'Visit':'Update'}</span><span class="tl-when">${fmtLong(n.when)}</span></div>${n.txt?`<div class="tl-txt">${n.txt}</div>`:''}</div></div>`;
+  const tlItem=(n,last)=>`<div class="tl"><div class="tl-rail"><div class="tl-dot ${n.kind}"><svg viewBox="0 0 24 24" fill="none">${n.kind==='visit'?'<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>':'<path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>'}</svg></div>${last?'':'<div class="tl-line"></div>'}</div><div class="tl-body"><div><span class="tl-kind ${n.kind}">${n.kind==='visit'?'Visit':'Update'}</span><span class="tl-when">${fmtLong(n.when)}</span></div>${n.txt?`<div class="tl-txt">${esc(n.txt)}</div>`:''}</div></div>`;
   const timeline=shown.length
     ? visible.map((n,i)=>tlItem(n,i===visible.length-1 && moreCount<=0)).join('')+(moreCount>0?`<div class="section-title" style="padding-top:6px"><span class="spacer"></span><a href="#" onclick="expandTimeline(event)">Show all ${shown.length}</a></div>`:'')
     : `<div class="tl-empty">No history yet. Log a visit or add an update to start tracking.</div>`;
 
-  const emailRow=c.email?`<a class="field-row link" href="mailto:${c.email}"><span class="k">Email</span><span class="v">${c.email}</span><span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7l9 6 9-6M4 6h16a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span></a>`:'';
+  const emailRow=c.email?`<a class="field-row link" href="mailto:${encodeURIComponent(c.email)}"><span class="k">Email</span><span class="v">${esc(c.email)}</span><span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7l9 6 9-6M4 6h16a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V7a1 1 0 011-1z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span></a>`:'';
+
+  // CALL ONLY: no Directions affordance — the address is shown but not a maps link.
+  const addrRow=c.callOnly
+    ? `<div class="field-row"><span class="k">Address</span><span class="v">${esc(c.addr)||'—'}</span><span class="derived">Call only</span></div>`
+    : `<a class="field-row link" href="${mapsUrl}" target="_blank" rel="noopener"><span class="k">Address</span><span class="v">${esc(c.addr)||'—'}</span><span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.7"/></svg></span></a>`;
+  const actionCta=c.callOnly
+    ? (callNum?`<button class="cta cta-update" onclick="location.href='tel:${esc(callNum)}'"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-3 2a11 11 0 005 5l2-3 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>Call</button>`:'')
+    : `<a class="cta cta-update" href="${mapsUrl}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="9" r="2.4" stroke="currentColor" stroke-width="2"/></svg>Directions</a>`;
 
   document.getElementById('detailBody').innerHTML=`
     <div class="detail-head">
@@ -547,21 +713,21 @@ function openDetail(id){
         <button class="back mobile-only" onclick="backFromDetail()"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
         <span class="spacer"></span>${pill}
       </div>
-      <div class="detail-name">${c.name}</div>
+      <div class="detail-name">${esc(c.name)}${c.starred?' <span class="terr-tag">★</span>':''}</div>
       ${person?`<div class="detail-person">${person}</div>`:''}
-      <div class="detail-freq"><span class="detail-terr">${c.territory}</span>${freqWord(c.freq)} · last touch ${lastTouch(c)}</div>
+      <div class="detail-freq"><span class="detail-terr">${esc(c.territory)}</span>${freqWord(c.freq)} · last touch ${lastTouch(c)}${c.callOnly?' · call only':''}</div>
     </div>
     ${c.churned?'':`<div class="cta-row">
       <button class="cta cta-visit" onclick="openLog('visit')"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Log visit</button>
-      <button class="cta cta-update" onclick="openLog('update')"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>Add update</button>
+      ${actionCta}
     </div>`}
     <div class="section">
       <div class="section-title">Contact</div>
       <div class="field">
-        <a class="field-row link" href="tel:${callNum}"><span class="k">Call</span><span class="v">${c.phone||'—'}</span><span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-3 2a11 11 0 005 5l2-3 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span></a>
+        <a class="field-row link" href="tel:${esc(callNum)}"><span class="k">Call</span><span class="v">${esc(c.phone)||'—'}</span><span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-3 2a11 11 0 005 5l2-3 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span></a>
         ${emailRow}
-        <a class="field-row link" href="${mapsUrl}" target="_blank" rel="noopener"><span class="k">Address</span><span class="v">${c.addr||'—'}</span><span class="go"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.7"/></svg></span></a>
-        <div class="field-row"><span class="k">Territory</span><span class="v">${c.territory}</span><span class="derived">Auto from address</span></div>
+        ${addrRow}
+        <div class="field-row"><span class="k">Territory</span><span class="v">${esc(c.territory)}</span><span class="derived">Auto from address</span></div>
       </div>
     </div>
     <div class="section">
@@ -584,10 +750,27 @@ function openDetail(id){
 }
 function showDetailMobile(){document.querySelectorAll('#view-today,#view-contractors,#view-map,#view-add-mobile,#view-log-mobile').forEach(v=>v.classList.remove('active'));document.getElementById('view-detail').classList.add('active');document.getElementById('topSub').textContent='Contractor';updateFab();}
 function backFromDetail(){document.getElementById('view-detail').classList.remove('active');show(cameFrom);}
-function expandTimeline(e){e.preventDefault();const c=contractors.find(x=>x.id===currentId);const shown=c.notes.slice().reverse();document.getElementById('timeline').innerHTML=shown.map((n,i)=>`<div class="tl"><div class="tl-rail"><div class="tl-dot ${n.kind}"><svg viewBox="0 0 24 24" fill="none">${n.kind==='visit'?'<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>':'<path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>'}</svg></div>${i===shown.length-1?'':'<div class="tl-line"></div>'}</div><div class="tl-body"><div><span class="tl-kind ${n.kind}">${n.kind==='visit'?'Visit':'Update'}</span><span class="tl-when">${fmtLong(n.when)}</span></div>${n.txt?`<div class="tl-txt">${n.txt}</div>`:''}</div></div>`).join('');}
+function expandTimeline(e){e.preventDefault();const c=contractors.find(x=>x.id===currentId);if(!c)return;const shown=c.notes.slice().reverse();document.getElementById('timeline').innerHTML=shown.map((n,i)=>`<div class="tl"><div class="tl-rail"><div class="tl-dot ${n.kind}"><svg viewBox="0 0 24 24" fill="none">${n.kind==='visit'?'<path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>':'<path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>'}</svg></div>${i===shown.length-1?'':'<div class="tl-line"></div>'}</div><div class="tl-body"><div><span class="tl-kind ${n.kind}">${n.kind==='visit'?'Visit':'Update'}</span><span class="tl-when">${fmtLong(n.when)}</span></div>${n.txt?`<div class="tl-txt">${esc(n.txt)}</div>`:''}</div></div>`).join('');}
+
 const FREQS=[7,14,21,30,45,60,90];
-function bumpFreq(dir){const c=contractors.find(x=>x.id===currentId);let i=FREQS.indexOf(c.freq);if(i<0)i=FREQS.findIndex(f=>f>=c.freq);i=Math.min(FREQS.length-1,Math.max(0,i+dir));c.freq=FREQS[i];document.getElementById('freqVal').textContent=freqWord(c.freq);document.getElementById('freqDays').textContent=c.freq;renderToday();}
-function toggleChurn(){const c=contractors.find(x=>x.id===currentId);c.churned=!c.churned;toast(c.churned?'Moved out of rotation':'Back in rotation');fillTerrSelects();openDetail(currentId);renderToday();renderContractors();}
+let freqTimer=null;
+function bumpFreq(dir){
+  const c=contractors.find(x=>x.id===currentId); if(!c)return;
+  let i=FREQS.indexOf(c.freq); if(i<0)i=FREQS.findIndex(f=>f>=c.freq); if(i<0)i=FREQS.length-1;
+  i=Math.min(FREQS.length-1,Math.max(0,i+dir));
+  c.freq=FREQS[i];
+  document.getElementById('freqVal').textContent=freqWord(c.freq);
+  document.getElementById('freqDays').textContent=c.freq;
+  renderToday();
+  // debounced so holding +/- doesn't fire a write per click
+  clearTimeout(freqTimer); const days=c.freq, id=c.id;
+  freqTimer=setTimeout(()=>mutate(()=>persistFreq(id,days),'Cadence saved'),700);
+}
+function toggleChurn(){
+  const c=contractors.find(x=>x.id===currentId); if(!c)return;
+  const next=!c.churned;
+  mutate(()=>persistChurn(c.id,next),next?'Moved out of rotation':'Back in rotation');
+}
 
 let logKind='visit';
 function logFormHTML(){
@@ -606,11 +789,11 @@ function logFormHTML(){
 }
 function setKind(k){logKind=k;kVisit.setAttribute('aria-pressed',k==='visit');kUpdate.setAttribute('aria-pressed',k==='update');document.getElementById('logTitle').textContent=k==='visit'?'Log a visit':'Add an update';document.getElementById('kindNote').textContent=k==='visit'?'A visit resets the clock and moves them down your list.':"An update is just a note — it doesn't change when they're next due.";document.getElementById('dateWrap').style.display=k==='visit'?'block':'none';document.getElementById('noteLabel').innerHTML=k==='visit'?'Notes <span class="opt">— optional</span>':'Note';document.getElementById('logSave').textContent=k==='visit'?'Save visit':'Save update';}
 function openLog(kind){
-  const c=contractors.find(x=>x.id===currentId);
+  const c=contractors.find(x=>x.id===currentId); if(!c)return;
   const host=isDesktop()?document.getElementById('view-log'):document.getElementById('view-log-mobile');
   host.innerHTML=logFormHTML();
   document.getElementById('logFor').textContent='for '+c.name;
-  document.getElementById('vDate').value=TODAY.toISOString().slice(0,10);
+  document.getElementById('vDate').value=dayStart(new Date()).toISOString().slice(0,10);
   document.getElementById('vNote').value='';
   setKind(kind||'visit');
   const lb=document.getElementById('logBack'); if(lb)lb.onclick=()=>openDetail(currentId);
@@ -618,21 +801,18 @@ function openLog(kind){
   if(isDesktop())setDetailView('log'); else {document.querySelectorAll('#view-today,#view-contractors,#view-map,#view-detail,#view-add-mobile').forEach(v=>v.classList.remove('active'));document.getElementById('view-log-mobile').classList.add('active');document.getElementById('scroll').scrollTop=0;}
 }
 function saveLog(){
-  const c=contractors.find(x=>x.id===currentId);
+  const c=contractors.find(x=>x.id===currentId); if(!c)return;
   const note=document.getElementById('vNote').value.trim();
-  if(logKind==='visit'){const d=new Date(document.getElementById('vDate').value+'T09:00:00');c.lastVisit=d;c.notes.push({kind:'visit',when:d,txt:note});toast('Visit logged for '+c.name);}
-  else{if(!note){document.getElementById('vNote').focus();toast('Add a note first');return;}c.notes.push({kind:'update',when:new Date(TODAY),txt:note});toast('Update added');}
-  renderToday();renderContractors();openDetail(currentId);
+  if(logKind==='visit'){
+    const dateStr=document.getElementById('vDate').value||dayStart(new Date()).toISOString().slice(0,10);
+    mutate(()=>persistVisit(c.id,dateStr,note),'Visit logged for '+c.name);
+  } else {
+    if(!note){document.getElementById('vNote').focus();toast('Add a note first');return;}
+    mutate(()=>persistUpdate(c.id,note),'Update added');
+  }
 }
 
 let editingId=null;
-const AC_DB=[
-  ['118 SW Maynard Rd','Cary, NC 27511'],['2650 Discovery Dr','Raleigh, NC 27616'],['905 W Main St','Durham, NC 27701'],
-  ['206 N Main St','Fuquay-Varina, NC 27526'],['809 S Salem St','Apex, NC 27502'],['512 E Main St','Clayton, NC 27520'],
-  ['2800 Slater Rd','Morrisville, NC 27560'],['7500 Six Forks Rd','Raleigh, NC 27615'],['300 S Main St','Holly Springs, NC 27540'],
-  ['1100 Forestville Rd','Wake Forest, NC 27587'],['5620 Quitman Trail','Raleigh, NC 27610'],['120 Main St','Knightdale, NC 27545'],
-  ['1218 Cooper Dr','Raleigh, NC 27607'],['400 W Williams St','Apex, NC 27502'],['225 S Main St','Zebulon, NC 27597']
-];
 function addFormHTML(){
   return `<div class="form">
     <button class="back mobile-only" onclick="closeAdd()" style="margin-bottom:14px"><svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Back</button>
@@ -640,14 +820,12 @@ function addFormHTML(){
     <div class="inp"><label for="cName">Business name</label><input id="cName" placeholder="e.g. Cardinal Comfort Systems"></div>
 
     <div class="grouplbl">Primary contact</div>
-    <div class="two"><div class="inp"><label for="cFirst">First name</label><input id="cFirst" placeholder="Dave"></div><div class="inp"><label for="cLast">Last name</label><input id="cLast" placeholder="Whitfield"></div></div>
-    <div class="inp"><label for="cTitle">Title <span class="opt">— optional</span></label><input id="cTitle" placeholder="Owner"></div>
-    <div class="inp"><label for="cEmail">Email <span class="opt">— optional</span></label><input id="cEmail" type="email" inputmode="email" placeholder="dave@company.com"></div>
+    <div class="inp"><label for="cContact">Contact <span class="opt">— optional, free text</span></label><input id="cContact" placeholder="e.g. Dave Whitfield, owner"></div>
 
     <div class="grouplbl">Location</div>
     <div class="inp"><label for="cPhone">Phone</label><input id="cPhone" type="tel" inputmode="tel" placeholder="(919) 555-0148"></div>
-    <div class="inp ac"><label for="cAddr">Address <span class="opt">— start typing, pick a match</span></label>
-      <input id="cAddr" autocomplete="off" placeholder="Start typing an address…" oninput="acInput(this.value)" onblur="setTimeout(acHide,150)">
+    <div class="inp ac"><label for="cAddr">Address <span class="opt">— street, city, ST zip</span></label>
+      <input id="cAddr" autocomplete="off" placeholder="123 Main St, Clayton, NC 27520" oninput="acInput(this.value)" onblur="setTimeout(acHide,150)">
       <div class="ac-list" id="acList"></div>
     </div>
     <div class="terr-derived" id="terrDerived">
@@ -665,14 +843,18 @@ function acInput(v){
   if(q.length<2){acHide();return;}
   const hits=AC_DB.filter(a=>(a[0]+' '+a[1]).toLowerCase().includes(q)).slice(0,5);
   if(!hits.length){acHide();return;}
-  list.innerHTML=hits.map(a=>`<div class="ac-item" onmousedown="acPick('${a[0]}, ${a[1]}')" ontouchstart="acPick('${a[0]}, ${a[1]}')"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.7"/></svg><div><div class="main">${a[0]}</div><div class="sub">${a[1]}</div></div></div>`).join('')
-    +`<div class="ac-foot"><svg viewBox="0 0 24 24" fill="none" style="width:13px;height:13px"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>Address, map pin &amp; territory captured automatically</div>`;
+  list.innerHTML=hits.map(a=>{const full=esc(a[0]+', '+a[1]).replace(/'/g,'&#39;');
+    return `<div class="ac-item" onmousedown="acPick('${full}')" ontouchstart="acPick('${full}')"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.7"/></svg><div><div class="main">${esc(a[0])}</div><div class="sub">${esc(a[1])}</div></div></div>`;}).join('')
+    +`<div class="ac-foot"><svg viewBox="0 0 24 24" fill="none" style="width:13px;height:13px"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>Existing addresses on file · Places lookup comes later</div>`;
   list.classList.add('show');
 }
 function updateDerivedTerr(addr){
   const box=document.getElementById('terrDerived'); if(!box)return;
   const t=deriveTerritory(addr);
-  if(addr && addr.match(/,\s*NC/i)){document.getElementById('terrDerivedVal').textContent=t;box.classList.add('show');}
+  // Show the preview once we can actually read a state or zip out of the
+  // text — same parser the save path uses, so preview and result agree.
+  const b=addrBits(addr);
+  if(addr && (b.state||b.zip)){document.getElementById('terrDerivedVal').textContent=t;box.classList.add('show');}
   else box.classList.remove('show');
 }
 function acPick(full){document.getElementById('cAddr').value=full;acHide();updateDerivedTerr(full);toast('Address set · territory '+deriveTerritory(full));}
@@ -687,29 +869,69 @@ function mountAdd(){
 function closeAdd(){ if(editingId){openDetail(editingId);} else if(isDesktop()){setDetailView('detail');} else {show('contractors');} }
 function editContractor(e){
   if(e)e.preventDefault();
-  editingId=currentId; const c=contractors.find(x=>x.id===currentId);
+  editingId=currentId; const c=contractors.find(x=>x.id===currentId); if(!c)return;
   mountAdd();
   document.getElementById('addTitle').textContent='Edit contractor';
-  cName.value=c.name;cFirst.value=c.first||'';cLast.value=c.last||'';cTitle.value=c.title||'';cEmail.value=c.email||'';cPhone.value=c.phone||'';cAddr.value=c.addr||'';
+  cName.value=c.name;cContact.value=c.contact||'';cPhone.value=c.phone||'';cAddr.value=c.addr||'';
   updateDerivedTerr(c.addr||'');
 }
-function saveContractor(){
+async function saveContractor(){
   const name=cName.value.trim();
   if(!name){cName.focus();cName.style.borderColor='var(--red)';toast('Add a business name');return;}
   const addr=cAddr.value.trim();
-  const data={name,first:cFirst.value.trim(),last:cLast.value.trim(),title:cTitle.value.trim(),email:cEmail.value.trim(),phone:cPhone.value.trim()||'—',addr,territory:deriveTerritory(addr)};
-  if(editingId){Object.assign(contractors.find(x=>x.id===editingId),data);toast('Saved changes');const id=editingId;editingId=null;fillTerrSelects();renderToday();renderContractors();openDetail(id);return;}
-  const c={id:++ID,...data,freq:14,lastVisit:daysAgo(15),churned:false,notes:[]};
-  contractors.push(c);toast(name+' added · '+data.territory);fillTerrSelects();renderToday();renderContractors();openDetail(c.id);
+  const p=parseAddr(addr);
+  const payload={
+    company:name,
+    contact:cContact.value.trim()||null,
+    phone:cPhone.value.trim()||null,
+    street_address:p.street_address||null,
+    city:p.city||null, state:p.state||'NC', zip:p.zip||null,
+    territory:deriveTerritory(addr)
+  };
+  const id=editingId;
+  try{
+    const sb=sbClient();
+    if(id){
+      const r=await sb.from('contractors').update(payload).eq('id',id);
+      if(r.error)throw r.error;
+      editingId=null; toast('Saved changes'); await loadData(); openDetail(id);
+    }else{
+      if(!currentOwnerId) throw new Error('no signed-in user — cannot set owner');
+      const r=await sb.from('contractors').insert(Object.assign({},payload,{
+        owner_id:currentOwnerId, visitable:'VISIT', starred:false,
+        target_days:60, last_visited:null, status:'active'
+      })).select('id').single();
+      if(r.error)throw r.error;
+      toast(name+' added · '+payload.territory);
+      await loadData(); openDetail(r.data.id);
+    }
+  }catch(err){console.error('[rounds] save contractor failed:',err);toast('Save failed — '+(err.message||'try again'));}
 }
 
 function renderMap(){
-  const canvas=document.getElementById('mapcanvas');canvas.querySelectorAll('.pin').forEach(p=>p.remove());
-  const w=canvas.clientWidth||360,ht=canvas.clientHeight||340;
-  contractors.filter(c=>!c.churned&&c.addr).forEach(c=>{
-    const h=[...c.name].reduce((a,ch)=>a+ch.charCodeAt(0),0);
-    const x=30+(h*37)%(w-60), y=30+(h*53)%(ht-60); const s=statusClass(c);
-    const pin=document.createElement('div');pin.className='pin '+s;pin.style.left=x+'px';pin.style.top=y+'px';pin.title=c.name+' · '+c.territory+' · '+statusText(c);
+  const canvas=document.getElementById('mapcanvas'); if(!canvas)return;
+  canvas.querySelectorAll('.pin').forEach(p=>p.remove());
+  const note=document.getElementById('mapNote');
+  const active=contractors.filter(c=>!c.churned);
+  // Rows with no coordinates simply get no pin (C374 and ~50 others).
+  const pts=active.filter(c=>c.lat!==null&&c.lng!==null);
+  const skipped=active.length-pts.length;
+  if(note) note.textContent=!dataLoaded?'Loading…'
+    :pts.length?`${pts.length} mapped${skipped?` · ${skipped} without coordinates (no pin)`:''}`
+    :'No coordinates on file yet — nothing to plot.';
+  if(!pts.length)return;
+  const w=canvas.clientWidth||360, ht=canvas.clientHeight||340, pad=28;
+  let minLat=Math.min(...pts.map(p=>p.lat)), maxLat=Math.max(...pts.map(p=>p.lat));
+  let minLng=Math.min(...pts.map(p=>p.lng)), maxLng=Math.max(...pts.map(p=>p.lng));
+  if(maxLat-minLat<1e-6){minLat-=0.02;maxLat+=0.02;}
+  if(maxLng-minLng<1e-6){minLng-=0.02;maxLng+=0.02;}
+  pts.forEach(c=>{
+    const x=pad+((c.lng-minLng)/(maxLng-minLng))*(w-pad*2);
+    const y=pad+((maxLat-c.lat)/(maxLat-minLat))*(ht-pad*2);
+    const s=statusClass(c);
+    const pin=document.createElement('div');
+    pin.className='pin '+s;pin.style.left=x+'px';pin.style.top=y+'px';
+    pin.title=c.name+' · '+c.territory+' · '+statusText(c);
     pin.innerHTML='<svg viewBox="0 0 24 30"><path class="p" d="M12 0C5.4 0 0 5.2 0 11.6 0 20 12 30 12 30s12-10 12-18.4C24 5.2 18.6 0 12 0z"/><circle cx="12" cy="11.5" r="4.5" fill="#fff"/></svg>';
     pin.onclick=()=>openDetail(c.id);canvas.appendChild(pin);
   });
@@ -737,13 +959,18 @@ let toastT;function toast(msg){const t=document.getElementById('toast');document
 
 window.addEventListener('resize',()=>{markSelected();updateFab();});
 
-// ── BOOT ── auth is handled by the hvac-visits gate; no login screen lives here.
+/* ── BOOT ──────────────────────────────────────────────────────────
+   Data loads on `rooster:authed`, which the gate fires once a session
+   is confirmed — never on page load, so queries always carry a JWT.
+   The shell renders immediately with a loading state.               */
 function boot(){
   fillTerrSelects();
   renderToday();
   if(isDesktop()){ renderContractors(); document.getElementById('view-detail').classList.add('active'); }
 }
 boot();
+setDataState('loading');
+document.addEventListener('rooster:authed',function(){ loadData(); });
 </script>
 </body>
 </html>

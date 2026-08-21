@@ -331,7 +331,12 @@
   window.roosterAuth = {
     signOut: signOut,
     email: function () { return _signedInEmail; },
-    isLocalBypass: isLocalBypass
+    isLocalBypass: isLocalBypass,
+    // Read-only accessor so a host page can reuse THIS client and its
+    // session rather than calling createClient() again. A second client
+    // means a second GoTrueClient in the same browser context, which
+    // supabase-js warns about and which can race on token refresh.
+    client: getClient
   };
 
   if (document.readyState === 'loading') {
