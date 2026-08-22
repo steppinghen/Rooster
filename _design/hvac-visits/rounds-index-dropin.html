@@ -18,10 +18,6 @@
 <!-- window.roosterAuth.client(); load data on the rooster:authed     -->
 <!-- event, not on page load. See integration note.                  -->
 <!-- ============================================================= -->
-<link rel="stylesheet" href="vendor/auth-overlay.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
-<script src="auth-config.js"></script>
-<script src="vendor/auth-overlay.js"></script>
 <style>
   :root{
     --tint:#0f6f80; --tint-fill:rgba(15,111,128,.10);
@@ -435,274 +431,78 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
-   DATA LAYER — Supabase. Replaces the demo cordon.
-   Reads/writes go through the gate's client (window.roosterAuth.client());
-   no second client is created. Initial load fires on `rooster:authed`.
-   Shapes below match what the render functions consume, unchanged.
+   DATA LAYER — CC: REPLACE THIS BLOCK WITH SUPABASE.
+   ───────────────────────────────────────────────────────────────────────
+   Everything below to the "END DEMO DATA" marker is hardcoded sample data
+   so this file previews standalone. In the live app, populate these same
+   variables from Supabase (reuse window.roosterAuth.client()), on the
+   `rooster:authed` event — NOT on page load. Shapes the render functions
+   expect are documented in the integration note. Contract summary:
+
+   attention[]  = open follow-ups across all accounts, for Today→Needs attention
+                  select from updates where is_followup and done_at is null
+                  order by due_date nulls last;  {who=company, what=note,
+                  when=humanized due_date, late=(due_date<today)}
+   due[]        = active contractors sorted by overdue (days_since - target_days)
+                  {name,terr,meta,d:'+14d'|'today'|'−9d',l:'over'|'due'|'left',
+                   heat:'hot'|'due'|'cool',call:(visitable==='CALL ONLY')}
+                  calm-start: last_visited NULL → not overdue, sorts last.
+   roster[]     = all contractors [name,territory,contact,heat,readout,('call')?]
+   nextSteps[]/history[] = per-open-account, loaded in openDetail(id):
+                  nextSteps = updates where is_followup and done_at is null (this contractor)
+                  history   = visits + all updates (incl done follow-ups) newest first
+   Mutations (see integration note for exact SQL):
+     logVisit → insert visits + set contractors.last_visited
+     addNote  → insert updates (is_followup=false)
+     addFollowup → insert updates (is_followup=true, due_date)
+     completeFollowup → update updates set done_at=now()
+     saveContractor / setChurn / setCadence → update contractors
+   Territory is derived from address (existing deriveTerritory logic) — never typed.
    ═══════════════════════════════════════════════════════════════════════ */
-/* ===== TERRITORY: two-table lookup, exactly like the sheet ===== */
-const RALEIGH_ZIPS={
-  '27601':'RALEIGH-S','27605':'RALEIGH-S','27603':'RALEIGH-S','27606':'RALEIGH-S','27610':'RALEIGH-S','27529':'RALEIGH-S',
-  '27604':'RALEIGH-N','27608':'RALEIGH-N','27609':'RALEIGH-N','27612':'RALEIGH-N','27613':'RALEIGH-N','27614':'RALEIGH-N','27615':'RALEIGH-N','27616':'RALEIGH-N','27617':'RALEIGH-N','27618':'RALEIGH-N',
-  '27607':'WEST'
-};
-const CITY_TERR={
-  'CARY':'WEST','APEX':'WEST','MORRISVILLE':'WEST','NEW HILL':'WEST',
-  'FUQUAY VARINA':'SOUTH','FUQUAY-VARINA':'SOUTH','HOLLY SPRINGS':'SOUTH','WILLOW SPRING':'SOUTH','LILLINGTON':'SOUTH',
-  'WAKE FOREST':'NORTH','YOUNGSVILLE':'NORTH','ROLESVILLE':'NORTH','FRANKLINTON':'NORTH',
-  'GARNER':'SOUTHEAST','CLAYTON':'SOUTHEAST','ANGIER':'SOUTHEAST','BENSON':'SOUTHEAST','COATS':'SOUTHEAST','SMITHFIELD':'SOUTHEAST',
-  'LOUISBURG':'FAR NORTH','CREEDMOOR':'FAR NORTH','HENDERSON':'FAR NORTH','KITTRELL':'FAR NORTH','BUNN':'FAR NORTH',
-  'WENDELL':'EAST','ZEBULON':'EAST','KNIGHTDALE':'EAST','MIDDLESEX':'EAST',
-  'DURHAM':'DURHAM','CHAPEL HILL':'DURHAM','PITTSBORO':'DURHAM','MONCURE':'DURHAM','HILLSBOROUGH':'DURHAM',
-  'SANFORD':'SANFORD'
-};
-const TERR_ORDER=['RALEIGH-N','RALEIGH-S','NORTH','SOUTH','SOUTHEAST','EAST','FAR NORTH','WEST','DURHAM','SANFORD','RALEIGH-UNASSIGNED','OUT OF RANGE'];
-function addrBits(addr){
-  // Parse by comma segments, not loose regex. Two traps this avoids:
-  //   - a bare \d{5} match grabs PO Box / street numbers ("PO BOX 12061")
-  //   - a lazy city match ate "MO" out of "MONCURE" because the NC in
-  //     MO-NC-URE satisfied the state token.
-  const out={city:'',state:'',zip:null};
-  if(!addr) return out;
-  const parts=String(addr).split(',').map(x=>x.trim()).filter(Boolean);
-  let si=-1;
-  for(let i=parts.length-1;i>=0;i--){
-    const m=parts[i].match(/^([A-Za-z]{2})(?:\s+(\d{5}))?(?:-\d{4})?$/);
-    if(m){si=i;out.state=m[1].toUpperCase();if(m[2])out.zip=m[2];break;}
-  }
-  if(si>0) out.city=parts[si-1].toUpperCase();
-  if(si===-1){
-    // No "ST" / "ST 12345" segment — try "CITY ST ZIP" in the last segment.
-    const tail=parts[parts.length-1]||'';
-    const m=tail.match(/^(.+?)\s+([A-Za-z]{2})\s+(\d{5})(?:-\d{4})?$/);
-    if(m){out.city=m[1].trim().toUpperCase();out.state=m[2].toUpperCase();out.zip=m[3];}
-    else if(parts.length>=2) out.city=parts[parts.length-2].toUpperCase();
-  }
-  // Zip always comes from the LAST 5-digit run, never the first.
-  if(!out.zip){const zs=String(addr).match(/\b\d{5}\b/g); if(zs) out.zip=zs[zs.length-1];}
-  return out;
-}
-function deriveTerritory(addr){
-  if(!addr) return 'OUT OF RANGE';
-  const b=addrBits(addr);
-  // The lookup tables are NC-only. An out-of-state address that happens to
-  // share an NC city name (CLAYTON, GA) is not in the rotation.
-  if(b.state && b.state!=='NC') return 'OUT OF RANGE';
-  // Raleigh is zip-driven; a Raleigh address whose zip isn't in the table is
-  // RALEIGH-UNASSIGNED (a known-city gap), not OUT OF RANGE (unknown city).
-  if(b.city==='RALEIGH') return (b.zip&&RALEIGH_ZIPS[b.zip])?RALEIGH_ZIPS[b.zip]:'RALEIGH-UNASSIGNED';
-  if(CITY_TERR[b.city]) return CITY_TERR[b.city];
-  if(b.zip&&RALEIGH_ZIPS[b.zip]) return RALEIGH_ZIPS[b.zip];
-  return 'OUT OF RANGE';
-}
-
-
-
-/* ---- state (same names/shapes the renders expect) ---- */
-let contractors=[], byId={}, attention=[], due=[], recent=[], roster=[];
-let AREAS=['All areas'];
-let nextSteps=[], history=[];
-let currentOwnerId=null, dataLoaded=false, loadErr=null, openId=null;
-let TODAY=new Date();
-
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-function sbClient(){
-  if(!window.roosterAuth||typeof window.roosterAuth.client!=='function')
-    throw new Error('auth gate not loaded — no Supabase client');
-  return window.roosterAuth.client();
-}
-
-/* ---- status math. last_visited NULL = calm start: never overdue ---- */
-const DAYMS=86400000;
-function dayStart(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
-function daysSince(lv){return lv?Math.round((dayStart(TODAY)-dayStart(lv))/DAYMS):null;}
-function overdueOf(c){const ds=daysSince(c.lastVisit);return ds===null?null:ds-c.freq;}
-function heatOf(o){if(o===null)return'cool';return o>7?'hot':o>=0?'due':'cool';}
-function sortKey(c){const o=overdueOf(c);return o===null?-1e9:o;}
-function readoutOf(o){
-  if(o===null)return{d:'—',l:'not visited'};
-  if(o>0)return{d:'+'+o+'d',l:'over'};
-  if(o===0)return{d:'today',l:'due'};
-  return{d:'−'+Math.abs(o)+'d',l:'left'};
-}
-function cadenceWord(n){return({7:'weekly',14:'every 2 wks',21:'every 3 wks',30:'monthly',45:'every 6 wks',60:'every 2 months',90:'quarterly'})[n]||('every '+n+' days');}
-function lastTouchWord(c){const d=daysSince(c.lastVisit);return d===null?'never':d===0?'today':d===1?'yesterday':d+'d ago';}
-function metaOf(c){
-  const cad=cadenceWord(c.freq);
-  return c.contact ? esc(c.contact)+' · '+cad : cad+' · last touch '+lastTouchWord(c);
-}
-function humanWhen(dt){
-  const ms=TODAY-dt, h=Math.floor(ms/3600000), d=Math.round((dayStart(TODAY)-dayStart(dt))/DAYMS);
-  if(d===0)return h<1?'Just now':h+'h ago';
-  if(d===1)return'Yesterday';
-  if(d<7)return d+'d ago';
-  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-}
-function humanDue(ds){
-  if(!ds)return{when:'No date',late:false};
-  const due=new Date(ds+'T00:00'), diff=Math.round((dayStart(due)-dayStart(TODAY))/DAYMS);
-  if(diff===0)return{when:'Today',late:false};
-  if(diff<0)return{when:Math.abs(diff)+'d late',late:true};
-  if(diff===1)return{when:'Tomorrow',late:false};
-  return{when:due.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}),late:false};
-}
-function addrString(r){
-  const tail=[r.state,r.zip].filter(Boolean).join(' ');
-  return [r.street_address,r.city,tail].filter(Boolean).join(', ');
-}
-function parseAddr(addr){
-  const out={street_address:'',city:'',state:'NC',zip:''};
-  if(!addr)return out;
-  const b=addrBits(addr);
-  if(b.zip)out.zip=b.zip;
-  if(b.state)out.state=b.state;
-  const parts=addr.split(',').map(x=>x.trim()).filter(Boolean);
-  if(parts[0])out.street_address=parts[0];
-  if(b.city)out.city=b.city;
-  return out;
-}
-function rowToC(r){
-  const lat=r.lat==null?null:Number(r.lat), lng=r.lng==null?null:Number(r.lng);
-  return {
-    id:r.id, name:r.company||'(unnamed)', contact:(r.contact||'').trim(),
-    phone:r.phone||'', addr:addrString(r), territory:r.territory||'OUT OF RANGE',
-    freq:r.target_days||60,
-    lastVisit:r.last_visited?new Date(r.last_visited+'T09:00:00'):null,
-    churned:r.status==='churned', callOnly:(r.visitable||'VISIT')==='CALL ONLY',
-    starred:!!r.starred,
-    lat:Number.isFinite(lat)?lat:null, lng:Number.isFinite(lng)?lng:null
-  };
-}
-
-/* ---- load everything, then paint ---- */
-async function loadAll(){
-  loadErr=null;
-  try{
-    const sb=sbClient();
-    const {data:{user}}=await sb.auth.getUser();
-    currentOwnerId=user?user.id:null;
-    const [cR,vR,uR]=await Promise.all([
-      sb.from('contractors').select('*').order('company',{ascending:true}),
-      sb.from('visits').select('*').order('visited_on',{ascending:false}),
-      sb.from('updates').select('*,contractors(company)').order('created_at',{ascending:false})
-    ]);
-    if(cR.error)throw cR.error; if(vR.error)throw vR.error; if(uR.error)throw uR.error;
-    TODAY=new Date();
-    contractors=(cR.data||[]).map(rowToC);
-    byId={}; contractors.forEach(c=>byId[c.id]=c);
-    allVisits=vR.data||[]; allUpdates=uR.data||[];
-
-    /* due[] — active accounts, worst first; calm start sorts last */
-    due=contractors.filter(c=>!c.churned).sort((a,b)=>sortKey(b)-sortKey(a)).map(c=>{
-      const o=overdueOf(c), r=readoutOf(o);
-      return {id:c.id,name:c.name,terr:c.territory,meta:metaOf(c),d:r.d,l:r.l,heat:heatOf(o),call:c.callOnly};
-    });
-
-    /* attention[] — open follow-ups across all accounts, soonest first */
-    attention=allUpdates.filter(u=>u.is_followup&&!u.done_at)
-      .sort((a,b)=>(a.due_date||'9999-12-31').localeCompare(b.due_date||'9999-12-31'))
-      .map(u=>{const h=humanDue(u.due_date);
-        return {id:u.id,cid:u.contractor_id,who:(u.contractors&&u.contractors.company)||(byId[u.contractor_id]||{}).name||'—',
-                what:u.note||'Follow up',when:h.when,late:h.late};});
-
-    /* recent[] — newest visits + notes across the book */
-    recent=allVisits.map(v=>({kind:'visit',cid:v.contractor_id,when:new Date(v.visited_on+'T09:00:00'),
-        what:'Visit — <b>'+esc((byId[v.contractor_id]||{}).name||'—')+'</b>'}))
-      .concat(allUpdates.filter(u=>!u.is_followup).map(u=>({kind:'note',cid:u.contractor_id,when:new Date(u.created_at),
-        what:'Note — <b>'+esc((u.contractors&&u.contractors.company)||(byId[u.contractor_id]||{}).name||'—')+'</b>'})))
-      .sort((a,b)=>b.when-a.when).slice(0,6)
-      .map(r=>({kind:r.kind,cid:r.cid,what:r.what,when:humanWhen(r.when)}));
-
-    /* roster[] — [name,terr,contact,heat,readout,call,id,label] */
-    roster=contractors.map(c=>{
-      const o=overdueOf(c), r=readoutOf(o);
-      return [c.name,c.territory,c.contact,heatOf(o),r.d,c.callOnly?'call':'',c.id,r.l,c.churned?'churned':'active'];
-    });
-
-    /* area chips — real territories, in the sheet's display order */
-    const present=new Set(contractors.filter(c=>!c.churned).map(c=>c.territory));
-    AREAS=['All areas'].concat(TERR_ORDER.filter(t=>present.has(t)))
-                       .concat([...present].filter(t=>!TERR_ORDER.includes(t)).sort());
-
-    dataLoaded=true;
-    paintAll();
-  }catch(err){
-    console.error('[rounds] load failed:',err);
-    loadErr=err.message||String(err); dataLoaded=false;
-    paintAll();
-    toast('Could not load your book — '+loadErr);
-  }
-}
-let allVisits=[], allUpdates=[];
-
-function paintAll(){
-  setTiles();
-  renderAtt();renderChips();renderChipsR();renderDue();renderRoster(rosterQuery());renderDone();
-  setHeaderCounts();
-  /* Re-open the selected account so the desktop right pane reflects the DB
-     after a write; on desktop with nothing selected, show the placeholder. */
-  if(openId&&byId[openId]) openDetail(openId);
-  else { openId=null; if(dataLoaded&&isDesktop()&&typeof detailPlaceholder==='function')detailPlaceholder(); markCurrent(); }
-}
-function rosterQuery(){const i=document.querySelector('#s-contractors input');return i?(i.value||''):'';}
-function setTiles(){
-  const hot=due.filter(d=>d.heat==='hot').length;
-  const dt=due.filter(d=>d.heat==='due'&&d.d==='today').length;
-  const el=id=>document.getElementById(id);
-  if(el('tHot'))el('tHot').textContent=dataLoaded?hot:'—';
-  if(el('tDue'))el('tDue').textContent=dataLoaded?dt:'—';
-  if(el('tAtt'))el('tAtt').textContent=dataLoaded?attention.length:'—';
-}
-function todaySub(){return TODAY.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});}
-function bookSub(){return dataLoaded?(contractors.length+' in your book'):(loadErr?'Could not load':'Loading…');}
-function setHeaderCounts(){
-  if(!window.largeSub)return;
-  if(current==='today')largeSub.textContent=todaySub();
-  else if(current==='contractors')largeSub.textContent=bookSub();
-}
-
-/* ---- writes: mutate, then re-read so the UI reflects the DB ---- */
-async function mutate(fn,okMsg){
-  try{ await fn(); if(okMsg)toast(okMsg); await loadAll(); }
-  catch(err){ console.error('[rounds] write failed:',err); toast('Save failed — '+(err.message||'try again')); }
-}
-function insVisit(cid,dateStr,note){
-  const sb=sbClient();
-  return sb.from('visits').insert({owner_id:currentOwnerId,contractor_id:cid,visited_on:dateStr,note:note||null})
-    .then(r=>{if(r.error)throw r.error;return sb.from('contractors').update({last_visited:dateStr}).eq('id',cid);})
-    .then(r=>{if(r.error)throw r.error;});
-}
-function insNote(cid,note){
-  return sbClient().from('updates').insert({owner_id:currentOwnerId,contractor_id:cid,note:note,is_followup:false})
-    .then(r=>{if(r.error)throw r.error;});
-}
-function insFollowup(cid,note,dueDate){
-  return sbClient().from('updates').insert({owner_id:currentOwnerId,contractor_id:cid,note:note,is_followup:true,due_date:dueDate||null})
-    .then(r=>{if(r.error)throw r.error;});
-}
-function markDone(updateId){
-  return sbClient().from('updates').update({done_at:new Date().toISOString()}).eq('id',updateId)
-    .then(r=>{if(r.error)throw r.error;});
-}
-function setCadence(cid,days){
-  return sbClient().from('contractors').update({target_days:days}).eq('id',cid)
-    .then(r=>{if(r.error)throw r.error;});
-}
-function setStatus(cid,churned){
-  return sbClient().from('contractors').update({status:churned?'churned':'active'}).eq('id',cid)
-    .then(r=>{if(r.error)throw r.error;});
-}
+const attention=[
+  {who:'King Heating & Air',what:'Drop off the rooftop-unit quote',when:'Today',late:false},
+  {who:'Bull City Mechanical',what:"Call Mike back — ready to talk contract",when:'Today',late:false},
+  {who:'Cardinal Comfort',what:'Send the coil promo sheet',when:'2d late',late:true},
+];
+const due=[
+  {name:'Oak City Mechanical',terr:'RALEIGH-N',meta:'Dave Whitfield · weekly',d:'+14d',l:'over',heat:'hot',call:false},
+  {name:'Falls Lake Air',terr:'RALEIGH-N',meta:'monthly · last touch 44d',d:'+14d',l:'over',heat:'hot',call:false},
+  {name:'Southern Cross HVAC',terr:'SOUTH',meta:'Renee Baker · every 3 wks',d:'+6d',l:'over',heat:'due',call:false},
+  {name:'A R E Mechanical',terr:'FAR NORTH',meta:'phone only · every 2 mo',d:'+2d',l:'over',heat:'due',call:true},
+  {name:'Wake Air Pros',terr:'NORTH',meta:'Greg S. · monthly',d:'today',l:'due',heat:'due',call:false},
+  {name:'Trinity Climate',terr:'WEST',meta:'monthly · new account',d:'today',l:'due',heat:'due',call:false},
+];
+const recent=[
+  {kind:'visit',what:'Visit — <b>Cape Fear Comfort</b>',when:'2h ago'},
+  {kind:'note',what:'Note — <b>Quitman Trail Mech.</b>',when:'Yesterday'},
+  {kind:'visit',what:'Visit — <b>Piedmont HVAC Supply</b>',when:'Yesterday'},
+];
+const roster=[
+  ['A & L OF NC INC (KING HEATING AND AIR)','SANFORD','Mike Ali','cool','−48d'],
+  ['A & M HEATING & AIR CONDITIONING','SOUTHEAST','Joshua','cool','−12d'],
+  ['A COMFORT SERV','WEST','Perminder','cool','−30d'],
+  ['A MAYNOR HEATING & AIR','WEST','Brett / Monte','cool','−9d'],
+  ['A R E MECHANICAL INC','FAR NORTH','','due','+2d','call'],
+  ['A&J DRAIN INC.','SOUTH','','cool','−20d','call'],
+  ['ABL & ASSOCIATES PLBG LLC','RALEIGH-S','','cool','−15d'],
+  ['ABUNDANT AIR','EAST','','cool','−40d'],
+  ['AIRFLOW SERVICES HVAC','RALEIGH-S','','cool','−7d'],
+  ['BULL CITY MECHANICAL','DURHAM','Mike Alvarez','due','+3d'],
+  ['CARDINAL COMFORT SYSTEMS','WEST','Tom R.','cool','−9d'],
+  ['CAPE FEAR COMFORT','SOUTH','Sara K.','cool','−28d'],
+];
+const AREAS=['All areas','RALEIGH-N','RALEIGH-S','NORTH','SOUTH','SOUTHEAST','EAST','FAR NORTH','WEST','DURHAM','SANFORD'];
+/* ═══════════════ END DEMO DATA — everything above gets replaced ═══════════════ */
 let area='All areas', seg='active', current='today';
 const AVCOL={hot:'#ff3b30',due:'#ff9500',cool:'#0f6f80'};
 
 function chev(){return '<span class="chev"><svg viewBox="0 0 8 14" fill="none"><path d="M1 1l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';}
 
 function renderAtt(){
-  if(!dataLoaded){attList.innerHTML=`<div class="cell" style="color:var(--label2);font-size:15px">${loadErr?'Could not load follow-ups.':'Loading…'}</div>`;return;}
   attList.innerHTML=attention.length?attention.map((a,i)=>`
-    <button class="cell inset" data-cid="${a.cid}" onclick="openDetail('${a.cid}','Today')">
-      <span class="att-check" id="ac${i}" role="button" onclick="toggleAtt(${i},event)"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      <span class="att-main"><span class="att-what">${esc(a.what)}</span><span class="att-who">${esc(a.who)}</span></span>
+    <button class="cell inset" onclick="toggleAtt(${i},event)">
+      <span class="att-check ${a.done?'done':''}" id="ac${i}"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="att-main"><span class="att-what">${a.what}</span><span class="att-who">${a.who}</span></span>
       <span class="att-when ${a.late?'late':''}">${a.when}</span>
     </button>`).join('') : `<div class="cell" style="color:var(--label2);font-size:15px">Nothing to follow up on. Nice.</div>`;
 }
@@ -716,21 +516,19 @@ function pickArea(a){
   if(active)active.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
 }
 function renderDue(){
-  if(!dataLoaded){dueList.innerHTML=`<div class="cell" style="color:var(--label2);font-size:15px">${loadErr?'Could not load your book.':'Loading…'}</div>`;return;}
   const rows=area==='All areas'?due:due.filter(d=>d.terr===area);
   dueList.innerHTML=rows.length?rows.map((d,i)=>`
-    <button class="cell" data-cid="${d.id}" onclick="openDetail('${d.id}','Today')">
+    <button class="cell" onclick="openDetail('${d.name.replace(/'/g,"\\'")}','${d.terr}','${d.meta.replace(/'/g,"\\'")}','${d.heat}','${d.d}','Today')">
       <span class="dot ${d.heat}"></span>
-      <span class="cell-main"><span class="cell-name">${esc(d.name)}</span><span class="cell-meta">${d.call?'Call only · ':''}${d.meta}</span></span>
+      <span class="cell-main"><span class="cell-name">${d.name}</span><span class="cell-meta">${d.call?'Call only · ':''}${d.meta}</span></span>
       <span class="read ${d.heat}"><span class="d tnum">${d.d}</span><span class="l">${d.l}</span></span>
       ${chev()}
     </button>`).join('') : `<div class="cell" style="color:var(--label2);font-size:15px">All caught up in ${area}.</div>`;
 }
 function renderDone(){
   if(!window.doneList)return;
-  if(!dataLoaded){doneList.innerHTML='';return;}
   doneList.innerHTML=recent.map(r=>`
-    <button class="rd-row" onclick="openDetail('${r.cid}','Today')">
+    <button class="rd-row" onclick="toast('Opens the record')">
       <span class="rd-ic ${r.kind==='note'?'note':''}">${r.kind==='visit'
         ?'<svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         :'<svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'}</span>
@@ -746,70 +544,47 @@ function renderChipsR(){
 function pickAreaR(a){rosterArea=a;renderChipsR();renderRoster(document.querySelector('#s-contractors input').value||'');
   const el=document.getElementById('chipbarR');const act=el&&el.querySelector('[aria-pressed="true"]');if(act)act.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});}
 function renderRoster(q=''){
-  if(!dataLoaded){rosterWrap.innerHTML=`<div class="note">${loadErr?'Could not load your book.':'Loading…'}</div>`;return;}
   q=q.toLowerCase();
-  const rows=roster.filter(r=>r[8]===seg)
-    .filter(r=>(r[0]+' '+r[2]).toLowerCase().includes(q))
-    .filter(r=>rosterArea==='All areas'||r[1]===rosterArea);
+  const rows=roster.filter(r=>(r[0]+' '+r[2]).toLowerCase().includes(q)).filter(r=>rosterArea==='All areas'||r[1]===rosterArea);
   const groups={};
   rows.forEach(r=>{const L=r[0][0].toUpperCase();(groups[L]=groups[L]||[]).push(r);});
   let html='';
   Object.keys(groups).sort().forEach(L=>{
     html+=`<div class="sticky">${L}</div><div class="group" style="margin-bottom:16px">`;
     html+=groups[L].map(r=>`
-      <button class="cell" data-cid="${r[6]}" onclick="openDetail('${r[6]}','Contractors')">
+      <button class="cell" onclick="openDetail('${r[0].replace(/'/g,"\\'")}','${r[1]}','${r[2]?r[2]+' · ':''}every 2 months','${r[3]}','${r[4]}','Contractors')">
         <span class="dot ${r[3]}"></span>
-        <span class="cell-main"><span class="cell-name">${esc(r[0])}</span><span class="cell-meta">${r[5]==='call'?'Call only · ':''}${esc(r[2]||'No contact yet')} · ${esc(r[1])}</span></span>
-        <span class="read ${r[3]}"><span class="d tnum">${r[4]}</span><span class="l">${r[7]}</span></span>
+        <span class="cell-main"><span class="cell-name">${r[0]}</span><span class="cell-meta">${r[5]==='call'?'Call only · ':''}${r[2]||'No contact yet'} · ${r[1]}</span></span>
+        <span class="read ${r[3]}"><span class="d tnum">${r[4]}</span><span class="l">${r[4].startsWith('−')?'left':'over'}</span></span>
         ${chev()}
       </button>`).join('');
     html+='</div>';
   });
-  rosterWrap.innerHTML=html||`<div class="note">${seg==='churned'?'No churned accounts. Ones you mark inactive land here.':'No matches'+(rosterArea==='All areas'?'':' in '+rosterArea)+'. Try another area, or add them with + below.'}</div>`;
+  rosterWrap.innerHTML=html||`<div class="note">No matches${rosterArea==='All areas'?'':' in '+rosterArea}. Try another area, or add them with + below.</div>`;
   idx.innerHTML=['#','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map(l=>`<button>${l}</button>`).join('');
 }
 function setSeg(s){seg=s;segA.setAttribute('aria-pressed',s==='active');segC.setAttribute('aria-pressed',s==='churned');
-  renderRoster(rosterQuery());}
+  rosterWrap.innerHTML = s==='churned'?`<div class="note">No churned contractors. Accounts you mark inactive land here.</div>`:''; if(s==='active')renderRoster('');}
 
-function toggleAtt(i,e){
-  e.stopPropagation();
-  const a=attention[i]; if(!a)return;
-  const el=document.getElementById('ac'+i); if(el)el.classList.add('done');
-  mutate(()=>markDone(a.id),'Marked done');   // stays in history as "Done"
-}
+function toggleAtt(i,e){e.stopPropagation();const el=document.getElementById('ac'+i);el.classList.add('done');toast('Marked handled');setTimeout(()=>{attention.splice(i,1);renderAtt();},380);}
 
-const FREQS=[7,14,21,30,45,60,90];
-/* Highlights the open row in the list column (desktop master-detail).
-   Uses data-cid rather than window.event so it also works when openDetail
-   is called programmatically after a write-then-reload. */
-function markCurrent(){
-  document.querySelectorAll('.cell[aria-current]').forEach(c=>c.removeAttribute('aria-current'));
-  if(!isDesktop()||!openId)return;
-  document.querySelectorAll('.cell[data-cid="'+openId+'"]').forEach(c=>c.setAttribute('aria-current','true'));
-}
-function openDetail(id,from){
-  const c=byId[id]; if(!c)return;
-  openId=id; currentC=c;
-  markCurrent();
-  const o=overdueOf(c), heat=heatOf(o);
-  document.getElementById('backLabel').textContent=from||(current==='contractors'?'Contractors':'Today');
-  const label = o===null ? 'Not visited yet'
-    : o>0 ? `${o} day${o>1?'s':''} overdue`
-    : o===0 ? 'Due today' : `Due in ${Math.abs(o)} days`;
-  const initials=(c.name.replace(/[^A-Za-z ]/g,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('')||'?').toUpperCase();
-  const isCall=c.callOnly;
-  const tel=(c.phone||'').replace(/[^\d+]/g,'');
-  const maps='https://maps.apple.com/?q='+encodeURIComponent(c.addr||c.name);
+function openDetail(name,terr,meta,heat,d,from){
+  if(isDesktop()){document.querySelectorAll('.cell[aria-current]').forEach(c=>c.removeAttribute('aria-current'));if(window.event&&window.event.currentTarget)window.event.currentTarget.setAttribute('aria-current','true');}
+  currentC={name,area:terr,contact:'',phone:'(919) 555-0100',addr:`232 Wilson Rd, ${terr==='SOUTH'?'Sanford':'Raleigh'}, NC`,call:meta.indexOf('phone only')>=0};
+  document.getElementById('backLabel').textContent=from;
+  const label = heat==='hot'?`${d.replace('+','').replace('d','')} days overdue` : heat==='due'?(d==='today'?'Due today':`${d.replace('+','').replace('d','')} days overdue`) : `Due in ${d.replace('−','').replace('d','')} days`;
+  const initials=name.replace(/[^A-Za-z ]/g,'').trim().split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  const isCall=meta.indexOf('phone only')>=0||meta.indexOf('Call only')>=0;
   detailBody.innerHTML=`
     <div class="d-hero">
-      <div class="mono-av" style="background:${AVCOL[heat]}"><span>${esc(initials)}</span></div>
-      <div class="d-name">${esc(c.name)}</div>
-      <div class="d-meta">${esc(c.territory)} · ${metaOf(c)}</div>
+      <div class="mono-av" style="background:${AVCOL[heat]}"><span>${initials}</span></div>
+      <div class="d-name">${name}</div>
+      <div class="d-meta">${terr} · ${meta}</div>
     </div>
     <div class="qa">
-      <button ${tel?`onclick="location.href='tel:${esc(tel)}'"`:'disabled'}><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-3 2a11 11 0 005 5l2-3 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Call</span></button>
-      ${isCall?'':`<button onclick="window.open('${maps}','_blank','noopener')"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9" r="2.4" stroke="currentColor" stroke-width="1.8"/></svg><span>Directions</span></button>`}
-      <button class="primary" onclick="logVisit()"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Log visit</span></button>
+      <button onclick="toast('Calls the number')"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-3 2a11 11 0 005 5l2-3 5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Call</span></button>
+      ${isCall?'':`<button onclick="toast('Opens Maps')"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="9" r="2.4" stroke="currentColor" stroke-width="1.8"/></svg><span>Directions</span></button>`}
+      <button class="primary" onclick="logVisit('${name.replace(/'/g,"\\'")}')"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Log visit</span></button>
       <button onclick="openCompose()"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4L18 10l-4-4L4 16v4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Add note</span></button>
     </div>
     <div class="status-line ${heat}"><span class="dot ${heat}"></span>${label}</div>
@@ -819,52 +594,35 @@ function openDetail(id,from){
 
     <div class="ghead">Contact</div>
     <div class="group">
-      <a class="cell" href="tel:${esc(tel)}"><span class="k kv" style="width:74px;color:var(--label)">Call</span><span class="v kv tint" style="flex:1">${esc(c.phone||'—')}</span></a>
-      <div class="cell"><span class="k kv" style="width:74px">Address</span><span class="v kv" style="flex:1;font-size:16px">${esc(c.addr||'—')}</span>${isCall?'<span class="aux">Call only</span>':''}</div>
-      <div class="cell"><span class="k kv" style="width:74px">Area</span><span class="v kv" style="flex:1;font-size:16px">${esc(c.territory)}</span><span class="aux">Auto</span></div>
+      <a class="cell" href="tel:9195550100"><span class="k kv" style="width:74px;color:var(--label)">Call</span><span class="v kv tint" style="flex:1">(919) 555-0100</span></a>
+      <div class="cell"><span class="k kv" style="width:74px">Address</span><span class="v kv" style="flex:1;font-size:16px">232 Wilson Rd, ${terr==='SOUTH'?'Sanford':'Raleigh'}, NC</span>${isCall?'<span class="aux">Call only</span>':''}</div>
+      <div class="cell"><span class="k kv" style="width:74px">Area</span><span class="v kv" style="flex:1;font-size:16px">${terr}</span><span class="aux">Auto</span></div>
     </div>
 
     <div class="ghead">Details</div>
     <div class="group">
       <div class="cell"><span style="flex:1;font-size:16px">Visit every</span>
-        <div class="stepper"><button onclick="bumpCadence(-1)">−</button><div class="v" id="cadVal">${cadenceWord(c.freq)}<small>${c.freq} days</small></div><button onclick="bumpCadence(1)">+</button></div></div>
-      <div class="cell"><span style="flex:1;font-size:16px">${c.churned?'Churned — hidden from Today':'Active in rotation'}</span><button class="switch" aria-pressed="${!c.churned}" onclick="toggleRotation()"></button></div>
+        <div class="stepper"><button onclick="toast('−')">−</button><div class="v">2 months<small>60 days</small></div><button onclick="toast('+')">+</button></div></div>
+      <div class="cell"><span style="flex:1;font-size:16px">Active in rotation</span><button class="switch" aria-pressed="true" onclick="this.setAttribute('aria-pressed',this.getAttribute('aria-pressed')==='true'?'false':'true')"></button></div>
     </div>
 
     <div class="ghead">History<button class="pill" onclick="openCompose()"><svg viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Add note</button></div>
     <div class="group" id="historyLog" style="padding:14px 0 6px"></div>
     <div style="height:24px"></div>`;
-
-  /* per-account follow-ups + unified timeline, from rows already loaded */
-  nextSteps=allUpdates.filter(u=>u.contractor_id===id&&u.is_followup&&!u.done_at)
-    .sort((a,b)=>(a.due_date||'9999-12-31').localeCompare(b.due_date||'9999-12-31'))
-    .map(u=>{const h=humanDue(u.due_date);return{id:u.id,what:esc(u.note||'Follow up'),due:h.when,hot:h.late};});
-  history=allVisits.filter(v=>v.contractor_id===id)
-      .map(v=>({kind:'visit',at:new Date(v.visited_on+'T09:00:00'),what:esc(v.note||'Visited.')}))
-    /* Open follow-ups live in Next steps only; they join the timeline as
-       "Done" once checked off. Plain notes always appear. */
-    .concat(allUpdates.filter(u=>u.contractor_id===id&&(!u.is_followup||u.done_at))
-      .map(u=>({kind:u.done_at?'done':'note',at:new Date(u.done_at||u.created_at),what:esc(u.note||'')})))
-    .sort((a,b)=>b.at-a.at)
-    .map(h=>({kind:h.kind,what:h.what,when:humanWhen(h.at)}));
-
   renderNextSteps();renderHistory();
   detail.classList.add('on');fabHide(true);
 }
-function bumpCadence(dir){
-  const c=byId[openId]; if(!c)return;
-  let i=FREQS.indexOf(c.freq); if(i<0)i=FREQS.findIndex(f=>f>=c.freq); if(i<0)i=FREQS.length-1;
-  i=Math.min(FREQS.length-1,Math.max(0,i+dir));
-  const days=FREQS[i]; if(days===c.freq)return;
-  const el=document.getElementById('cadVal');
-  if(el)el.innerHTML=`${cadenceWord(days)}<small>${days} days</small>`;
-  mutate(()=>setCadence(c.id,days),'Cadence saved');
-}
-function toggleRotation(){
-  const c=byId[openId]; if(!c)return;
-  mutate(()=>setStatus(c.id,!c.churned), c.churned?'Back in rotation':'Moved out of rotation');
-}
-/* per-account timeline — filled from Supabase in openDetail() */
+/* demo timeline for the open account */
+let nextSteps=[
+  {what:'Send the rooftop-unit quote',due:'Fri, Aug 22',hot:false},
+  {what:'Circle back on the maintenance contract',due:'2 days overdue',hot:true},
+];
+let history=[
+  {kind:'done',what:'Followed up on coil promo — he ordered',when:'Aug 8'},
+  {kind:'visit',what:'Walked the new product line. Good visit.',when:'Jun 12'},
+  {kind:'note',what:'Slow to pay last quarter — check billing first.',when:'Jun 2'},
+  {kind:'visit',what:'Dropped samples. Met the new service manager.',when:'May 20'},
+];
 function renderNextSteps(){
   const el=document.getElementById('nextSteps');if(!el)return;
   el.innerHTML = nextSteps.length ? nextSteps.map((s,i)=>`
@@ -873,12 +631,8 @@ function renderNextSteps(){
       <span class="ns-b"><span class="ns-what">${s.what}</span><span class="ns-due ${s.hot?'hot':''}">⏰ ${s.due}</span></span>
     </button>`).join('') : `<div class="cell" style="color:var(--label2);font-size:15px">No open next steps. Add one from a note.</div>`;
 }
-function doneStep(i){
-  const s=nextSteps[i]; if(!s)return;
-  const el=document.getElementById('ns'+i);
-  if(el){el.classList.add('done');el.querySelector('svg').style.opacity=1;el.style.background='var(--cool)';el.style.borderColor='var(--cool)';}
-  mutate(()=>markDone(s.id),'Marked done');   // becomes a "Done" history entry
-}
+function doneStep(i){const el=document.getElementById('ns'+i);el.classList.add('done');el.querySelector('svg').style.opacity=1;el.style.background='var(--cool)';el.style.borderColor='var(--cool)';toast('Marked done');
+  setTimeout(()=>{const s=nextSteps.splice(i,1)[0];history.unshift({kind:'done',what:s.what,when:'Just now'});renderNextSteps();renderHistory();},380);}
 function renderHistory(){
   const el=document.getElementById('historyLog');if(!el)return;
   const ICON={
@@ -895,7 +649,7 @@ function renderHistory(){
     </div>`;}).join('');
 }
 function closeDetail(){detail.classList.remove('on');fabHide(false);}
-function logVisit(){openCompose(false,'visit');}
+function logVisit(name){openCompose(false,'visit');}
 
 /* ---- note composer: note, visit-with-note, or follow-up ---- */
 let composeMode='note';
@@ -923,23 +677,21 @@ function closeCompose(){cw.classList.remove('on');}
 function saveCompose(){
   const txt=document.getElementById('composeText').value.trim();
   const isFu=document.getElementById('fuToggle').getAttribute('aria-pressed')==='true';
-  const fuDate=document.getElementById('fuDate').value||null;
-  const cid=openId;
-  if(!cid){toast('No account open');return;}
+  const fuDate=document.getElementById('fuDate').value;
+  const dueLabel=fuDate?new Date(fuDate+'T00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}):'No date';
 
   if(composeMode==='visit'){
-    const today=dayStart(new Date()).toISOString().slice(0,10);   // local date, not UTC
     closeCompose();
-    mutate(async()=>{
-      await insVisit(cid,today,txt);                              // visit + resets the clock
-      if(isFu)await insFollowup(cid,txt||'Follow up',fuDate);
-    }, isFu?'Visit logged + next step added':'Visit logged — clock reset');
+    history.unshift({kind:'visit',what:txt||'Visited.',when:'Just now'});
+    if(isFu)nextSteps.unshift({what:txt||'Follow up',due:dueLabel,hot:false});
+    renderHistory();renderNextSteps();
+    setTimeout(()=>toast(isFu?'Visit logged + next step added':'Visit logged — clock reset'),100);
     return;
   }
   if(!txt){document.getElementById('composeText').focus();return;}
   closeCompose();
-  if(isFu) mutate(()=>insFollowup(cid,txt,fuDate),'Next step added — shows in Today');
-  else     mutate(()=>insNote(cid,txt),'Note added');
+  if(isFu){nextSteps.unshift({what:txt,due:dueLabel,hot:false});renderNextSteps();toast('Next step added — shows in Today');}
+  else{history.unshift({kind:'note',what:txt,when:'Just now'});renderHistory();toast('Note added');}
 }
 
 /* ---- Today summary tiles: tap to filter ---- */
@@ -970,9 +722,9 @@ function renderDueFiltered(mode){
 }
 function paintDue(rows){
   dueList.innerHTML=rows.length?rows.map(d=>`
-    <button class="cell" data-cid="${d.id}" onclick="openDetail('${d.id}','Today')">
+    <button class="cell" onclick="openDetail('${d.name.replace(/'/g,"\\'")}','${d.terr}','${d.meta.replace(/'/g,"\\'")}','${d.heat}','${d.d}','Today')">
       <span class="dot ${d.heat}"></span>
-      <span class="cell-main"><span class="cell-name">${esc(d.name)}</span><span class="cell-meta">${d.call?'Call only · ':''}${d.meta}</span></span>
+      <span class="cell-main"><span class="cell-name">${d.name}</span><span class="cell-meta">${d.call?'Call only · ':''}${d.meta}</span></span>
       <span class="read ${d.heat}"><span class="d tnum">${d.d}</span><span class="l">${d.l}</span></span>
       ${chev()}
     </button>`).join('') : `<div class="cell" style="color:var(--label2);font-size:15px">Nothing here right now.</div>`;
@@ -980,92 +732,53 @@ function paintDue(rows){
 
 /* ---- edit / add ---- */
 let currentC=null;
-let editFreq=60, editingId=null;
 function openEdit(isNew){
   document.getElementById('editTitle').textContent = isNew?'New contractor':'Edit contractor';
-  const src = isNew?null:(byId[openId]||null);
-  editingId = src?src.id:null;
-  editFreq = src?src.freq:60;
-  const c = src?{name:src.name,contact:src.contact,phone:src.phone,addr:src.addr,area:src.territory,call:src.callOnly}
-               :{name:'',contact:'',phone:'',addr:'',area:'—',call:false};
+  const c = isNew?{name:'',contact:'',phone:'',addr:'',area:'—',call:false} : (currentC||{name:'A R E Mechanical',contact:'Sandy',phone:'704-766-1576',addr:'PO Box 988, Henderson, NC',area:'FAR NORTH',call:true});
   editBody.innerHTML=`
     <div class="ghead">Name</div>
-    <div class="group"><div class="field"><input id="eName" placeholder="Business name" value="${esc(c.name)}"></div></div>
+    <div class="group"><div class="field"><input placeholder="Business name" value="${c.name.replace(/"/g,'&quot;')}"></div></div>
 
     <div class="ghead">Primary contact</div>
     <div class="group">
-      <div class="field"><label>Contact</label><input id="eContact" placeholder="Name (optional)" value="${esc(c.contact||'')}"></div>
-      <div class="field"><label>Phone</label><input id="ePhone" inputmode="tel" placeholder="(919) 555-0000" value="${esc(c.phone||'')}"></div>
+      <div class="field"><label>Contact</label><input placeholder="Name (optional)" value="${(c.contact||'').replace(/"/g,'&quot;')}"></div>
+      <div class="field"><label>Phone</label><input inputmode="tel" placeholder="(919) 555-0000" value="${c.phone||''}"></div>
     </div>
 
     <div class="ghead">Location</div>
     <div class="group">
-      <div class="field"><label>Address</label><input id="eAddr" placeholder="Start typing…" value="${esc(c.addr||'')}" oninput="editArea(this.value)"></div>
+      <div class="field"><label>Address</label><input placeholder="Start typing…" value="${(c.addr||'').replace(/"/g,'&quot;')}" oninput="editArea(this.value)"></div>
       <div class="field"><label>Area</label><span class="auto-area" id="editAreaVal">${c.area||'—'}</span><span class="aux">Auto</span></div>
     </div>
     <div style="font-size:13px;color:var(--label2);padding:6px 16px 0">Type an address and pick a match — we fill the area, ZIP, and map pin for you.</div>
 
     <div class="ghead">Visit type</div>
-    <div class="group"><div class="field"><label style="width:auto;flex:1">Call only (never drive here)</label><button class="switch" id="eCall" aria-pressed="${c.call}" onclick="this.setAttribute('aria-pressed',this.getAttribute('aria-pressed')==='true'?'false':'true')"></button></div></div>
+    <div class="group"><div class="field"><label style="width:auto;flex:1">Call only (never drive here)</label><button class="switch" aria-pressed="${c.call}" onclick="this.setAttribute('aria-pressed',this.getAttribute('aria-pressed')==='true'?'false':'true')"></button></div></div>
 
     <div class="ghead">Visit every</div>
     <div class="group"><div class="field"><label style="width:auto;flex:1">How often</label>
-      <div class="stepper"><button onclick="bumpEditFreq(-1)">−</button><div class="v" id="eFreqVal">${cadenceWord(editFreq)}<small>${editFreq} days</small></div><button onclick="bumpEditFreq(1)">+</button></div></div></div>
+      <div class="stepper"><button onclick="toast('−')">−</button><div class="v">2 months<small>60 days</small></div><button onclick="toast('+')">+</button></div></div></div>
 
     ${isNew?'':`<div class="ghead">Rotation</div>
-    <div class="group"><button class="destructive" onclick="markChurned()">Mark as churned</button></div>`}
+    <div class="group"><button class="destructive" onclick="toast('Marked churned — moves to Churned list')">Mark as churned</button></div>`}
     <div style="height:28px"></div>`;
   edit.classList.add('on');fabHide(true);
 }
 function editArea(v){
-  // the real two-table lookup — same deriveTerritory the 418 rows were built with
-  const b=addrBits(v);
-  const el=document.getElementById('editAreaVal');
-  if(el)el.textContent=(v&&(b.state||b.zip))?deriveTerritory(v):'—';
-}
-function bumpEditFreq(dir){
-  let i=FREQS.indexOf(editFreq); if(i<0)i=FREQS.findIndex(f=>f>=editFreq); if(i<0)i=FREQS.length-1;
-  i=Math.min(FREQS.length-1,Math.max(0,i+dir)); editFreq=FREQS[i];
-  const el=document.getElementById('eFreqVal');
-  if(el)el.innerHTML=`${cadenceWord(editFreq)}<small>${editFreq} days</small>`;
-}
-function markChurned(){
-  if(!editingId)return;
-  closeEdit();
-  mutate(()=>setStatus(editingId,true),'Marked churned');
+  // fake derive for the concept
+  const u=v.toUpperCase();let a='—';
+  if(/CARY|APEX|MORRISVILLE/.test(u))a='WEST';
+  else if(/FUQUAY|HOLLY SPRINGS/.test(u))a='SOUTH';
+  else if(/WAKE FOREST|YOUNGSVILLE/.test(u))a='NORTH';
+  else if(/DURHAM|CHAPEL HILL/.test(u))a='DURHAM';
+  else if(/HENDERSON|LOUISBURG/.test(u))a='FAR NORTH';
+  else if(/SANFORD/.test(u))a='SANFORD';
+  else if(/RALEIGH/.test(u))a='RALEIGH-N';
+  else if(v.trim().length>4)a='OUT OF RANGE';
+  document.getElementById('editAreaVal').textContent=a;
 }
 function closeEdit(){edit.classList.remove('on');fabHide(false);}
-function saveEdit(){
-  const name=(document.getElementById('eName').value||'').trim();
-  if(!name){document.getElementById('eName').focus();toast('Add a business name');return;}
-  const addr=(document.getElementById('eAddr').value||'').trim();
-  const a=parseAddr(addr);
-  const payload={
-    company:name,
-    contact:(document.getElementById('eContact').value||'').trim()||null,
-    phone:(document.getElementById('ePhone').value||'').trim()||null,
-    street_address:a.street_address||null, city:a.city||null, state:a.state||'NC', zip:a.zip||null,
-    territory:deriveTerritory(addr),                 // derived, never the typed value
-    visitable:document.getElementById('eCall').getAttribute('aria-pressed')==='true'?'CALL ONLY':'VISIT',
-    target_days:editFreq
-  };
-  const id=editingId;
-  closeEdit();
-  mutate(async()=>{
-    const sb=sbClient();
-    if(id){
-      const r=await sb.from('contractors').update(payload).eq('id',id);
-      if(r.error)throw r.error;
-    }else{
-      if(!currentOwnerId)throw new Error('no signed-in user');
-      const r=await sb.from('contractors')
-        .insert(Object.assign({},payload,{owner_id:currentOwnerId,starred:false,last_visited:null,status:'active'}))
-        .select('id').single();
-      if(r.error)throw r.error;
-      openId=r.data.id;
-    }
-  }, id?'Saved':(name+' added · '+payload.territory));
-}
+function saveEdit(){closeEdit();toast('Saved');}
 
 function openAreas(){}function closeAreas(){asWrap.classList.remove('on');}
 function closeAreas(){asWrap.classList.remove('on');}
@@ -1082,21 +795,16 @@ function show(v){
   document.querySelector('.phone').dataset.tab=v;
   ['today','contractors','map'].forEach(x=>{document.getElementById('s-'+x).classList.toggle('on',x===v);document.getElementById('tab-'+x).setAttribute('aria-selected',x===v);});
   scroll.scrollTop=0;
-  const T={today:['Today',todaySub()],contractors:['Contractors',bookSub()],map:['Territory map','See your book by area']};
+  const T={today:['Today','Friday, August 21'],contractors:['Contractors','418 in your book'],map:['Territory map','See your book by area']};
   largeTitle.childNodes[0].nodeValue=T[v][0];largeSub.textContent=T[v][1];
-  openId=null;                                     // tab change clears the selection
-  if(isDesktop()){detail.classList.remove('on');detailPlaceholder();markCurrent();} else {closeDetail();}
+  if(isDesktop()){detail.classList.remove('on');detailPlaceholder();} else {closeDetail();}
 }
 function fabHide(h){document.getElementById('fab').classList.toggle('hide',h);}
 let tt;function toast(m){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1700);}
 
 document.querySelector('.phone').dataset.tab='today';
-/* Shell paints immediately with loading states; real data arrives on the
-   gate's `rooster:authed` event so every query carries a JWT. Both
-   breakpoints call the same renders, so wiring once covers both. */
-paintAll();
+renderAtt();renderChips();renderChipsR();renderDue();renderRoster('');
 if(isDesktop())detailPlaceholder();
-document.addEventListener('rooster:authed',function(){ loadAll(); });
 </script>
 </body>
 </html>
