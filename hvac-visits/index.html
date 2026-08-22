@@ -271,6 +271,24 @@
   .toast.on{opacity:1;transform:translateX(-50%)}
   .toast svg{width:17px;height:17px;color:#4cd964;flex:none}
 
+  /* ── Sign-out badge, injected by the gate as fixed bottom-right ──────
+     There it sat on top of the floating dock, covering the Map tab and the
+     Add button. Repositioned here only — the gate's auth logic, markup and
+     class names are untouched. Mobile: top-right of the large-title area.
+     Desktop: into the left nav rail (see the desktop block below). */
+  .phone #roosterAuthBadge{
+    position:absolute;z-index:6;
+    top:calc(env(safe-area-inset-top) + 10px);right:12px;bottom:auto;left:auto;
+    background:var(--card);border:1px solid var(--sep-soft);
+    box-shadow:none;backdrop-filter:none;
+  }
+  /* On a phone the badge is right-anchored in the same band as the large
+     title. With the email shown it is ~152px wide, which collides with
+     "Contractors" (text runs to ~210px) on a 360px screen and clears by
+     only 1px at 375px. Drop to the button alone here; the rail has room
+     for the address on desktop. */
+  .phone #roosterAuthBadge .rooster-badge-email{display:none}
+
   /* ═══════════════ DESKTOP (≥900px) — master-detail, intentional ═══════════════ */
   @media(min-width:900px){
     body{background:#e6e8eb}
@@ -326,6 +344,16 @@
     .cw.on .compose{transform:translate(-50%,-50%)}
     .as{left:50%;right:auto;transform:translateX(-50%) translateY(20px);width:340px;bottom:auto;top:50%;margin-top:-160px}
     .as-wrap.on .as{transform:translateX(-50%)}
+  
+    /* Sign-out becomes the last item in the rail's flex column, so it
+       inherits the rail's own width and padding instead of being placed by
+       hand — the rail's box is narrower than its grid column, so absolute
+       coordinates stuck out on both sides. margin-top:auto floats it to
+       the foot, clear of the tabs. */
+    .dock #roosterAuthBadge{position:static;margin-top:auto;width:auto;
+      top:auto;right:auto;bottom:auto;left:auto;justify-content:space-between}
+    .dock #roosterAuthBadge .rooster-badge-email{display:block;min-width:0;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   }
   .d-empty{display:none}
 </style>
@@ -1096,7 +1124,17 @@ document.querySelector('.phone').dataset.tab='today';
    breakpoints call the same renders, so wiring once covers both. */
 paintAll();
 if(isDesktop())detailPlaceholder();
-document.addEventListener('rooster:authed',function(){ loadAll(); });
+/* The gate appends its badge to <body>. Move it inside .phone so the rules
+   above can place it; CSS does the positioning at each width. */
+function placeAuthBadge(){
+  const b=document.getElementById('roosterAuthBadge'); if(!b)return;
+  // desktop: last child of the nav rail. mobile: top-right of the shell.
+  const host=isDesktop()?document.querySelector('.dock'):document.querySelector('.phone');
+  if(host&&b.parentElement!==host)host.appendChild(b);
+}
+window.addEventListener('resize',placeAuthBadge);
+document.addEventListener('rooster:authed',function(){ placeAuthBadge(); loadAll(); });
+setTimeout(placeAuthBadge,600);   // safety net if the badge lands late
 </script>
 </body>
 </html>
