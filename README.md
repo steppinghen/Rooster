@@ -10,7 +10,7 @@ Personal projects monorepo. One GitHub repo, several independent Netlify sites �
 | [`dad-contracting/`](dad-contracting/) | Contracting business site | _tbd_ | No | No | 8889 |
 | [`hvac-visits/`](hvac-visits/) | Visit-tracking tool | _tbd_ | **Yes** | No | 8890 |
 | [`lab/`](lab/) | Experiments playground | _tbd_ | **Yes** | No | 8891 |
-| [`knee-program/`](knee-program/) | Knee rehab tracker — on-device only | _tbd_ | No | No | 8892 |
+| [`knee-program/`](knee-program/) | Knee rehab tracker — on-device only | [live](https://rooster-knee.netlify.app) | No | No | 8892 |
 | [`_shared/`](_shared/) | Library — copied from, never deployed | — | — | — | — |
 
 **No site is indexed, by design.** `X-Robots-Tag: noindex` plus a `robots` meta tag on every site, public ones included — these are shared by link, not found by search. New sites inherit it.
@@ -103,7 +103,7 @@ Created under the **Rooster** team (`rooster-nc`), each folder linked to its own
 | `dad-contracting/` | `rooster-dad` | https://rooster-dad.netlify.app | not yet |
 | `hvac-visits/` | `rooster-hvac` | https://rooster-hvac.netlify.app | not yet |
 | `lab/` | `rooster-lab` | https://rooster-lab.netlify.app | not yet |
-| `knee-program/` | `rooster-knee` | https://rooster-knee.netlify.app | not yet |
+| `knee-program/` | `rooster-knee` | https://rooster-knee.netlify.app | ✅ prod |
 
 **Team-wide SSO protection is currently ON**, so deployed sites return 401 to the public. It must be turned off before the remaining sites are worth deploying — see `gotchas.md`. No custom domains or DNS are configured.
 

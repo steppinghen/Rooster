@@ -10,7 +10,7 @@ no backend.
 
 | | |
 |---|---|
-| **URL** | _not deployed yet_ |
+| **URL** | <https://rooster-knee.netlify.app> |
 | **Gated** | **No** — see below |
 | **Indexed** | No — `X-Robots-Tag: noindex` + `robots` meta tag |
 | **Dev port** | 8892 |
@@ -56,7 +56,8 @@ pipeline.
 
 ## Deploy
 
-One folder = one Netlify site, same as every other site here. First time:
+One folder = one Netlify site, same as every other site here. Already created and
+deployed; these are the commands that did it:
 
 ```bash
 cd knee-program

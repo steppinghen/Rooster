@@ -28,3 +28,12 @@
   for = "/*"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow, noarchive, nosnippet, noimageindex"
+
+# Netlify serves .webmanifest as application/octet-stream, which Chrome
+# rejects — the manifest is then ignored and the site isn't installable
+# on Android. iOS doesn't care (it reads apple-touch-icon + the
+# apple-mobile-web-app-* meta tags), so this only shows up off-iOS.
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
