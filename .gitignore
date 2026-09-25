@@ -88,3 +88,6 @@ Desktop.ini
 # whole folder) or in a repo whose visibility might change.
 _db/**/*.xlsx
 _db/**/*_transformed.csv
+
+# Per-repo account tokens (never commit)
+.claude/settings.local.json
