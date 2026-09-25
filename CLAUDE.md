@@ -31,3 +31,20 @@ git config user.email              # expect: 316376381+steppinghen@users.noreply
 cat supabase/.temp/project-ref     # expect: csbjszhlzdxeoqafggbw
 supabase projects list             # expect: csbjszhlzdxeoqafggbw present and marked linked (●)
 ```
+
+## New site
+
+**Hosting**
+
+- Each new project gets its own subfolder at the repo root, with its own Netlify site. Never deploy from the repo root.
+- Before creating a site, run the account checks above and confirm the Netlify team is the steppinghen team (`rooster-nc`). If it isn't, stop and ask the user.
+- Name the site `rooster-<project-name>`, create it in that team, and link only the project's subfolder. Add the new folder, site name, and site ID to the table above.
+- After deploying, confirm the live URL loads publicly (no 401) and report the URL.
+
+**Database**
+
+- All rooster projects share one Supabase project (ref `csbjszhlzdxeoqafggbw`). Before any database change, confirm the linked ref matches. If it doesn't, stop and ask the user.
+- Every table name starts with the project's prefix (for example `kids_`, `knee_`). Never create or change a table without a prefix, and never touch another project's tables.
+- Every new table has row-level security enabled, with its policies written in the same migration.
+- All changes go through migration files in `supabase/migrations`, pushed with the Supabase CLI. No changes made by hand in the dashboard.
+- Before pushing a migration, show the user the SQL and wait for their OK.
