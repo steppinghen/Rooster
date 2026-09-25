@@ -109,7 +109,7 @@ Run from the site's base directory, this skips whenever nothing in that folder c
 
 ## `lab/` subfolders are not gated by default
 
-The gate is per page. `lab/index.html` loads the overlay; `lab/whatever/index.html` does not, unless you add the same four `<head>` tags with `../` paths. See `lab/README.md`.
+The gate is per page. `lab/index.html` loads the overlay; `lab/whatever/index.html` does not, unless you add the same four `<head>` tags with `../` paths. See `lab/CLAUDE.md`.
 
 The `noindex` header *is* site-wide, so an ungated experiment still stays out of Google. It's reachable by anyone with the URL, though.
 

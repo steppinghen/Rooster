@@ -2,6 +2,10 @@
 
 See `README.md`, `decisions.md`, and `gotchas.md` for project context.
 
+## Per-project files
+
+Every project folder has its own `CLAUDE.md` (stable guidance) and `STATUS.md` (churny, in-progress notes). **When working on a project, read `<folder>/CLAUDE.md` and `<folder>/STATUS.md` first.** Before ending a session, update that project's `STATUS.md` with what was done and what's next. Templates live in `_shared/templates/`.
+
 ## Accounts
 
 | Service | This repo uses |
@@ -39,6 +43,7 @@ supabase projects list             # expect: csbjszhlzdxeoqafggbw present and ma
 - Each new project gets its own subfolder at the repo root, with its own Netlify site. Never deploy from the repo root.
 - Before creating a site, run the account checks above and confirm the Netlify team is the steppinghen team (`rooster-nc`). If it isn't, stop and ask the user.
 - Name the site `rooster-<project-name>`, create it in that team, and link only the project's subfolder. Add the new folder, site name, and site ID to the table above.
+- Create `<folder>/CLAUDE.md` and `<folder>/STATUS.md` from `_shared/templates/CLAUDE.md.template` and `_shared/templates/STATUS.md.template`.
 - After deploying, confirm the live URL loads publicly (no 401) and report the URL.
 
 **Database**

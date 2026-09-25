@@ -6,11 +6,11 @@ Personal projects monorepo. One GitHub repo, several independent Netlify sites �
 
 | Folder | What it is | URL | Gated | Indexed | Dev port |
 |---|---|---|---|---|---|
-| [`portfolio/`](portfolio/) | Portfolio, migrating off WordPress | _tbd_ | No | No | 8888 |
-| [`dad-contracting/`](dad-contracting/) | Contracting business site | _tbd_ | No | No | 8889 |
-| [`hvac-visits/`](hvac-visits/) | Visit-tracking tool | _tbd_ | **Yes** | No | 8890 |
-| [`lab/`](lab/) | Experiments playground | _tbd_ | **Yes** | No | 8891 |
-| [`knee-program/`](knee-program/) | Knee rehab tracker — on-device only | [live](https://rooster-knee.netlify.app) | No | No | 8892 |
+| [`portfolio/`](portfolio/CLAUDE.md) | Portfolio, migrating off WordPress | _tbd_ | No | No | 8888 |
+| [`dad-contracting/`](dad-contracting/CLAUDE.md) | Contracting business site | _tbd_ | No | No | 8889 |
+| [`hvac-visits/`](hvac-visits/CLAUDE.md) | Visit-tracking tool | _tbd_ | **Yes** | No | 8890 |
+| [`lab/`](lab/CLAUDE.md) | Experiments playground | _tbd_ | **Yes** | No | 8891 |
+| [`knee-program/`](knee-program/CLAUDE.md) | Knee rehab tracker — on-device only | [live](https://rooster-knee.netlify.app) | No | No | 8892 |
 | [`_shared/`](_shared/) | Library — copied from, never deployed | — | — | — | — |
 
 **No site is indexed, by design.** `X-Robots-Tag: noindex` plus a `robots` meta tag on every site, public ones included — these are shared by link, not found by search. New sites inherit it.
@@ -19,7 +19,7 @@ Personal projects monorepo. One GitHub repo, several independent Netlify sites �
 
 **Folder names are kebab-case and describe the thing.** `dad-contracting`, not `dadsite` or `project2`.
 
-**Every project folder has its own `README.md`** stating what it is, its URL, and whether it's gated.
+**Every project folder has its own `CLAUDE.md` and `STATUS.md`.** `CLAUDE.md` states what the project is, its URL, whether it's gated, and any project-specific rules; `STATUS.md` tracks in-progress work and blockers. Templates in `_shared/templates/`.
 
 **One folder = one deployable Netlify site.** A folder is self-contained: its own `index.html`, its own `netlify.toml`, its own copy of anything shared. Nothing reaches outside its own directory at runtime — Netlify only publishes the folder, so `../_shared/x.js` is a 404 in production even though it works locally.
 
@@ -77,6 +77,7 @@ Gated sites use a Supabase magic-link overlay ported from `comms-platform`. Setu
 ```
 rooster/
 ├── README.md
+├── CLAUDE.md             repo-wide accounts, verification, new-site rules
 ├── decisions.md
 ├── gotchas.md
 ├── package.json          dev + sync scripts
@@ -85,8 +86,9 @@ rooster/
 │   ├── auth-overlay.css
 │   ├── auth-config.example.js
 │   ├── schema.sql
-│   └── noindex-headers
-├── portfolio/
+│   ├── noindex-headers
+│   └── templates/        CLAUDE.md + STATUS.md templates for new projects
+├── portfolio/            each project folder holds its own CLAUDE.md + STATUS.md
 ├── dad-contracting/
 ├── hvac-visits/
 ├── lab/

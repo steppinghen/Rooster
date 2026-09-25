@@ -1,0 +1,22 @@
+# hvac-visits — status
+
+## Currently working on
+
+_none_
+
+## Blockers / open questions
+
+Tool itself isn't built yet — only the gate scaffold and a placeholder `index.html`.
+
+## Setup checklist
+
+- [x] `auth-config.js` wired to the personal Supabase project
+- [ ] Run `_shared/schema.sql` in that project — **required**, the gate denies everyone until `is_email_allowed()` exists
+- [ ] Add your email to `allowed_emails`
+- [ ] Add redirect URLs in Supabase → Authentication → URL Configuration (`http://localhost:8890/**` for local testing, plus the deployed URL)
+- [ ] Build the actual visit-tracking tool
+- [ ] First deploy
+
+## Backlog
+
+_none_

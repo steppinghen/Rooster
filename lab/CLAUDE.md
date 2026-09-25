@@ -9,13 +9,15 @@ Playground. `index.html` links to experiment subfolders; each subfolder is self-
 | **Indexed** | No — `X-Robots-Tag: noindex` |
 | **Dev port** | 8891 |
 
+Netlify site name and ID: see the table in the root `../CLAUDE.md`. Do not duplicate them here — the root table is authoritative.
+
 ## Run locally
 
 ```bash
 cd lab && netlify dev      # or: npm run dev:lab
 ```
 
-Auth is bypassed on localhost. Real flow: <http://localhost:8891/?forceauth=1>
+Auth is bypassed on localhost. Real flow: <http://localhost:8891/?forceauth=1>. Exercise the real login before every deploy.
 
 ## Adding an experiment
 
@@ -47,7 +49,7 @@ The gate is **per page**, not per site. `lab/index.html` loads the overlay; a su
 <script src="../vendor/auth-overlay.js"></script>
 ```
 
-Note the `../` — paths are relative to the subfolder. Without these, the experiment is wide open to anyone who knows the URL. The `noindex` header still applies (it's set at the site level), so it stays out of Google either way.
+Note the `../` — paths are relative to the subfolder. Without these, the experiment is wide open to anyone who knows the URL. The `noindex` header still applies (site-level), so it stays out of Google either way.
 
 ## Access
 
@@ -55,9 +57,18 @@ Note the `../` — paths are relative to the subfolder. Without these, the exper
 insert into allowed_emails (email, site) values ('someone@example.com', 'lab');
 ```
 
-## Setup status
+## Database tables
 
-- [x] `auth-config.js` wired to the personal Supabase project
-- [ ] Run `_shared/schema.sql` in that project — **required**, the gate denies everyone until `is_email_allowed()` exists
-- [ ] Add your email to `allowed_emails`
-- [ ] Add redirect URLs in Supabase → Authentication → URL Configuration (`http://localhost:8891/**` for local testing, plus the deployed URL)
+All tables for this project must be prefixed `lab_` (see root `../CLAUDE.md` "Database" rules). Never create an un-prefixed table and never touch another project's tables.
+
+## What NOT to change without asking
+
+- `noindex` — edits in two places.
+- Script order in `<head>`.
+- Adding a new subfolder without the four `<head>` tags leaves it ungated.
+
+## Related docs
+
+- Root `../CLAUDE.md`, `../decisions.md`, `../gotchas.md` — repo-wide.
+- `_shared/README.md` — auth-overlay setup.
+- `./STATUS.md` — current work and blockers for this project.

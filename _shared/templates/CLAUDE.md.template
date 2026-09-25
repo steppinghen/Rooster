@@ -1,0 +1,39 @@
+# <project-name>
+
+<one-line description of what this project is>
+
+| | |
+|---|---|
+| **URL** | <live URL, or `_not deployed yet_`> |
+| **Gated** | <No — public / **Yes** — Supabase magic link, `site = '<project-name>'`> |
+| **Indexed** | No — `X-Robots-Tag: noindex` + `robots` meta tag |
+| **Dev port** | <8888..8892> |
+
+Netlify site name and ID: see the table in the root `../CLAUDE.md`. Do not duplicate them here — the root table is authoritative.
+
+## Run locally
+
+```bash
+cd <folder> && netlify dev      # or: npm run dev:<folder>
+```
+
+<Gated sites only: note the localhost auth bypass and the `?forceauth=1` escape hatch.>
+
+## Conventions and gotchas specific to this project
+
+<Enduring rules that a Claude session must know before editing this project. Examples:
+- knee-program: all state is in `localStorage`; there is no backend and no sync.
+- lab: the gate is per page; every subfolder's `index.html` needs the four `<head>` tags with `../` paths.
+- hvac-visits: allow-list managed in `allowed_emails` with `site = 'hvac-visits'`.>
+
+## What NOT to change without asking
+
+- `noindex` is intentional on every rooster site. Removing it takes edits in two places (`netlify.toml` headers and the `<meta name="robots">` tag). Do not lift it without confirming.
+- <any project-specific "don't touch" rules>
+
+## Related docs
+
+- Root `../CLAUDE.md` — accounts, Netlify/Supabase verification, new-site rules.
+- Root `../decisions.md` — repo-wide architectural decisions.
+- Root `../gotchas.md` — traps that apply to every project.
+- `./STATUS.md` — current work and blockers for this project.
