@@ -69,6 +69,7 @@ export const setProfileChannels    = (profile_id, channel_ids) => callOp('set_pr
 export const addOneoffVideo        = (input, profile_ids = []) => callOp('add_oneoff_video', { input, profile_ids });
 export const removeOneoffVideo     = (video_id)         => callOp('remove_oneoff_video',   { video_id });
 export const hideVideo             = (profile_id, video_id) => callOp('hide_video',        { profile_id, video_id });
+export const hideVideoEverywhere   = (video_id)          => callOp('hide_video_everywhere', { video_id });
 export const unhideVideo           = (profile_id, video_id) => callOp('unhide_video',      { profile_id, video_id });
 export const addBlocklistKeyword   = (keyword)          => callOp('add_blocklist_keyword', { keyword });
 export const removeBlocklistKeyword = (keyword)         => callOp('remove_blocklist_keyword', { keyword });

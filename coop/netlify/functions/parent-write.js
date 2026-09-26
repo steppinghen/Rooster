@@ -424,6 +424,23 @@ const OPS = {
     return {};
   },
 
+  // Quick-block: hide this video for every existing profile in one shot.
+  // New profiles added later start fresh — re-block if needed.
+  async hide_video_everywhere({ video_id }) {
+    if (!video_id) throw new Error('video_id required');
+    const { data: profs, error: pErr } = await supabase
+      .from('coop_profiles')
+      .select('id');
+    if (pErr) throw pErr;
+    if (!profs || !profs.length) return { blocked_for: 0 };
+    const rows = profs.map(p => ({ profile_id: p.id, video_id }));
+    const { error } = await supabase
+      .from('coop_profile_hidden_videos')
+      .upsert(rows, { onConflict: 'profile_id,video_id', ignoreDuplicates: true });
+    if (error) throw error;
+    return { blocked_for: profs.length };
+  },
+
   async unhide_video({ profile_id, video_id }) {
     if (!profile_id || !video_id) throw new Error('profile_id and video_id required');
     const { error } = await supabase

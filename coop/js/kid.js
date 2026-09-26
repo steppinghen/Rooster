@@ -19,6 +19,7 @@ import { h, icon, ICONS, toast } from './dom.js';
 import { avatarSvg, PACKS } from './avatars.js';
 import * as data from './data.js';
 import * as player from './player.js';
+import { attachLongPress, openBlockSheet } from './kidBlock.js';
 
 const PAGE_SIZE = 24;
 
@@ -206,13 +207,19 @@ function playVideo(profile, v, returnTo, sourceElement) {
 }
 
 function videoTile(v, onclick) {
-  return h('button', { class: 'k-tile', onclick, type: 'button' },
+  const tile = h('button', { class: 'k-tile', onclick, type: 'button' },
     h('div', { class: 'k-tile-thumb', style: v.thumbnail_url ? { backgroundImage: `url("${v.thumbnail_url}")` } : {} }),
     h('div', { class: 'k-tile-body' },
       h('div', { class: 'k-tile-title' }, v.title || ''),
       v.channel_title ? h('div', { class: 'k-tile-channel' }, v.channel_title) : null
     )
   );
+  // Long-press → parent block sheet (parent PIN required).
+  attachLongPress(tile, () => openBlockSheet(v, () => {
+    // Optimistic hide: remove this tile from the grid on success.
+    tile.remove();
+  }));
+  return tile;
 }
 
 // Load ~PAGE_SIZE tiles at a time via IntersectionObserver on a sentinel.
@@ -258,7 +265,8 @@ export async function renderHome(rootEl, profile, go) {
 
   // Hero — full-bleed newest video
   if (hero) {
-    const heroBox = h('section', { class: 'k-hero', 'aria-label': 'Featured' },
+    let heroBox;
+    heroBox = h('section', { class: 'k-hero', 'aria-label': 'Featured' },
       h('div', { class: 'k-hero-bg', style: hero.thumbnail_url ? { backgroundImage: `url("${hero.thumbnail_url}")` } : {} }),
       h('div', { class: 'k-hero-fade' }),
       h('div', { class: 'k-hero-body' },
@@ -290,6 +298,11 @@ export async function renderHome(rootEl, profile, go) {
         )
       )
     );
+    // Long-press anywhere on the hero → parent block sheet.
+    attachLongPress(heroBox, () => openBlockSheet(hero, () => {
+      // Refresh Home so a new hero is picked.
+      go('kidHome', { profileId: profile.id });
+    }));
     content.appendChild(heroBox);
   }
 

@@ -29,6 +29,7 @@
 
 import { h, icon, ICONS } from './dom.js';
 import * as data from './data.js';
+import { attachLongPress, openBlockSheet } from './kidBlock.js';
 
 // ---------- lifecycle state ----------
 let apiReady = null;
@@ -173,6 +174,15 @@ function ensureDom() {
   tapShield.addEventListener('click', () => {
     if (upNextOverlay.classList.contains('shown')) return;
     controlsVisible ? hideControls() : showControls();
+  });
+  // Long-press on the playing video area → block sheet for the current
+  // video. Suppresses the trailing click so we don't also toggle controls.
+  attachLongPress(tapShield, () => {
+    if (!current) return;
+    openBlockSheet(
+      { id: current.videoId, title: current.title, thumbnail_url: current.thumbnailUrl },
+      () => close()   // after blocking, close the player
+    );
   });
 
   installSwipe();
@@ -531,7 +541,7 @@ function renderUpNextOverlay(picks) {
   upNextOverlay.innerHTML = '';
   const grid = h('div', { class: 'k-player-upnext-grid' });
   for (const v of picks) {
-    grid.appendChild(h('button', {
+    const tile = h('button', {
       type: 'button',
       class: 'k-player-upnext-tile',
       onclick: (ev) => { ev.stopPropagation(); openInternal(v); }
@@ -540,7 +550,10 @@ function renderUpNextOverlay(picks) {
         h('div', { class: 'k-player-upnext-play', html: icon(ICONS.play) })
       ),
       h('div', { class: 'k-player-upnext-title' }, v.title || '')
-    ));
+    );
+    // Long-press on an Up Next tile → block THAT video everywhere.
+    attachLongPress(tile, () => openBlockSheet(v, () => { tile.remove(); }));
+    grid.appendChild(tile);
   }
   grid.appendChild(h('button', {
     type: 'button',
