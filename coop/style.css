@@ -191,7 +191,11 @@ input { font-family: inherit; font-size: 17px; }
 
 /* --------------------------------------------------------------------------
    Seamless video player (coop/js/player.js). One overlay reused between
-   videos — no per-open teardown.
+   videos. Stacking (bottom → top):
+     iframe (z:1) → cover (z:4) → intro (z:5) → controls (z:8) →
+     tap-shield (z:6, below controls) → fallback / hint / upnext (z:12+)
+   The shield never covers controls, so a scrubber drag on iPhone hits
+   the scrubber (not the shield).
    -------------------------------------------------------------------------- */
 .k-player {
   position: fixed; inset: 0;
@@ -203,35 +207,96 @@ input { font-family: inherit; font-size: 17px; }
   --on-accent: #14231C;
 }
 .k-player.open { display: block; }
-.k-player-video, .k-player-thumb {
-  position: absolute; inset: 0;
+.k-player-video {
+  position: absolute; inset: 0; z-index: 1;
 }
 .k-player-video iframe, .k-player-video #k-player-slot,
 .k-player-video > iframe {
   width: 100% !important; height: 100% !important; border: 0;
   display: block;
 }
-.k-player-thumb {
+
+/* Pause cover — shown whenever state ≠ PLAYING after the first play,
+   hides YouTube's pause UI, related-videos flash, "Watch on YouTube",
+   and share. Object-fit cover behaviour: background-image with
+   `background-size: cover` never stretches. */
+.k-player-cover {
+  position: absolute; inset: 0;
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
   background: #000 center/cover no-repeat;
-  z-index: 5;
-  filter: saturate(0.85);
-  will-change: transform, opacity;
+  pointer-events: none;
 }
-/* Transparent tap shield sits on top of the iframe so no tap can reach
-   YouTube's own UI (title, channel link, "Watch on YouTube", share). */
+.k-player-cover.shown { opacity: 1; }
+.k-player-cover-scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.55));
+}
+
+/* Intro (opening avatar + drawn ring). Above the cover so the intro
+   never shows a stale thumbnail during opening. */
+.k-player-intro {
+  position: absolute; inset: 0;
+  z-index: 5;
+  display: none;
+  align-items: center; justify-content: center;
+}
+.k-player-intro.showing { display: flex; }
+.k-intro-avatar {
+  position: absolute;
+  width: 96px; height: 96px; border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2;
+}
+.k-intro-avatar .avatar-img, .k-intro-avatar .avatar-img svg { width: 100%; height: 100%; display: block; }
+.k-intro-ring-wrap {
+  position: absolute;
+  width: 120px; height: 120px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1;
+}
+.k-intro-ring { width: 120px; height: 120px; display: block; }
+.k-intro-ring circle {
+  stroke-dasharray: 327;
+  stroke-dashoffset: 327;
+  transition: none;
+}
+.k-player-intro.draw .k-intro-ring circle {
+  animation: k-ring-draw 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes k-ring-draw {
+  from { stroke-dashoffset: 327; }
+  to   { stroke-dashoffset: 0; }
+}
+.k-player-intro.pulsing .k-intro-ring circle {
+  animation: k-ring-pulse 1.4s ease-in-out infinite;
+  stroke-dashoffset: 0;
+}
+@keyframes k-ring-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1;    }
+}
+
+/* Transparent tap shield BELOW controls so a scrubber drag hits the
+   scrubber, not the shield. Above cover so long-press on a paused
+   video still works. */
 .k-player-shield {
   position: absolute; inset: 0;
   background: transparent;
-  z-index: 7;
+  z-index: 6;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Fallback play (shown if iOS/YouTube didn't autoplay). */
+/* Fallback play (shown if autoplay is blocked and warmup hadn't
+   finished before the first tap). */
 .k-player-fallback {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%) scale(0.9);
-  z-index: 12;
+  z-index: 14;
   width: 96px; height: 96px; border-radius: 50%;
   background: var(--accent);
   color: var(--on-accent);
@@ -248,56 +313,60 @@ input { font-family: inherit; font-size: 17px; }
 /* Custom control overlay. */
 .k-player-controls {
   position: absolute; inset: 0;
-  z-index: 10;
+  z-index: 8;
   opacity: 0;
   pointer-events: none;
   transition: opacity 200ms ease-out;
 }
-.k-player-controls.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
+.k-player-controls.visible { opacity: 1; pointer-events: auto; }
 .k-player-back {
   position: absolute;
   top: max(16px, env(safe-area-inset-top));
   left: max(16px, env(safe-area-inset-left));
-  width: 48px; height: 48px; border-radius: 50%;
+  min-width: 52px; min-height: 52px;
+  width: 52px; height: 52px; border-radius: 50%;
   background: rgba(0,0,0,0.5);
   border: 1px solid rgba(255,255,255,0.15);
   color: #FFFFFF;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  padding: 0;
 }
 .k-player-back svg { width: 22px; height: 22px; }
-.k-player-bottom {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  padding: 16px max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-  display: flex; align-items: center; gap: 16px;
-  background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0));
-}
-.k-player-playpause {
-  width: 56px; height: 56px; border-radius: 50%;
+
+/* Big centered Play/Pause. */
+.k-player-center-pp {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 88px; min-height: 88px;
+  width: 88px; height: 88px; border-radius: 50%;
   background: var(--accent);
   color: var(--on-accent);
   border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
   padding: 0;
 }
-.k-player-playpause svg { width: 26px; height: 26px; }
-.k-player-playpause:active { transform: scale(0.96); }
-.k-player-bottom-line { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.k-player-center-pp svg { width: 36px; height: 36px; margin-left: 4px; }
+.k-player-center-pp:active { transform: translate(-50%, -50%) scale(0.96); }
+
+/* Bottom bar: scrubber row + controls row. */
+.k-player-bottom {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 14px max(20px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0));
+  display: flex; flex-direction: column; gap: 8px;
+}
 .k-player-scrub {
-  flex: 1; position: relative;
-  height: 32px;
-  display: flex; align-items: center;
+  position: relative;
+  height: 44px;             /* tall invisible touch area — 44px min */
   cursor: pointer;
   touch-action: none;
+  display: flex; align-items: center;
 }
-.k-player-scrub::before {
+.k-player-scrub::before {   /* the visual 4px line */
   content: '';
   position: absolute; left: 0; right: 0; top: 50%; height: 4px;
   transform: translateY(-50%);
@@ -310,23 +379,59 @@ input { font-family: inherit; font-size: 17px; }
   background: var(--accent);
   border-radius: 2px;
   pointer-events: none;
+  width: 0%;
 }
 .k-player-scrub-thumb {
   position: absolute; top: 50%; left: 0;
-  width: 14px; height: 14px; border-radius: 50%;
+  width: 16px; height: 16px; border-radius: 50%;
   background: var(--accent);
   transform: translate(-50%, -50%);
   box-shadow: 0 2px 4px rgba(0,0,0,0.35);
   pointer-events: none;
-  display: none;
 }
-.k-player-controls.visible .k-player-scrub-thumb { display: block; }
-.k-player-scrub-fill { width: 0%; }
-.k-player-scrub-thumb { left: 0%; }
+.k-player-bottom-line {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 52px;
+}
 .k-player-time {
-  color: rgba(255,255,255,0.85); font-family: 'Figtree', system-ui, sans-serif;
-  font-size: 13px; font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
+  color: rgba(255,255,255,0.9); font-family: 'Figtree', system-ui, sans-serif;
+  font-size: 14px; font-variant-numeric: tabular-nums;
+  flex-shrink: 0; min-width: 90px;
+}
+.k-player-skip, .k-player-cc {
+  min-width: 52px; min-height: 52px; padding: 0 14px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #FFFFFF;
+  border-radius: 12px;
+  font: inherit; font-weight: 700; font-size: 14px;
+  cursor: pointer;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.k-player-cc.on { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+
+/* Double-tap seek hint. */
+.k-player-hint {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 13;
+  padding: 10px 18px; border-radius: 999px;
+  background: rgba(0,0,0,0.65);
+  color: var(--accent);
+  font-family: 'Outfit', system-ui, sans-serif; font-weight: 700; font-size: 22px;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  pointer-events: none;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.k-player-hint.shown { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .k-intro-ring circle {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+  .k-player, .k-player-cover, .k-player-controls { transition: opacity 180ms ease-out !important; }
 }
 
 /* Up Next overlay — 3 tiles + Back tile, faded in over the paused frame. */

@@ -1,90 +1,104 @@
 // ------------------------------------------------------------------------
 // coop/js/player.js
 //
-// Seamless in-app YouTube player. Lives as a single overlay attached to
-// document.body and reused between videos — no per-open teardown, no
-// black frame between tap and playback.
+// Seamless in-app YouTube player.
 //
-// Design summary:
-//   - warmup() at app start loads the IFrame API and creates ONE hidden
-//     YT.Player. Subsequent openPlayer() calls just loadVideoById()
-//     synchronously from the tap handler (so iOS grants sound).
-//   - openPlayer({sourceElement, thumbnailUrl, ...}) animates a
-//     background thumbnail from the tile's rect to fullscreen (FLIP,
-//     ~300 ms, gentle ease). Thumbnail stays over the iframe until
-//     YT.PlayerState.PLAYING fires — then it crossfades out.
-//   - Custom controls (accent-colored back, play/pause, scrubber) are
-//     rendered on our own overlay, above a full-cover transparent tap
-//     shield that blocks every YouTube UI element (title, channel,
-//     "Watch on YouTube", share). Tap the shield to toggle controls;
-//     controls auto-hide after 3 s of playback.
-//   - Closing (back button or swipe-down) reverses the zoom into the
-//     source tile's rect.
-//   - Video end + Up Next on: fade three next-newest tiles + a Back
-//     tile IN over the paused final frame. No route change.
-//   - Resume position saved to localStorage per (profile, video) on
-//     PAUSED / periodic tick / ENDED-clear.
-//   - Respects prefers-reduced-motion by swapping the zoom for a fade.
+// Opening: fade to dark (200 ms) → kid's avatar centered with an SVG
+// accent ring that draws itself around it (~600 ms) → when both the
+// player fires PLAYING and 600 ms have elapsed, fade avatar+ring out
+// and the video in (~250 ms). If the video doesn't start after ~2 s
+// the ring gently pulses until it does. Same intro is used when the
+// kid taps an Up Next pick.
+//
+// Pause cover: whenever state ≠ PLAYING after the video has once
+// started, cover the iframe with the video's own thumbnail (object-fit
+// cover, no stretch) + a soft dark scrim. This hides YouTube's pause
+// UI (title bar, "Watch on YouTube", share, related suggestions).
+// Removed the instant PLAYING resumes.
+//
+// Controls: big centered Play/Pause in the kid's accent, back FAB
+// top-left, bottom bar with progress + time + ±10 s + CC. Tap the
+// screen to show/hide; auto-hide after 3 s while playing. Scrubbing
+// uses pointer events with touch-action: none and a 44 px hit area.
+// Double-tap left/right third seeks ±10 s with a brief hint. CC uses
+// loadModule('captions') + setOption; per-kid preference is stored on
+// device.
+//
+// Close: fade out to the previous screen (no shrink). Swipe down also
+// closes. Resume position saved per (profile, video) in localStorage.
+// prefers-reduced-motion swaps ring draw for a plain fade.
 // ------------------------------------------------------------------------
 
 import { h, icon, ICONS } from './dom.js';
+import { avatarSvg } from './avatars.js';
 import * as data from './data.js';
 import { attachLongPress, openBlockSheet } from './kidBlock.js';
 
-// ---------- lifecycle state ----------
+// ---------- module state ----------
 let apiReady = null;
 let ytPlayer = null;
 let YT_NS = null;
 
 let container = null;
-let thumb = null;
-let iframeWrap = null;
-let iframeSlot = null;
+let iframeWrap = null, iframeSlot = null;
 let tapShield = null;
+let cover = null;               // pause / non-PLAYING cover (video thumbnail + scrim)
+let intro = null;               // opening animation (avatar + ring)
+let introAvatar = null;
+let introRing = null;
 let controls = null;
 let backBtn = null;
-let playPauseBtn = null;
-let scrubTrack = null;
-let scrubFill = null;
-let scrubThumb = null;
+let centerPP = null;            // big centered play/pause
+let scrubTrack = null, scrubFill = null, scrubThumb = null;
 let timeLabel = null;
-let fallbackPlay = null;   // giant Play button shown if iOS blocks autoplay
+let skipBackBtn = null;
+let skipFwdBtn = null;
+let ccBtn = null;
+let hintLabel = null;           // "−10" / "+10" flash
 let upNextOverlay = null;
+let fallbackPlay = null;
 
-let current = null;        // active video context (see openPlayer)
+let current = null;             // { profile, profileId, videoId, title, thumbnailUrl, channelId, returnTo, hasStarted, playingResolver }
 let controlsVisible = false;
 let controlsHideTimer = null;
 let progressTimer = null;
-let userSeeking = false;
 let saveTimer = null;
-let openInFlight = false;  // during open animation
+let userSeeking = false;
+let scrubberPointerId = null;
+let ccOn = false;
+let ccAvailable = false;
+let openInFlight = false;
+let lastTap = { t: 0, x: 0 };
 
 const REDUCED = () => window.matchMedia
   ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
+const RING_CIRCUMFERENCE = 327;   // 2π·52, matches the CSS
 
 // ---------- resume position ----------
-function posKey(profileId, videoId) { return `coop_pos_${profileId}_${videoId}`; }
-function readResumePos(profileId, videoId) {
+function posKey(p, v) { return `coop_pos_${p}_${v}`; }
+function readResumePos(p, v) {
   try {
-    const raw = localStorage.getItem(posKey(profileId, videoId));
+    const raw = localStorage.getItem(posKey(p, v));
     if (!raw) return 0;
     const n = Number(raw);
-    return Number.isFinite(n) && n > 3 ? n : 0;   // ignore tiny values
+    return Number.isFinite(n) && n > 3 ? n : 0;
   } catch { return 0; }
 }
-function writeResumePos(profileId, videoId, seconds) {
-  try { localStorage.setItem(posKey(profileId, videoId), String(Math.floor(seconds))); }
-  catch { /* private mode */ }
+function writeResumePos(p, v, s) {
+  try { localStorage.setItem(posKey(p, v), String(Math.floor(s))); } catch {}
 }
-function clearResumePos(profileId, videoId) {
-  try { localStorage.removeItem(posKey(profileId, videoId)); } catch {}
-}
+function clearResumePos(p, v) { try { localStorage.removeItem(posKey(p, v)); } catch {} }
 
-// ---------- warmup: load API + create hidden player ----------
+// ---------- CC preference ----------
+function ccKey(p) { return `coop_cc_${p}`; }
+function readCcPref(p) { try { return localStorage.getItem(ccKey(p)) === 'on'; } catch { return false; } }
+function writeCcPref(p, on) { try { localStorage.setItem(ccKey(p), on ? 'on' : 'off'); } catch {} }
+
+// ---------- warmup ----------
 export function warmup() {
   if (apiReady) return apiReady;
   ensureDom();
-  apiReady = new Promise(resolve => {
+  apiReady = new Promise((resolve) => {
     const done = (YT) => {
       YT_NS = YT;
       ytPlayer = new YT.Player(iframeSlot, {
@@ -92,15 +106,12 @@ export function warmup() {
         playerVars: {
           controls: 0, rel: 0, iv_load_policy: 3,
           playsinline: 1, fs: 0, disablekb: 1,
-          modestbranding: 1
+          modestbranding: 1, cc_load_policy: 0
         },
         events: {
           onReady: () => resolve(YT),
           onStateChange: handleStateChange,
-          onError: () => {
-            // Silent — fallback play button is already shown if we're
-            // stuck; back button always closes.
-          }
+          onError: () => {}
         }
       });
     };
@@ -108,9 +119,9 @@ export function warmup() {
     else {
       const prev = window.onYouTubeIframeAPIReady;
       window.onYouTubeIframeAPIReady = () => { if (typeof prev === 'function') prev(); done(window.YT); };
-      const script = document.createElement('script');
-      script.src = 'https://www.youtube.com/iframe_api';
-      document.head.appendChild(script);
+      const s = document.createElement('script');
+      s.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(s);
     }
   });
   return apiReady;
@@ -120,68 +131,111 @@ export function warmup() {
 function ensureDom() {
   if (container) return;
 
-  thumb = h('div', { class: 'k-player-thumb', 'aria-hidden': 'true' });
-  iframeSlot = h('div', { id: 'k-player-slot' });   // YT.Player replaces this
+  iframeSlot = h('div', { id: 'k-player-slot' });
   tapShield = h('div', { class: 'k-player-shield', 'aria-hidden': 'true' });
-  iframeWrap = h('div', { class: 'k-player-video' }, iframeSlot, tapShield);
+  iframeWrap = h('div', { class: 'k-player-video' }, iframeSlot);
+
+  // Pause cover — hidden by default, shown when state ≠ PLAYING after
+  // first playback started.
+  cover = h('div', { class: 'k-player-cover', 'aria-hidden': 'true' },
+    h('div', { class: 'k-player-cover-scrim' })
+  );
+
+  // Intro overlay — avatar + drawn accent ring. Shown during opening
+  // and any time the video hasn't started yet.
+  introAvatar = h('div', { class: 'k-intro-avatar' });
+  introRing = h('div', { class: 'k-intro-ring-wrap' },
+    // SVG with a single circle whose stroke-dashoffset is animated by CSS.
+    // r=52, cx/cy=60 → circumference ≈ 327.
+    Object.assign(document.createElementNS('http://www.w3.org/2000/svg', 'svg'), {}) // placeholder; replaced below
+  );
+  // Rebuild the ring properly (needed to keep the SVG in the right namespace).
+  {
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 120 120');
+    svg.setAttribute('class', 'k-intro-ring');
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('cx', '60'); circle.setAttribute('cy', '60'); circle.setAttribute('r', '52');
+    circle.setAttribute('fill', 'none');
+    circle.setAttribute('stroke', 'var(--accent)');
+    circle.setAttribute('stroke-width', '4');
+    circle.setAttribute('stroke-linecap', 'round');
+    circle.setAttribute('transform', 'rotate(-90 60 60)');
+    svg.appendChild(circle);
+    introRing.innerHTML = '';
+    introRing.appendChild(svg);
+  }
+  intro = h('div', { class: 'k-player-intro', 'aria-hidden': 'true' },
+    introRing, introAvatar
+  );
 
   fallbackPlay = h('button', {
-    class: 'k-player-fallback',
-    type: 'button',
-    'aria-label': 'Play',
+    class: 'k-player-fallback', type: 'button', 'aria-label': 'Play',
     onclick: (e) => { e.stopPropagation(); tryPlay(true); }
   }, h('span', { html: icon(ICONS.play) }));
 
   backBtn = h('button', {
-    class: 'k-player-back',
-    type: 'button',
-    'aria-label': 'Close player',
+    class: 'k-player-back', type: 'button', 'aria-label': 'Close player',
     onclick: (e) => { e.stopPropagation(); close(); }
   }, h('span', { html: icon(ICONS.back) }));
 
-  playPauseBtn = h('button', {
-    class: 'k-player-playpause',
-    type: 'button',
-    'aria-label': 'Play/Pause',
+  centerPP = h('button', {
+    class: 'k-player-center-pp', type: 'button', 'aria-label': 'Play/Pause',
     onclick: (e) => { e.stopPropagation(); togglePlay(); }
   });
-  playPauseBtn.innerHTML = icon(ICONS.play);
+  centerPP.innerHTML = icon(ICONS.play);
 
   scrubFill = h('div', { class: 'k-player-scrub-fill' });
   scrubThumb = h('div', { class: 'k-player-scrub-thumb' });
-  scrubTrack = h('div', { class: 'k-player-scrub' }, scrubFill, scrubThumb);
+  scrubTrack = h('div', { class: 'k-player-scrub', 'aria-label': 'Seek', role: 'slider' }, scrubFill, scrubThumb);
   installScrubHandlers();
 
   timeLabel = h('div', { class: 'k-player-time' }, '0:00 / 0:00');
 
+  skipBackBtn = h('button', {
+    class: 'k-player-skip', type: 'button', 'aria-label': 'Skip back 10 seconds',
+    onclick: (e) => { e.stopPropagation(); skipBy(-10); scheduleAutoHide(); }
+  }, '−10');
+  skipFwdBtn = h('button', {
+    class: 'k-player-skip', type: 'button', 'aria-label': 'Skip forward 10 seconds',
+    onclick: (e) => { e.stopPropagation(); skipBy(10); scheduleAutoHide(); }
+  }, '+10');
+  ccBtn = h('button', {
+    class: 'k-player-cc', type: 'button', 'aria-label': 'Captions',
+    onclick: (e) => { e.stopPropagation(); toggleCc(); }
+  }, 'CC');
+
+  const bottomLine = h('div', { class: 'k-player-bottom-line' },
+    timeLabel,
+    h('div', { style: { flex: '1' } }),
+    skipBackBtn, skipFwdBtn, ccBtn
+  );
+  const bottomBar = h('div', { class: 'k-player-bottom' }, scrubTrack, bottomLine);
+
   controls = h('div', { class: 'k-player-controls', 'aria-hidden': 'true' },
-    backBtn,
-    h('div', { class: 'k-player-bottom' },
-      playPauseBtn,
-      h('div', { class: 'k-player-bottom-line' }, scrubTrack, timeLabel)
-    )
+    backBtn, centerPP, bottomBar
   );
 
+  hintLabel = h('div', { class: 'k-player-hint', 'aria-hidden': 'true' });
   upNextOverlay = h('div', { class: 'k-player-upnext', 'aria-hidden': 'true' });
 
-  container = h('div', { class: 'k-player', 'aria-hidden': 'true', 'role': 'dialog' },
-    iframeWrap, thumb, fallbackPlay, controls, upNextOverlay
+  container = h('div', { class: 'k-player', 'aria-hidden': 'true', role: 'dialog' },
+    iframeWrap, cover, controls, intro, tapShield, hintLabel, fallbackPlay, upNextOverlay
   );
   document.body.appendChild(container);
 
-  // Tap on the video area toggles controls. Controls' buttons stop
-  // propagation so their taps don't also toggle.
-  tapShield.addEventListener('click', () => {
-    if (upNextOverlay.classList.contains('shown')) return;
-    controlsVisible ? hideControls() : showControls();
-  });
-  // Long-press on the playing video area → block sheet for the current
-  // video. Suppresses the trailing click so we don't also toggle controls.
+  // Tap shield handles taps on the video area (below controls in z-index
+  // — see CSS — so it never covers our own controls).
+  tapShield.addEventListener('click', onShieldClick);
+
+  // Long-press inside the video area → block-video sheet for the
+  // currently playing video.
   attachLongPress(tapShield, () => {
     if (!current) return;
     openBlockSheet(
       { id: current.videoId, title: current.title, thumbnail_url: current.thumbnailUrl },
-      () => close()   // after blocking, close the player
+      () => close()
     );
   });
 
@@ -190,55 +244,71 @@ function ensureDom() {
 
 // ---------- open ----------
 export function openPlayer(opts) {
-  // opts: { profile, videoId, title, thumbnailUrl, channelId, sourceElement, returnTo }
   ensureDom();
 
   current = {
-    profileId: opts.profile?.id,
     profile: opts.profile,
+    profileId: opts.profile?.id,
     videoId: opts.videoId,
     title: opts.title,
     thumbnailUrl: opts.thumbnailUrl,
     channelId: opts.channelId,
     returnTo: opts.returnTo,
-    sourceElement: opts.sourceElement || null,
-    sourceRect: opts.sourceElement ? opts.sourceElement.getBoundingClientRect() : null
+    hasStarted: false,
+    playingResolver: null,
+    introStart: performance.now()
   };
 
-  // Accent theming.
+  // Theme.
   const accent = opts.profile?.accent_color || '#A9D3BE';
   const onAccent = opts.profile?.on_accent_text || '#14231C';
   container.style.setProperty('--accent', accent);
   container.style.setProperty('--on-accent', onAccent);
 
-  // Reset overlays and thumb.
+  // Reset transient UI.
   upNextOverlay.classList.remove('shown');
   upNextOverlay.innerHTML = '';
-  upNextOverlay.setAttribute('aria-hidden', 'true');
   fallbackPlay.classList.remove('shown');
-  thumb.style.opacity = '1';
-  thumb.style.backgroundImage = opts.thumbnailUrl ? `url("${opts.thumbnailUrl}")` : 'linear-gradient(180deg,#1A2230,#0F1620)';
+  hintLabel.classList.remove('shown');
+  ccOn = false; ccAvailable = false;
+  updateCcButton();
 
-  // Show container (display: flex).
+  // Intro: avatar + ring.
+  introAvatar.innerHTML = `<div class="avatar-img">${avatarSvg(opts.profile?.avatar || 'animals:fox')}</div>`;
+  // Reset ring animation by re-adding class.
+  intro.classList.remove('showing', 'pulsing');
+  cover.classList.remove('shown');
+  cover.style.backgroundImage = opts.thumbnailUrl ? `url("${opts.thumbnailUrl}")` : '';
+  cover.style.opacity = '0';
+
+  // Container fades in from black.
   container.setAttribute('aria-hidden', 'false');
   container.classList.add('open');
   document.documentElement.style.overflow = 'hidden';
+  container.style.opacity = '0';
+  container.offsetWidth;
+  container.style.transition = 'opacity 200ms ease-out';
+  container.style.opacity = '1';
+  // Video wrap starts invisible; we crossfade it in once PLAYING.
+  iframeWrap.style.opacity = '0';
+  intro.classList.add('showing');
+  // Kick the ring drawing on the next frame.
+  requestAnimationFrame(() => intro.classList.add('draw'));
 
-  // Animate open.
-  openInFlight = true;
-  if (current.sourceRect && !REDUCED()) animateFromRect(current.sourceRect);
-  else fadeInContainer();
+  // Kick a pulse if playback stalls beyond ~2 s.
+  setTimeout(() => {
+    if (current && !current.hasStarted) intro.classList.add('pulsing');
+  }, 2000);
 
-  // Try to start playback SYNCHRONOUSLY from the tap handler so iOS
-  // grants sound. If the API isn't ready yet (first ever open),
-  // schedule + show fallback so the kid can tap to play.
+  // Start playback synchronously so iOS grants sound.
   const startAt = current.profileId ? readResumePos(current.profileId, current.videoId) : 0;
+  const playingPromise = new Promise(r => { current.playingResolver = r; });
+  const minDelay = new Promise(r => setTimeout(r, 600));
+
   if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
-    try {
-      ytPlayer.loadVideoById({ videoId: current.videoId, startSeconds: startAt });
-    } catch { showFallbackPlay(); }
+    try { ytPlayer.loadVideoById({ videoId: current.videoId, startSeconds: startAt }); }
+    catch { showFallbackPlay(); }
   } else {
-    // API still loading. Queue play + expose fallback.
     warmup().then(() => {
       if (!current || current.videoId !== opts.videoId) return;
       try { ytPlayer.loadVideoById({ videoId: current.videoId, startSeconds: startAt }); }
@@ -247,47 +317,37 @@ export function openPlayer(opts) {
     showFallbackPlay();
   }
 
-  showControls();
-  scheduleAutoHide(3500);
+  // Reveal the video once BOTH the min delay has elapsed AND PLAYING fires.
+  openInFlight = true;
+  Promise.all([playingPromise, minDelay]).then(() => {
+    if (!current) return;
+    revealVideo();
+  });
+
+  // Controls hidden during intro; auto-shown briefly after reveal.
 }
 
-function fadeInContainer() {
-  container.style.opacity = '0';
-  container.offsetWidth;
-  container.style.transition = 'opacity 200ms ease-out';
-  container.style.opacity = '1';
-  requestAnimationFrame(() => setTimeout(() => { openInFlight = false; container.style.transition = ''; }, 220));
-}
-
-function animateFromRect(rect) {
-  // FLIP: start with a transform that makes the fullscreen thumb look
-  // like the source tile, then transition to identity.
-  const vw = window.innerWidth, vh = window.innerHeight;
-  const sx = rect.width / vw;
-  const sy = rect.height / vh;
-  const dx = rect.left, dy = rect.top;
-  thumb.style.transformOrigin = 'top left';
-  thumb.style.transition = 'none';
-  thumb.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
-  // Also fade the iframe/tap shield in so the first frame doesn't flash.
-  iframeWrap.style.opacity = '0';
-  controls.style.opacity = '0';
-  // Force reflow, then animate.
-  thumb.offsetWidth;
-  const dur = 300;
-  const ease = 'cubic-bezier(0.2, 0.9, 0.3, 1)';
-  thumb.style.transition = `transform ${dur}ms ${ease}`;
-  thumb.style.transform = 'none';
-  iframeWrap.style.transition = `opacity ${dur}ms ${ease}`;
+function revealVideo() {
+  if (!current) return;
+  openInFlight = false;
+  // Fade video in and intro out simultaneously.
+  iframeWrap.style.transition = 'opacity 250ms ease-out';
   iframeWrap.style.opacity = '1';
-  controls.style.transition = `opacity ${dur}ms ${ease}`;
-  controls.style.opacity = '1';
+  intro.style.transition = 'opacity 250ms ease-out';
+  intro.style.opacity = '0';
   setTimeout(() => {
-    thumb.style.transition = '';
+    intro.classList.remove('showing', 'pulsing', 'draw');
+    intro.style.opacity = '';
+    intro.style.transition = '';
     iframeWrap.style.transition = '';
-    controls.style.transition = '';
-    openInFlight = false;
-  }, dur + 20);
+  }, 280);
+  // Apply CC preference if any.
+  const wantCc = current.profileId ? readCcPref(current.profileId) : false;
+  if (wantCc) setTimeout(() => turnCcOn(), 400);
+  // Detect CC availability shortly after.
+  setTimeout(refreshCcAvailability, 1200);
+  showControls();
+  scheduleAutoHide();
 }
 
 // ---------- close ----------
@@ -296,63 +356,27 @@ function close() {
   stopProgressTimer();
   hideControls();
   savePosNow();
-
-  const rect = getCurrentSourceRect();
-  const doFinish = () => {
+  const done = () => {
     container.classList.remove('open');
     container.setAttribute('aria-hidden', 'true');
     document.documentElement.style.overflow = '';
     // Reset styles for next open.
-    thumb.style.transform = '';
-    thumb.style.transition = '';
-    thumb.style.opacity = '1';
-    iframeWrap.style.opacity = '';
-    controls.style.opacity = '';
-    upNextOverlay.classList.remove('shown');
-    upNextOverlay.innerHTML = '';
-    // Stop playback so audio doesn't linger.
+    container.style.opacity = ''; container.style.transition = '';
+    iframeWrap.style.opacity = ''; iframeWrap.style.transition = '';
+    intro.style.opacity = ''; intro.style.transition = '';
+    intro.classList.remove('showing', 'pulsing', 'draw');
+    cover.classList.remove('shown'); cover.style.opacity = '0';
+    upNextOverlay.classList.remove('shown'); upNextOverlay.innerHTML = '';
     try { ytPlayer && ytPlayer.stopVideo && ytPlayer.stopVideo(); } catch {}
     current = null;
   };
-
-  if (rect && !REDUCED()) {
-    const vw = window.innerWidth, vh = window.innerHeight;
-    const sx = rect.width / vw;
-    const sy = rect.height / vh;
-    const dx = rect.left, dy = rect.top;
-    // Bring the thumb back on top of the (soon-to-fade) iframe.
-    thumb.style.opacity = '1';
-    thumb.style.transition = 'none';
-    thumb.style.transformOrigin = 'top left';
-    thumb.style.transform = 'none';
-    thumb.offsetWidth;
-    const dur = 260;
-    const ease = 'cubic-bezier(0.4, 0, 0.6, 1)';
-    thumb.style.transition = `transform ${dur}ms ${ease}, opacity 120ms ease-in ${dur - 100}ms`;
-    thumb.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
-    thumb.style.opacity = '0.001';
-    iframeWrap.style.transition = `opacity ${dur}ms ${ease}`;
-    iframeWrap.style.opacity = '0';
-    controls.style.transition = `opacity 120ms ease-out`;
-    controls.style.opacity = '0';
-    setTimeout(doFinish, dur + 20);
-  } else {
-    container.style.transition = 'opacity 180ms ease-out';
-    container.style.opacity = '0';
-    setTimeout(() => { container.style.opacity = ''; container.style.transition = ''; doFinish(); }, 200);
-  }
-}
-function getCurrentSourceRect() {
-  if (!current || !current.sourceElement) return null;
-  try {
-    const r = current.sourceElement.getBoundingClientRect();
-    // If the element was removed / is 0 area, treat as no rect.
-    if (r.width === 0 || r.height === 0) return null;
-    return r;
-  } catch { return null; }
+  // Fade out only — no shrink animation.
+  container.style.transition = 'opacity 180ms ease-out';
+  container.style.opacity = '0';
+  setTimeout(done, 200);
 }
 
-// ---------- controls ----------
+// ---------- controls visibility ----------
 function showControls() {
   controls.classList.add('visible');
   controls.setAttribute('aria-hidden', 'false');
@@ -365,88 +389,124 @@ function hideControls() {
 }
 function scheduleAutoHide(ms = 3000) {
   clearTimeout(controlsHideTimer);
-  controlsHideTimer = setTimeout(() => {
-    if (isPlaying()) hideControls();
-  }, ms);
+  controlsHideTimer = setTimeout(() => { if (isPlaying()) hideControls(); }, ms);
 }
 function isPlaying() {
   try { return YT_NS && ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === YT_NS.PlayerState.PLAYING; }
   catch { return false; }
+}
+function updatePlayPauseIcon() {
+  centerPP.innerHTML = icon(isPlaying() ? ICONS.pause : ICONS.play);
 }
 function togglePlay() {
   if (!ytPlayer) return;
   try {
     if (isPlaying()) ytPlayer.pauseVideo();
     else ytPlayer.playVideo();
-    // Reflect state in the button icon a beat later.
-    setTimeout(updatePlayPauseIcon, 100);
+    setTimeout(updatePlayPauseIcon, 80);
   } catch {}
-}
-function updatePlayPauseIcon() {
-  playPauseBtn.innerHTML = icon(isPlaying() ? ICONS.pause || '<rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/>' : ICONS.play);
 }
 function showFallbackPlay() {
   fallbackPlay.classList.add('shown');
-  fallbackPlay.setAttribute('aria-hidden', 'false');
 }
 function hideFallbackPlay() {
   fallbackPlay.classList.remove('shown');
-  fallbackPlay.setAttribute('aria-hidden', 'true');
 }
-function tryPlay(fromUser) {
+function tryPlay() {
   hideFallbackPlay();
   if (!ytPlayer) return;
   try { ytPlayer.playVideo(); } catch {}
-  if (fromUser) { showControls(); scheduleAutoHide(); }
+  showControls(); scheduleAutoHide();
 }
 
-// ---------- scrubber ----------
+// ---------- tap / double-tap on the video area ----------
+function onShieldClick(e) {
+  if (upNextOverlay.classList.contains('shown')) return;
+  const now = Date.now();
+  const x = e.clientX ?? 0;
+  const w = window.innerWidth;
+  // Always toggle first (so a single tap feels instant); a second tap
+  // within 300 ms undoes the toggle and additionally seeks — net effect
+  // is no controls flicker for a double-tap seek.
+  controlsVisible ? hideControls() : showControls();
+  scheduleAutoHide();
+  if (now - lastTap.t < 300 && Math.abs(x - lastTap.x) < 80) {
+    // Double tap
+    controlsVisible ? hideControls() : showControls();   // undo
+    if (x < w / 3) { skipBy(-10); flashHint('−10'); }
+    else if (x > w * 2 / 3) { skipBy(10); flashHint('+10'); }
+    lastTap = { t: 0, x: 0 };
+  } else {
+    lastTap = { t: now, x };
+  }
+}
+function skipBy(delta) {
+  if (!ytPlayer) return;
+  try {
+    const t = Math.max(0, ytPlayer.getCurrentTime() + delta);
+    ytPlayer.seekTo(t, true);
+  } catch {}
+}
+function flashHint(text) {
+  hintLabel.textContent = text;
+  hintLabel.classList.remove('shown');
+  hintLabel.offsetWidth;
+  hintLabel.classList.add('shown');
+  setTimeout(() => hintLabel.classList.remove('shown'), 700);
+}
+
+// ---------- scrubber (pointer events, iPhone-friendly) ----------
 function installScrubHandlers() {
+  scrubTrack.style.touchAction = 'none';
   const setFromEvent = (evt) => {
     const rect = scrubTrack.getBoundingClientRect();
-    const x = Math.max(0, Math.min(rect.width, (evt.touches?.[0]?.clientX ?? evt.clientX) - rect.left));
+    const x = Math.max(0, Math.min(rect.width, (evt.clientX ?? 0) - rect.left));
     const frac = rect.width ? x / rect.width : 0;
     const duration = safeDuration();
-    if (!duration) return;
     const t = frac * duration;
     const pct = `${(frac * 100).toFixed(2)}%`;
     scrubFill.style.width = pct;
-    if (scrubThumb) scrubThumb.style.left = pct;
-    timeLabel.textContent = `${fmtTime(t)} / ${fmtTime(duration)}`;
+    scrubThumb.style.left = pct;
+    timeLabel.textContent = `${fmt(t, duration >= 3600)} / ${fmt(duration, duration >= 3600)}`;
     return t;
   };
-  const start = (evt) => {
+  scrubTrack.addEventListener('pointerdown', (evt) => {
+    evt.preventDefault();
+    try { scrubTrack.setPointerCapture(evt.pointerId); } catch {}
+    scrubberPointerId = evt.pointerId;
     userSeeking = true;
-    setFromEvent(evt);
-    if (evt.cancelable) evt.preventDefault();
-  };
-  const move = (evt) => {
-    if (!userSeeking) return;
-    setFromEvent(evt);
-    if (evt.cancelable) evt.preventDefault();
-  };
-  const end = (evt) => {
-    if (!userSeeking) return;
+    const t = setFromEvent(evt);
+    if (ytPlayer && ytPlayer.seekTo && Number.isFinite(t)) {
+      try { ytPlayer.seekTo(t, false); } catch {}
+    }
+  });
+  scrubTrack.addEventListener('pointermove', (evt) => {
+    if (!userSeeking || evt.pointerId !== scrubberPointerId) return;
+    const t = setFromEvent(evt);
+    if (ytPlayer && ytPlayer.seekTo && Number.isFinite(t)) {
+      try { ytPlayer.seekTo(t, false); } catch {}
+    }
+  });
+  const endSeek = (evt) => {
+    if (!userSeeking || (scrubberPointerId != null && evt.pointerId !== scrubberPointerId)) return;
     const t = setFromEvent(evt);
     userSeeking = false;
-    if (typeof t === 'number' && ytPlayer && ytPlayer.seekTo) {
+    scrubberPointerId = null;
+    if (ytPlayer && ytPlayer.seekTo && Number.isFinite(t)) {
       try { ytPlayer.seekTo(t, true); } catch {}
     }
     scheduleAutoHide();
   };
-  scrubTrack.addEventListener('mousedown', start);
-  scrubTrack.addEventListener('touchstart', start, { passive: false });
-  window.addEventListener('mousemove', move);
-  window.addEventListener('touchmove', move, { passive: false });
-  window.addEventListener('mouseup', end);
-  window.addEventListener('touchend', end);
+  scrubTrack.addEventListener('pointerup', endSeek);
+  scrubTrack.addEventListener('pointercancel', endSeek);
 }
-function fmtTime(sec) {
-  if (!Number.isFinite(sec) || sec < 0) sec = 0;
-  const s = Math.floor(sec);
-  const m = Math.floor(s / 60);
+function fmt(sec, long) {
+  const s = Math.max(0, Math.floor(sec || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
   const ss = String(s % 60).padStart(2, '0');
-  return `${m}:${ss}`;
+  if (long) return `${h}:${String(m).padStart(2,'0')}:${ss}`;
+  return `${Math.floor(s / 60)}:${ss}`;
 }
 function safeDuration() {
   try { return (ytPlayer && ytPlayer.getDuration && ytPlayer.getDuration()) || 0; } catch { return 0; }
@@ -460,10 +520,9 @@ function startProgressTimer() {
     const frac = d ? Math.min(1, t / d) : 0;
     const pct = `${(frac * 100).toFixed(2)}%`;
     scrubFill.style.width = pct;
-    if (scrubThumb) scrubThumb.style.left = pct;
-    timeLabel.textContent = `${fmtTime(t)} / ${fmtTime(d)}`;
+    scrubThumb.style.left = pct;
+    timeLabel.textContent = `${fmt(t, d >= 3600)} / ${fmt(d, d >= 3600)}`;
   }, 250);
-  // Save resume position every ~5 s while playing.
   clearInterval(saveTimer);
   saveTimer = setInterval(savePosNow, 5000);
 }
@@ -476,56 +535,95 @@ function savePosNow() {
   try {
     const t = ytPlayer.getCurrentTime();
     const d = safeDuration();
-    if (Number.isFinite(t) && t > 3 && d && t < d - 3) {
-      writeResumePos(current.profileId, current.videoId, t);
-    }
+    if (Number.isFinite(t) && t > 3 && d && t < d - 3) writeResumePos(current.profileId, current.videoId, t);
   } catch {}
 }
 
-// ---------- YT state changes ----------
+// ---------- captions ----------
+function refreshCcAvailability() {
+  let list = [];
+  try { list = ytPlayer.getOption('captions', 'tracklist') || []; } catch { list = []; }
+  ccAvailable = Array.isArray(list) && list.length > 0;
+  updateCcButton();
+}
+function updateCcButton() {
+  if (!ccBtn) return;
+  ccBtn.classList.toggle('on', !!ccOn);
+  ccBtn.style.display = ccAvailable ? '' : 'none';
+}
+function turnCcOn() {
+  if (!ytPlayer) return;
+  try {
+    ytPlayer.loadModule('captions');
+    ytPlayer.setOption('captions', 'track', { languageCode: 'en' });
+    ccOn = true;
+  } catch { ccOn = false; }
+  updateCcButton();
+}
+function turnCcOff() {
+  if (!ytPlayer) return;
+  try { ytPlayer.unloadModule('captions'); } catch {}
+  ccOn = false;
+  updateCcButton();
+}
+function toggleCc() {
+  if (!current) return;
+  if (ccOn) turnCcOff(); else turnCcOn();
+  writeCcPref(current.profileId, ccOn);
+}
+
+// ---------- YT state ----------
 function handleStateChange(e) {
   if (!YT_NS) return;
   const S = YT_NS.PlayerState;
   switch (e.data) {
     case S.PLAYING:
       hideFallbackPlay();
-      // Crossfade the thumbnail out — we're on the first frame.
-      if (thumb.style.opacity !== '0') {
-        thumb.style.transition = 'opacity 260ms ease-out';
-        thumb.style.opacity = '0';
+      if (current) {
+        current.hasStarted = true;
+        if (current.playingResolver) { current.playingResolver(); current.playingResolver = null; }
       }
+      cover.classList.remove('shown');
+      cover.style.opacity = '0';
       startProgressTimer();
       updatePlayPauseIcon();
       scheduleAutoHide();
+      // Recheck CC availability after PLAYING (tracklist may populate late).
+      setTimeout(refreshCcAvailability, 800);
       break;
     case S.PAUSED:
+      if (current && current.hasStarted) showCover();
       updatePlayPauseIcon();
       showControls();
       savePosNow();
       break;
-    case S.ENDED:
-      stopProgressTimer();
-      // Clear resume for this video since it's finished.
-      if (current) clearResumePos(current.profileId, current.videoId);
-      onEnded();
-      break;
     case S.BUFFERING:
-      // no-op — keep thumb visible if we haven't played yet.
+      if (current && current.hasStarted) showCover();
       break;
     case S.CUED:
-      updatePlayPauseIcon();
+      if (current && current.hasStarted) showCover();
+      break;
+    case S.ENDED:
+      stopProgressTimer();
+      if (current) clearResumePos(current.profileId, current.videoId);
+      showCover();
+      onEnded();
       break;
   }
 }
+function showCover() {
+  if (!current || !current.thumbnailUrl) return;
+  cover.style.backgroundImage = `url("${current.thumbnailUrl}")`;
+  cover.classList.add('shown');
+  cover.style.opacity = '1';
+}
 
+// ---------- Up Next after ENDED ----------
 async function onEnded() {
   if (!current) return;
-  // Fetch show_up_next from public settings.
   let showUpNext = true;
   try { showUpNext = (await data.fetchPublicSettings()).show_up_next !== false; } catch {}
   if (!showUpNext) { close(); return; }
-
-  // Load 3 next-newest for the same channel (feed-filtered).
   let picks = [];
   try {
     if (current.channelId) {
@@ -533,17 +631,14 @@ async function onEnded() {
       picks = feed.filter(v => v.id !== current.videoId).slice(0, 3);
     }
   } catch {}
-
   renderUpNextOverlay(picks);
 }
-
 function renderUpNextOverlay(picks) {
   upNextOverlay.innerHTML = '';
   const grid = h('div', { class: 'k-player-upnext-grid' });
   for (const v of picks) {
     const tile = h('button', {
-      type: 'button',
-      class: 'k-player-upnext-tile',
+      type: 'button', class: 'k-player-upnext-tile',
       onclick: (ev) => { ev.stopPropagation(); openInternal(v); }
     },
       h('div', { class: 'k-player-upnext-thumb', style: v.thumbnail_url ? { backgroundImage: `url("${v.thumbnail_url}")` } : {} },
@@ -551,13 +646,11 @@ function renderUpNextOverlay(picks) {
       ),
       h('div', { class: 'k-player-upnext-title' }, v.title || '')
     );
-    // Long-press on an Up Next tile → block THAT video everywhere.
-    attachLongPress(tile, () => openBlockSheet(v, () => { tile.remove(); }));
+    attachLongPress(tile, () => openBlockSheet(v, () => tile.remove()));
     grid.appendChild(tile);
   }
   grid.appendChild(h('button', {
-    type: 'button',
-    class: 'k-player-upnext-tile back',
+    type: 'button', class: 'k-player-upnext-tile back',
     onclick: (ev) => { ev.stopPropagation(); close(); }
   },
     h('div', { class: 'k-player-upnext-thumb back-thumb' },
@@ -567,40 +660,52 @@ function renderUpNextOverlay(picks) {
   ));
   upNextOverlay.appendChild(grid);
   upNextOverlay.classList.add('shown');
-  upNextOverlay.setAttribute('aria-hidden', 'false');
   hideControls();
 }
 
-// Internal: switch to a new video without closing/reopening the player.
+// Kid taps an Up Next pick — reuse the intro (avatar+ring) for the
+// transition instead of jumping straight into the new video.
 function openInternal(v) {
   if (!current) return;
   upNextOverlay.classList.remove('shown');
   upNextOverlay.innerHTML = '';
-  // Update thumbnail crossfade.
-  thumb.style.transition = 'none';
-  thumb.style.opacity = '1';
-  thumb.style.backgroundImage = v.thumbnail_url ? `url("${v.thumbnail_url}")` : '';
-  thumb.offsetWidth;
-  thumb.style.transition = 'opacity 260ms ease-out';
-  // Update current context.
+  hideControls();
   current.videoId = v.id;
   current.title = v.title;
   current.thumbnailUrl = v.thumbnail_url;
   current.channelId = v.channel_id || current.channelId;
+  current.hasStarted = false;
+  current.playingResolver = null;
+  current.introStart = performance.now();
+
+  // Hide the old video, show the intro again.
+  iframeWrap.style.transition = 'opacity 180ms ease-out';
+  iframeWrap.style.opacity = '0';
+  cover.classList.remove('shown');
+  cover.style.backgroundImage = v.thumbnail_url ? `url("${v.thumbnail_url}")` : '';
+  intro.classList.remove('showing', 'pulsing', 'draw');
+  intro.style.opacity = '';
+  // Force reflow, then re-run the animation.
+  intro.offsetWidth;
+  intro.classList.add('showing');
+  requestAnimationFrame(() => intro.classList.add('draw'));
+  setTimeout(() => { if (current && !current.hasStarted) intro.classList.add('pulsing'); }, 2000);
+
   const startAt = readResumePos(current.profileId, current.videoId) || 0;
+  const playingPromise = new Promise(r => { current.playingResolver = r; });
+  const minDelay = new Promise(r => setTimeout(r, 600));
   try { ytPlayer.loadVideoById({ videoId: current.videoId, startSeconds: startAt }); }
   catch { showFallbackPlay(); }
-  showControls();
-  scheduleAutoHide();
+  Promise.all([playingPromise, minDelay]).then(() => { if (current) revealVideo(); });
 }
 
-// ---------- swipe-down to close ----------
+// ---------- swipe-to-close ----------
 function installSwipe() {
   let startY = null, startX = null, startedOnControl = false;
   container.addEventListener('touchstart', (e) => {
     if (openInFlight) return;
     if (upNextOverlay.classList.contains('shown')) return;
-    startedOnControl = !!e.target.closest('.k-player-controls, .k-player-fallback, .k-player-upnext, .k-player-back');
+    startedOnControl = !!e.target.closest('.k-player-controls, .k-player-fallback, .k-player-upnext, .k-player-back, .k-player-scrub');
     if (startedOnControl) return;
     if (e.touches.length !== 1) return;
     startY = e.touches[0].clientY;
@@ -611,9 +716,8 @@ function installSwipe() {
     if (startedOnControl || startY == null) return;
     const dy = e.touches[0].clientY - startY;
     const dx = Math.abs(e.touches[0].clientX - startX);
-    if (dy <= 0 || dx > 60) { return; }
+    if (dy <= 0 || dx > 60) return;
     if (e.cancelable) e.preventDefault();
-    // Drag the whole overlay down slightly, with rubber-band.
     const t = Math.min(1, dy / 400);
     container.style.transform = `translateY(${dy * 0.6}px)`;
     container.style.opacity = String(1 - t * 0.5);

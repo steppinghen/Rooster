@@ -116,6 +116,15 @@ function deriveOnAccentText(hex) {
   return L > 0.5 ? '#14231C' : '#EAF0EE';
 }
 
+// Parse ISO 8601 duration (PT#H#M#S) → integer seconds; null on failure.
+function parseIsoDuration(d) {
+  if (!d) return null;
+  const m = d.match(/^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+  if (!m) return null;
+  const [, days, h, min, s] = m;
+  return (+(days || 0)) * 86400 + (+(h || 0)) * 3600 + (+(min || 0)) * 60 + +(s || 0);
+}
+
 async function ytOEmbed(videoId) {
   const url = `https://www.youtube.com/oembed?format=json&url=https%3A//www.youtube.com/watch%3Fv%3D${videoId}`;
   const res = await fetch(url);
@@ -371,13 +380,29 @@ const OPS = {
     if (!videoId) throw new Error('Could not parse video input');
     const oembed = await ytOEmbed(videoId);
     if (!oembed) throw new Error('Video not found via oEmbed');
-    const { error: vidErr } = await supabase.from('coop_videos').upsert({
+    // Also try to grab duration so the max-video-length filter can
+    // enforce a cap. oEmbed doesn't expose duration; videos.list does.
+    let duration_seconds = null;
+    if (YOUTUBE_API_KEY) {
+      try {
+        const p = new URLSearchParams({ part: 'contentDetails', id: videoId, key: YOUTUBE_API_KEY });
+        const r = await fetch('https://www.googleapis.com/youtube/v3/videos?' + p);
+        if (r.ok) {
+          const j = await r.json();
+          const iso = j.items?.[0]?.contentDetails?.duration;
+          duration_seconds = parseIsoDuration(iso);
+        }
+      } catch { /* leave null — read-time filter treats NULL as passes */ }
+    }
+    const patch = {
       id: videoId,
       title: oembed.title,
       thumbnail_url: oembed.thumbnail_url,
       channel_title: oembed.author_name,
       is_oneoff: true
-    }, { onConflict: 'id', ignoreDuplicates: false });
+    };
+    if (duration_seconds != null) patch.duration_seconds = duration_seconds;
+    const { error: vidErr } = await supabase.from('coop_videos').upsert(patch, { onConflict: 'id', ignoreDuplicates: false });
     // Note: this upsert will set is_oneoff=true even if the row existed
     // and was not previously a oneoff — that's the intended flag-flip.
     // On the reverse path (sync's upsert), is_oneoff is NOT in the
@@ -491,6 +516,57 @@ const OPS = {
       .eq('id', 1);
     if (error) throw error;
     return { show_up_next };
+  },
+
+  async set_max_video_seconds({ max_video_seconds }) {
+    // Accept null (no limit) or a positive integer.
+    if (max_video_seconds != null) {
+      const n = Number(max_video_seconds);
+      if (!Number.isInteger(n) || n <= 0) throw new Error('max_video_seconds must be a positive integer or null');
+      max_video_seconds = n;
+    }
+    const { error } = await supabase
+      .from('coop_public_settings')
+      .update({ max_video_seconds, updated_at: new Date().toISOString() })
+      .eq('id', 1);
+    if (error) throw error;
+    return { max_video_seconds };
+  },
+
+  // One-shot: pull duration for any is_oneoff row with a NULL duration.
+  // Batched 50 IDs per videos.list call. Returns { checked, filled }.
+  async backfill_oneoff_durations() {
+    if (!YOUTUBE_API_KEY) throw new Error('YOUTUBE_API_KEY not set');
+    const { data: rows, error } = await supabase
+      .from('coop_videos')
+      .select('id')
+      .eq('is_oneoff', true)
+      .is('duration_seconds', null);
+    if (error) throw error;
+    const ids = (rows || []).map(r => r.id);
+    if (!ids.length) return { checked: 0, filled: 0 };
+    let filled = 0;
+    for (let i = 0; i < ids.length; i += 50) {
+      const batch = ids.slice(i, i + 50);
+      const p = new URLSearchParams({ part: 'contentDetails', id: batch.join(','), key: YOUTUBE_API_KEY });
+      const r = await fetch('https://www.googleapis.com/youtube/v3/videos?' + p);
+      if (!r.ok) continue;
+      const j = await r.json();
+      const updates = [];
+      for (const item of j.items || []) {
+        const sec = parseIsoDuration(item.contentDetails?.duration);
+        if (sec != null) updates.push({ id: item.id, duration_seconds: sec });
+      }
+      // Upsert one row at a time (small volume, avoids overwriting other columns).
+      for (const u of updates) {
+        const { error: uErr } = await supabase
+          .from('coop_videos')
+          .update({ duration_seconds: u.duration_seconds })
+          .eq('id', u.id);
+        if (!uErr) filled++;
+      }
+    }
+    return { checked: ids.length, filled };
   },
 
   async diagnose_channel({ handle }) {

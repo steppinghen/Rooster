@@ -75,5 +75,7 @@ export const addBlocklistKeyword   = (keyword)          => callOp('add_blocklist
 export const removeBlocklistKeyword = (keyword)         => callOp('remove_blocklist_keyword', { keyword });
 export const setHideShorts         = (hide_shorts)      => callOp('set_hide_shorts',       { hide_shorts });
 export const setShowUpNext         = (show_up_next)     => callOp('set_show_up_next',      { show_up_next });
+export const setMaxVideoSeconds    = (max_video_seconds) => callOp('set_max_video_seconds', { max_video_seconds });
+export const backfillOneoffDurations = ()               => callOp('backfill_oneoff_durations', {});
 export const seedStarterChannels   = (rc_profile_id, brody_profile_id) =>
                                       callOp('seed_starter_channels', { rc_profile_id, brody_profile_id });

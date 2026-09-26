@@ -894,6 +894,55 @@ export async function renderSettings(rootEl, go) {
     ])
   }));
 
+  // Max video length — segmented control inline in a section.
+  const MAX_OPTIONS = [
+    [1800,  '30 m'],
+    [3600,  '1 h'],
+    [7200,  '2 h'],
+    [10800, '3 h'],
+    [null,  'None']
+  ];
+  const currentMax = settings.max_video_seconds ?? null;
+  const maxSeg = h('div', { class: 'p-segmented', style: { display: 'inline-flex' } });
+  function drawMax(sel) {
+    maxSeg.innerHTML = '';
+    for (const [val, label] of MAX_OPTIONS) {
+      const isSel = (sel === val) || (sel == null && val == null);
+      maxSeg.appendChild(h('button', {
+        type: 'button',
+        class: isSel ? 'active' : '',
+        onclick: async () => {
+          drawMax(val);
+          try { await writer.setMaxVideoSeconds(val); toast('Saved'); }
+          catch (e) { toast('Error: ' + e.message); drawMax(sel); }
+        }
+      }, label));
+    }
+  }
+  drawMax(currentMax);
+  scroll.appendChild(section({
+    header: 'Maximum video length',
+    footer: 'Videos longer than this are hidden from feeds, Up Next, and search. One-off videos with no known duration always pass — use Backfill below to fill them in.',
+    children: group([
+      h('div', { class: 'p-cell', style: { flexWrap: 'wrap', gap: '10px' } },
+        h('div', { class: 'p-cell-label' }, h('div', { class: 'p-cell-title' }, 'Cap')),
+        maxSeg
+      ),
+      cell({
+        title: 'Backfill one-off durations',
+        chevron: false,
+        right: h('span', { style: { color: 'var(--p-tint)' } }, 'Run'),
+        onclick: async () => {
+          toast('Backfilling…');
+          try {
+            const res = await writer.backfillOneoffDurations();
+            toast(`Filled ${res.filled ?? 0} of ${res.checked ?? 0}`);
+          } catch (e) { toast('Error: ' + e.message); }
+        }
+      })
+    ])
+  }));
+
   scroll.appendChild(section({
     header: 'Sync',
     footer: `Automatic sync every 6 h. Last synced ${lastSync}.`,
@@ -905,8 +954,6 @@ export async function renderSettings(rootEl, go) {
         onclick: async () => {
           toast('Syncing…');
           try {
-            const pin = writer.getCachedPin ? writer.getCachedPin() : null;
-            const body = pin ? { pin } : {};
             const res = await fetch('/.netlify/functions/sync-now', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ pin: sessionStorage.getItem('coop_parent_pin') || '' })
@@ -917,6 +964,12 @@ export async function renderSettings(rootEl, go) {
             go('parentSettings');
           } catch (e) { toast('Error: ' + e.message); }
         }
+      }),
+      cell({
+        title: 'Audit channels',
+        chevron: false,
+        right: h('span', { style: { color: 'var(--p-tint)' } }, 'Open'),
+        onclick: () => openAuditSheet(go)
       })
     ])
   }));
@@ -944,6 +997,44 @@ export async function renderSettings(rootEl, go) {
       })
     ])
   }));
+}
+
+function openAuditSheet(go) {
+  const body = h('div');
+  body.appendChild(h('div', { style: { color: '#8E8E93', padding: '8px 0' } }, 'Auditing every channel via YouTube Data API…'));
+  const sheet = openSheet({ title: 'Channel audit', cancel: 'Close', body });
+  writer.callOp
+    ? auditCall()
+    : auditCall();
+  async function auditCall() {
+    try {
+      const res = await fetch('/.netlify/functions/parent-write', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: sessionStorage.getItem('coop_parent_pin') || '', op: 'audit_channels', payload: { min_subscribers: 100000 } })
+      });
+      const j = await res.json();
+      if (!res.ok || j.ok === false) throw new Error(j.error || 'audit failed');
+      body.innerHTML = '';
+      body.appendChild(h('div', { style: { color: '#8E8E93', fontSize: '13px', marginBottom: '10px' } },
+        `Flagging anything under ${(j.min_subscribers ?? 100000).toLocaleString()} subs or with unusual characters.`));
+      const list = h('div', { class: 'p-group' });
+      for (const c of j.channels || []) {
+        const flags = c.flags?.length ? c.flags.join(' · ') : 'ok';
+        const flagsEl = h('div', { class: 'p-cell-sub', style: { color: c.flags?.length ? '#FF453A' : '#8E8E93' } }, flags);
+        list.appendChild(cell({
+          title: c.title || c.seed_title || c.id,
+          sub: `${c.customUrl || c.seed_handle || '—'} · ${c.subscribers != null ? c.subscribers.toLocaleString() + ' subs' : 'no subs'}`,
+          right: flagsEl,
+          chevron: false,
+          onclick: null
+        }));
+      }
+      body.appendChild(list);
+    } catch (e) {
+      body.innerHTML = '';
+      body.appendChild(h('div', { style: { color: '#FF453A' } }, 'Error: ' + e.message));
+    }
+  }
 }
 
 function openChangeParentPinSheet() {

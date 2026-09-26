@@ -71,11 +71,20 @@ export async function verifyKidPin(profileId, pin) {
 export async function fetchPublicSettings() {
   const { data, error } = await supabase
     .from('coop_public_settings')
-    .select('hide_shorts, show_up_next')
+    .select('hide_shorts, show_up_next, max_video_seconds')
     .eq('id', 1)
     .single();
   if (error) throw error;
   return data;
+}
+
+// Predicate used everywhere the kid can see a video: NULL duration is
+// always allowed (parent-approved one-offs may not have been backfilled
+// yet), NULL cap means no limit.
+function passesDurationCap(v, cap) {
+  if (cap == null) return true;
+  if (v.duration_seconds == null) return true;
+  return v.duration_seconds <= cap;
 }
 
 // -------- channels --------
@@ -191,6 +200,7 @@ export async function fetchFeedForProfile(profileId, { limit = 200 } = {}) {
 
   const blocklistRe = compileBlocklist((blocklist || []).map(k => k.keyword));
   const hideShorts = !!publicSettings?.hide_shorts;
+  const maxDur = publicSettings?.max_video_seconds ?? null;
   const seen = new Set();
   const out = [];
   for (const v of data || []) {
@@ -199,6 +209,7 @@ export async function fetchFeedForProfile(profileId, { limit = 200 } = {}) {
     if (hiddenIds.has(v.id)) continue;
     if (hideShorts && v.is_short === true) continue;
     if (matchesBlocklist(v.title, blocklistRe)) continue;
+    if (!passesDurationCap(v, maxDur)) continue;
     out.push(v);
   }
   return out;
