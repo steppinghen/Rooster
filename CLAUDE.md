@@ -15,14 +15,16 @@ Every project folder has its own `CLAUDE.md` (stable guidance) and `STATUS.md` (
 | Netlify | Account `steppinghen.nc@gmail.com`. **One site per subfolder; the repo root is intentionally not linked.** See the table below. |
 | Supabase | Project ref `csbjszhlzdxeoqafggbw` (linked at repo root; stored in `supabase/.temp/project-ref`) |
 
-| Folder | Netlify site | Site ID |
-|---|---|---|
-| `portfolio/` | `rooster-portfolio` | `fbf41681-1128-4d70-8db8-f8e070f54888` |
-| `dad-contracting/` | `rooster-dad` | `48a98ee4-3dd1-4f06-b325-057cfcdcecb4` |
-| `hvac-visits/` | `rooster-hvac` | `8956daf6-d01c-4042-b89f-0dc3748bcaa3` |
-| `lab/` | `rooster-lab` | `a57208ba-f912-4996-a075-5c23ed3336f8` |
-| `knee-program/` | `rooster-knee` | `25eff7d5-147c-432b-86da-24c8af851fd8` |
-| `coop/` | `rooster-coop` | `44fc9f31-1923-4b86-a377-a9a3f20ff5e4` |
+| Folder | Netlify site | Site ID | Dev port | Static port |
+|---|---|---|---|---|
+| `portfolio/` | `rooster-portfolio` | `fbf41681-1128-4d70-8db8-f8e070f54888` | 8888 | 3991 |
+| `dad-contracting/` | `rooster-dad` | `48a98ee4-3dd1-4f06-b325-057cfcdcecb4` | 8889 | 3992 |
+| `hvac-visits/` | `rooster-hvac` | `8956daf6-d01c-4042-b89f-0dc3748bcaa3` | 8890 | 3993 |
+| `lab/` | `rooster-lab` | `a57208ba-f912-4996-a075-5c23ed3336f8` | 8891 | 3994 |
+| `knee-program/` | `rooster-knee` | `25eff7d5-147c-432b-86da-24c8af851fd8` | 8892 | 3995 |
+| `coop/` | `rooster-coop` | `44fc9f31-1923-4b86-a377-a9a3f20ff5e4` | 8893 | 3996 |
+
+Each project's dev port is pinned in its own `netlify.toml` (`[dev].port` and `[dev].staticServerPort`) so sites can run side by side without EADDRINUSE. `netlify dev` binds the socket to all interfaces — the "http://localhost:PORT" banner is misleading, the site is reachable at `http://<tailscale-ip>:PORT` from any Tailnet device. When adding a new project, pick the next unused pair (e.g. `8894 / 3997`) and add a row here.
 
 `NETLIFY_AUTH_TOKEN` and `SUPABASE_ACCESS_TOKEN` come from `.claude/settings.local.json` (gitignored). Never print, log, or commit them.
 

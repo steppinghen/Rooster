@@ -8,10 +8,28 @@ Site: <https://rooster-coop.netlify.app>
 
 To change the PIN: open the site → tap the padlock (Parent Mode) → enter `0000` → Parent Settings → **Change Parent Code**. `sessionStorage` caches it per browser tab; new tabs re-prompt.
 
+## Session 2026-09-26 (pause mask + Netlify overlay + cleanup)
+
+**Shipped to prod** (commit `57dacd4`, deploy `6ab76c89a90f2965ed75ebc9`):
+- Player pause mask reworked. No longer replaces the video with a blown-up thumbnail. Portrait paints solid-black bars sized to the exact 16:9 letterbox (`calc((100% - 100vw * 9 / 16) / 2 + 4px)`) so YouTube's title / share / suggestions never peek out. Landscape (iPhone + iPad) fades dark gradient strips over the top/bottom edges plus a subtle 0.18 overall dim. The centered accent Play button still covers YouTube's center pause flash. Thumbnail now only shows during the pre-first-play intro (`.k-player-intro-thumb`) and fades on `PLAYING`.
+- QA screenshots at iPhone portrait, iPhone landscape, iPad landscape confirm mask geometry. Real YouTube pause-chrome test still needs a live iPad/iPhone — headless Chrome refused autoplay-with-sound.
+
+**Netlify overlay**: was the "Built with Netlify" badge (`built_with_badge_enabled`), not the collab drawer (`hud_enabled` was already off). Disabled via `netlify api updateSite` — confirmed the `nl-badge-frame` iframe is absent from the live prod HTML.
+
+**Local-only** (unpushed, undeployed) commit `2ec93af`: cleanup — removed dead `.screen`, `.screen-centered`, `.screen-scroll`, `.parent-mode-btn`, and the `.screen`-only `@media (min-width: 768px)` line. `-29/+2`. Smoke-tested on draft `6ab76e52b824cd6855ed64a3--rooster-coop.netlify.app`: profile-select renders, `.k-parent-mode-btn` still present, no console errors.
+
 ## Blockers / open questions
 
 - **PIN = `0000`** (throwaway). Change it before real use.
+- **Netlify Free-plan monthly deploy cap hit.** After the pause-mask prod deploy went through, follow-up `netlify deploy --prod` calls return `JSONHTTPError: Forbidden` (draft deploys still work). Cleanup commit `2ec93af` is waiting on either the billing cycle to reset, or promoting the draft `6ab76e52b824cd6855ed64a3` via the Netlify UI ("Publish deploy"). Local commits `57dacd4` + `2ec93af` were pushed to `origin/main` in this session.
 - **Disney Junior — @disneyjunior on YouTube resolves to a lookalike, not the official Disney channel.** The `channels.list?forHandle=disneyjunior` response returns channel ID `UC6aSP-ovnLX2W-tNiz1df4g` with `customUrl: @disneyjunior`, but the title uses combining-diacritic spoof glyphs (`Dis̈̇̃n̈̇̃ë̇̃y J̈̇̃ün̈̇or̈̇̃`), the subscriber count is 161, and the uploads playlist genuinely returns 404 (no videos). The row exists in `coop_channels` with 0 videos. Options: leave in place (Brody's other channels are fine), `remove_channel UC6aSP-ovnLX2W-tNiz1df4g` via parent-write, or supply a specific channel ID / handle you trust and re-seed. Not substituting on my own per your rule.
+
+## What's next
+
+- When Netlify's Free-tier cycle resets (or via UI promote of draft `6ab76e52b824cd6855ed64a3`): ship the `.screen` / `.parent-mode-btn` cleanup to prod.
+- Live-device QA on iPad + iPhone: confirm the new pause mask fully swallows YouTube's paused chrome (title bar, "Watch on YouTube", share, related-videos overlay) in both orientations. If any YT chrome pokes past the mask, gradient strip heights and portrait bar `+4px` safety padding in `coop/style.css` are the knobs.
+- Change parent PIN off `0000`.
+- User is doing Parent Mode write-path QA themselves this cycle.
 
 ## Live state
 
