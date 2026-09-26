@@ -603,6 +603,320 @@ input { font-family: inherit; font-size: 17px; }
 .k-search-heading { font-family: 'Outfit'; font-weight: 700; font-size: 22px; margin: 28px 0 4px; }
 .k-search-sub { color: var(--k-fg-muted); font-size: 14px; margin-bottom: 20px; }
 
+/* ==========================================================================
+   PARENT MODE — iOS Settings style (dark grouped).
+   System font, black bg, grouped cells #1C1C1E, iOS blue tint, iOS red
+   destructive. All parent screens scope under `.p-app`.
+   ========================================================================== */
+.p-app {
+  --p-bg: #000000;
+  --p-cell: #1C1C1E;
+  --p-cell-active: #2C2C2E;
+  --p-sep: #38383A;
+  --p-text: #FFFFFF;
+  --p-text-2: #8E8E93;
+  --p-tint: #0A84FF;
+  --p-red: #FF453A;
+  --p-green: #30D158;
+  --p-fill: #48484A;
+
+  min-height: 100vh; min-height: 100dvh;
+  background: var(--p-bg);
+  color: var(--p-text);
+  color-scheme: dark;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+               "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+  animation: fadeIn 0.18s ease-out;
+}
+
+.p-navbar {
+  position: sticky; top: 0; z-index: 60;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  padding: 0 8px;
+  padding-top: env(safe-area-inset-top);
+  min-height: calc(44px + env(safe-area-inset-top));
+  display: flex; align-items: center;
+  border-bottom: 0.5px solid transparent;
+  transition: border-color 0.15s ease;
+}
+.p-navbar.scrolled { border-bottom-color: var(--p-sep); }
+.p-navbar-back, .p-navbar-action {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--p-tint);
+  background: transparent; border: none;
+  font: inherit; font-size: 17px;
+  min-height: 44px; min-width: 44px;
+  padding: 4px 8px; cursor: pointer;
+}
+.p-navbar-back svg { width: 22px; height: 22px; }
+.p-navbar-action { justify-content: flex-end; margin-left: auto; }
+.p-navbar-action.destructive { color: var(--p-red); }
+.p-navbar-title {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, calc(-50% + env(safe-area-inset-top) / 2));
+  font-size: 17px; font-weight: 600;
+  color: var(--p-text);
+  opacity: 0; transition: opacity 0.15s ease;
+  pointer-events: none;
+  max-width: 60%; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.p-navbar.scrolled .p-navbar-title { opacity: 1; }
+
+.p-scroll {
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  min-height: 100vh; min-height: 100dvh;
+}
+.p-title-large {
+  font-size: 34px; font-weight: 700; letter-spacing: -0.4px;
+  padding: 8px 20px 12px;
+  max-width: 720px; margin: 0 auto;
+}
+
+/* Inset grouped list */
+.p-section {
+  max-width: 720px; margin: 0 auto 28px;
+  padding: 0 16px;
+}
+.p-section-header {
+  color: var(--p-text-2); font-size: 13px;
+  padding: 20px 20px 6px;
+  text-transform: uppercase;
+  letter-spacing: -0.08px;
+}
+.p-section-header:first-child { padding-top: 6px; }
+.p-section-footer {
+  color: var(--p-text-2); font-size: 13px; line-height: 1.35;
+  padding: 6px 20px 0;
+}
+.p-group {
+  background: var(--p-cell);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.p-cell {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 44px; padding: 11px 16px;
+  color: var(--p-text); font-size: 17px;
+  background: var(--p-cell); border: none;
+  width: 100%; text-align: left;
+  font-family: inherit; cursor: pointer;
+  position: relative;
+}
+.p-cell + .p-cell::before {
+  content: ''; position: absolute;
+  left: 16px; right: 0; top: 0;
+  height: 0.5px; background: var(--p-sep);
+}
+.p-cell:active:not(:disabled) { background: var(--p-cell-active); }
+.p-cell:disabled { opacity: 0.5; cursor: default; }
+.p-cell-label { flex: 1; min-width: 0; }
+.p-cell-title { color: var(--p-text); font-size: 17px; }
+.p-cell-sub { color: var(--p-text-2); font-size: 13px; margin-top: 2px; }
+.p-cell-value {
+  color: var(--p-text-2); font-size: 17px;
+  max-width: 60%; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+  text-align: right;
+}
+.p-cell-chevron { color: var(--p-fill); flex-shrink: 0; }
+.p-cell-chevron svg { width: 8px; height: 14px; }
+.p-cell.destructive { color: var(--p-red); }
+.p-cell.destructive .p-cell-title { color: var(--p-red); }
+.p-cell-plus svg { width: 22px; height: 22px; color: var(--p-tint); }
+.p-cell-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #2A2A2C; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.p-cell-avatar .avatar-img, .p-cell-avatar .avatar-img svg { width: 100%; height: 100%; display: block; }
+
+/* iOS toggle switch */
+.p-toggle {
+  appearance: none; -webkit-appearance: none;
+  width: 51px; height: 31px; border-radius: 16px;
+  background: #39393D;
+  position: relative; cursor: pointer; margin: 0; flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.p-toggle::after {
+  content: ''; position: absolute; left: 2px; top: 2px;
+  width: 27px; height: 27px; border-radius: 50%;
+  background: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+  transition: transform 0.15s ease;
+}
+.p-toggle:checked { background: var(--p-green); }
+.p-toggle:checked::after { transform: translateX(20px); }
+.p-toggle:disabled { opacity: 0.5; cursor: default; }
+
+/* Segmented control */
+.p-segmented {
+  display: inline-flex; align-items: center;
+  background: #1C1C1E; border: 0.5px solid var(--p-sep);
+  border-radius: 8px; padding: 2px; gap: 2px;
+  height: 32px;
+}
+.p-segmented button {
+  padding: 0 12px; min-height: 28px; min-width: 60px;
+  background: transparent; border: none;
+  color: var(--p-text); font: inherit; font-size: 13px; font-weight: 500;
+  border-radius: 6px; cursor: pointer;
+}
+.p-segmented button.active {
+  background: #636366;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+/* Bottom sheet */
+.p-sheet-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.55);
+  animation: p-sheet-fade 0.2s ease-out;
+}
+@keyframes p-sheet-fade { from { opacity: 0; } to { opacity: 1; } }
+.p-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 210;
+  background: #1C1C1E;
+  color: var(--p-text);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 0 max(16px, env(safe-area-inset-bottom));
+  max-height: 88vh; overflow-y: auto;
+  animation: p-sheet-slide 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+@keyframes p-sheet-slide { from { transform: translateY(100%); } to { transform: none; } }
+.p-sheet-handle {
+  width: 36px; height: 5px; border-radius: 3px;
+  background: #48484A; margin: 4px auto 16px;
+}
+.p-sheet-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px 12px;
+}
+.p-sheet-title { font-size: 17px; font-weight: 600; color: var(--p-text); }
+.p-sheet-cancel, .p-sheet-done {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--p-tint); font: inherit; font-size: 17px;
+  min-height: 44px; padding: 0 6px;
+}
+.p-sheet-done { font-weight: 600; }
+.p-sheet-body { padding: 8px 16px 16px; }
+
+/* Forms inside a sheet */
+.p-input {
+  width: 100%;
+  background: #2C2C2E;
+  color: var(--p-text);
+  border: none; border-radius: 10px;
+  padding: 14px 14px;
+  font: inherit; font-size: 17px;
+  min-height: 46px;
+}
+.p-input::placeholder { color: var(--p-text-2); }
+.p-input:focus { outline: 2px solid var(--p-tint); outline-offset: -2px; }
+.p-textarea { min-height: 80px; resize: vertical; }
+.p-field-label {
+  color: var(--p-text-2); font-size: 13px;
+  margin: 12px 4px 6px;
+  text-transform: uppercase; letter-spacing: 0.02em;
+}
+.p-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 48px; padding: 0 24px;
+  background: var(--p-tint); color: #FFFFFF;
+  border: none; border-radius: 12px;
+  font: inherit; font-size: 17px; font-weight: 600;
+  cursor: pointer; width: 100%;
+}
+.p-btn:disabled { opacity: 0.5; cursor: default; }
+.p-btn.secondary { background: #2C2C2E; color: var(--p-text); }
+.p-btn.destructive { background: var(--p-red); color: #FFFFFF; }
+
+/* Preview card (add-channel confirmation) */
+.p-preview {
+  background: #2C2C2E; border-radius: 12px; padding: 14px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 12px;
+}
+.p-preview-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #48484A center/cover no-repeat;
+  flex-shrink: 0;
+}
+.p-preview-info { flex: 1; min-width: 0; }
+.p-preview-title { font-size: 17px; font-weight: 600; }
+.p-preview-sub { color: var(--p-text-2); font-size: 13px; }
+
+/* Avatar picker (parent mode kid detail) — iOS pack tabs + grid */
+.p-avatar-picker { padding: 8px 0; }
+.p-pack-tabs {
+  display: flex; gap: 6px; padding: 8px 0;
+  overflow-x: auto; scrollbar-width: none;
+}
+.p-pack-tabs::-webkit-scrollbar { display: none; }
+.p-pack-tabs button {
+  flex: 0 0 auto;
+  padding: 8px 14px; min-height: 32px;
+  background: #2C2C2E; color: var(--p-text-2);
+  border: none; border-radius: 16px;
+  font: inherit; font-size: 14px; font-weight: 500;
+  cursor: pointer; white-space: nowrap;
+}
+.p-pack-tabs button.active { background: var(--p-tint); color: #FFFFFF; }
+.p-avatar-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, 68px);
+  gap: 10px; padding: 12px 0;
+  justify-content: center;
+}
+.p-avatar-chip {
+  width: 68px; height: 68px; border-radius: 16px;
+  background: #2C2C2E;
+  border: 2.5px solid transparent;
+  padding: 4px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.p-avatar-chip.selected { border-color: var(--p-tint); }
+.p-avatar-chip .avatar-img { width: 100%; height: 100%; }
+.p-avatar-chip .avatar-img svg { width: 100%; height: 100%; display: block; border-radius: 12px; }
+
+/* Accent swatch row (parent + kid Me screen) */
+.p-swatches {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 12px; padding: 8px 0;
+}
+.p-swatch {
+  aspect-ratio: 1;
+  border-radius: 50%; border: 3px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  min-height: 44px; min-width: 44px;
+}
+.p-swatch.selected {
+  border-color: #FFFFFF;
+  box-shadow: 0 0 0 2px var(--p-bg), 0 0 0 5px var(--p-tint);
+}
+
+/* Parent-mode entry PIN screen (dark) */
+.p-app.pin { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.p-app.pin .p-pin-title { font-size: 28px; font-weight: 700; margin-bottom: 4px; color: var(--p-text); }
+.p-app.pin .p-pin-sub { color: var(--p-text-2); margin-bottom: 24px; }
+.p-app.pin .k-pin-display { margin: 0 0 20px; }
+.p-app.pin .k-pin-dot { border-color: var(--p-tint); }
+.p-app.pin .k-pin-dot.filled { background: var(--p-tint); }
+.p-app.pin .k-numpad button { background: #1C1C1E; border: 0.5px solid var(--p-sep); color: var(--p-text); }
+.p-app.pin .k-numpad button:active { background: var(--p-tint); color: #FFFFFF; }
+.p-app.pin .k-numpad button.action { background: transparent; border-color: transparent; }
+
+@media (min-width: 900px) {
+  .p-section, .p-title-large { max-width: 720px; }
+}
+
 /* --------------------------------------------------------------------------
    Full-screen kid pages that don't want a nav column: profile-select and
    kid-pin. Use .k-page (dark bg, safe-area, no fixed nav).
@@ -665,16 +979,22 @@ input { font-family: inherit; font-size: 17px; }
 
 .k-parent-mode-btn {
   position: fixed; bottom: max(20px, env(safe-area-inset-bottom));
-  right: 20px; width: 56px; height: 56px; border-radius: 50%;
-  background: var(--k-glass-bg);
+  right: 20px;
+  min-width: 44px; min-height: 44px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: rgba(38, 50, 64, 0.85);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--k-glass-border);
-  color: var(--k-fg-muted);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.5);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   z-index: 50;
+  transition: color 0.15s ease, background 0.15s ease;
 }
-.k-parent-mode-btn:hover { color: var(--k-fg); }
+.k-parent-mode-btn:hover, .k-parent-mode-btn:active {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(50, 65, 84, 0.95);
+}
 .k-parent-mode-btn svg { width: 22px; height: 22px; }
 
 /* Kid PIN entry -------------------------------------------------------- */

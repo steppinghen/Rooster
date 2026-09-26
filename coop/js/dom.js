@@ -9,7 +9,16 @@ export function h(tag, attrs = {}, ...children) {
   const el = document.createElement(tag);
   for (const k in attrs) {
     if (k === 'class') el.className = attrs[k];
-    else if (k === 'style' && typeof attrs[k] === 'object') Object.assign(el.style, attrs[k]);
+    else if (k === 'style' && typeof attrs[k] === 'object') {
+      // Object.assign on el.style silently drops CSS custom properties
+      // (`--accent`, `--tile-accent`, etc.) — you have to go through
+      // setProperty. Split so both regular and custom props work.
+      for (const [prop, val] of Object.entries(attrs[k])) {
+        if (val == null || val === false) continue;
+        if (prop.startsWith('--')) el.style.setProperty(prop, val);
+        else el.style[prop] = val;
+      }
+    }
     else if (k.startsWith('on') && typeof attrs[k] === 'function') el.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
     else if (k === 'html') el.innerHTML = attrs[k];
     else if (attrs[k] !== null && attrs[k] !== undefined && attrs[k] !== false) el.setAttribute(k, attrs[k]);

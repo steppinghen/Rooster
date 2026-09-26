@@ -22,6 +22,7 @@ export function clearParentPin() {
   try { sessionStorage.removeItem(PIN_KEY); } catch { /* ignore */ }
 }
 export function hasCachedPin() { return !!cachedPin; }
+export function getCachedPin() { return cachedPin; }
 
 async function callOp(op, payload = {}) {
   if (!cachedPin) throw new Error('No parent PIN set');

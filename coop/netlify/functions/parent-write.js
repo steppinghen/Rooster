@@ -102,6 +102,20 @@ async function ytPlaylistOk(playlistId) {
   return res.ok;
 }
 
+// Return a readable text color (near-black or near-white) for a given
+// hex background, using relative luminance. Both output hexes match the
+// kid theme's --k-fg / near-black to preserve the calm look.
+function deriveOnAccentText(hex) {
+  const m = /^#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/.exec(hex);
+  if (!m) return '#14231C';
+  const [r, g, b] = [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+  // sRGB → linear
+  const chan = c => { const s = c / 255; return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4); };
+  const L = 0.2126 * chan(r) + 0.7152 * chan(g) + 0.0722 * chan(b);
+  // WCAG contrast: pick dark text for light backgrounds.
+  return L > 0.5 ? '#14231C' : '#EAF0EE';
+}
+
 async function ytOEmbed(videoId) {
   const url = `https://www.youtube.com/oembed?format=json&url=https%3A//www.youtube.com/watch%3Fv%3D${videoId}`;
   const res = await fetch(url);
@@ -173,6 +187,11 @@ const OPS = {
         throw new Error('accent_color must match ^#[0-9A-Fa-f]{6}$');
       }
       patch.accent_color = accent_color;
+      // Auto-derive on_accent_text from accent brightness unless the
+      // caller explicitly overrode it.
+      if (on_accent_text === undefined) {
+        patch.on_accent_text = deriveOnAccentText(accent_color);
+      }
     }
     if (on_accent_text !== undefined) {
       if (typeof on_accent_text !== 'string' || !HEX.test(on_accent_text)) {
