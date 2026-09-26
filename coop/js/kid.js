@@ -18,6 +18,7 @@
 import { h, icon, ICONS, toast } from './dom.js';
 import { avatarSvg, PACKS } from './avatars.js';
 import * as data from './data.js';
+import * as player from './player.js';
 
 const PAGE_SIZE = 24;
 
@@ -190,6 +191,20 @@ async function mountShell(root, profile, currentScreen, go) {
 
 // ---------- reusable tiles ----------
 
+// Play a video inside the seamless player overlay. Called from the
+// tap handler so iOS accepts the audio autoplay.
+function playVideo(profile, v, returnTo, sourceElement) {
+  player.openPlayer({
+    profile,
+    videoId: v.id,
+    title: v.title,
+    thumbnailUrl: v.thumbnail_url,
+    channelId: v.channel_id,
+    sourceElement,
+    returnTo
+  });
+}
+
 function videoTile(v, onclick) {
   return h('button', { class: 'k-tile', onclick, type: 'button' },
     h('div', { class: 'k-tile-thumb', style: v.thumbnail_url ? { backgroundImage: `url("${v.thumbnail_url}")` } : {} }),
@@ -252,13 +267,21 @@ export async function renderHome(rootEl, profile, go) {
         h('div', { class: 'k-hero-actions' },
           h('button', {
             class: 'k-btn k-btn-play',
-            onclick: () => go('videoPlayer', {
-              profileId: profile.id,
-              videoId: hero.id,
-              title: hero.title,
-              channelId: hero.channel_id,
-              returnTo: { screen: 'kidHome', params: { profileId: profile.id } }
-            })
+            onclick: (ev) => {
+              // Use the hero section as the source rect for the zoom
+              // animation — feels natural since the whole hero fills
+              // the top of the screen already.
+              const heroEl = ev.currentTarget.closest('.k-hero');
+              player.openPlayer({
+                profile,
+                videoId: hero.id,
+                title: hero.title,
+                thumbnailUrl: hero.thumbnail_url,
+                channelId: hero.channel_id,
+                sourceElement: heroEl,
+                returnTo: { screen: 'kidHome', params: { profileId: profile.id } }
+              });
+            }
           }, h('span', { html: icon(ICONS.play) }), h('span', {}, 'Play')),
           profile.nav_style === 'sidebar' && hero.channel_id ? h('button', {
             class: 'k-btn k-btn-ghost',
@@ -312,13 +335,11 @@ export async function renderAllVideos(rootEl, profile, go) {
 
   const listWrap = h('div');
   content.appendChild(listWrap);
-  pagedGrid(listWrap, feed, (v) => videoTile(v, () => go('videoPlayer', {
-    profileId: profile.id,
-    videoId: v.id,
-    title: v.title,
-    channelId: v.channel_id,
-    returnTo: { screen: 'kidAllVideos', params: { profileId: profile.id } }
-  })), 'grid-3col');
+  pagedGrid(listWrap, feed, (v) => videoTile(v, (ev) => playVideo(
+    profile, v,
+    { screen: 'kidAllVideos', params: { profileId: profile.id } },
+    ev.currentTarget
+  )), 'grid-3col');
 }
 
 // ---------- CHANNEL PAGE ----------
@@ -361,13 +382,12 @@ export async function renderChannel(rootEl, profile, channelId, go) {
 
   const listWrap = h('div');
   content.appendChild(listWrap);
-  pagedGrid(listWrap, videos, (v) => videoTile(v, () => go('videoPlayer', {
-    profileId: profile.id,
-    videoId: v.id,
-    title: v.title,
-    channelId: v.channel_id || channelId,
-    returnTo: { screen: 'kidChannel', params: { profileId: profile.id, channelId } }
-  })), 'grid-3col');
+  pagedGrid(listWrap, videos, (v) => videoTile(v, (ev) => playVideo(
+    profile,
+    { ...v, channel_id: v.channel_id || channelId },
+    { screen: 'kidChannel', params: { profileId: profile.id, channelId } },
+    ev.currentTarget
+  )), 'grid-3col');
 }
 
 // ---------- SEARCH ----------
@@ -421,13 +441,11 @@ export async function renderSearch(rootEl, profile, go) {
     }
     const listWrap = h('div');
     results.appendChild(listWrap);
-    pagedGrid(listWrap, videos, (v) => videoTile(v, () => go('videoPlayer', {
-      profileId: profile.id,
-      videoId: v.id,
-      title: v.title,
-      channelId: v.channel_id,
-      returnTo: { screen: 'kidSearch', params: { profileId: profile.id } }
-    })), 'grid-3col');
+    pagedGrid(listWrap, videos, (v) => videoTile(v, (ev) => playVideo(
+      profile, v,
+      { screen: 'kidSearch', params: { profileId: profile.id } },
+      ev.currentTarget
+    )), 'grid-3col');
   }
 
   input.addEventListener('input', () => {
@@ -550,58 +568,6 @@ export async function renderMe(rootEl, profile, go) {
   ));
 }
 
-// ---------- UP NEXT (shown after a video ends) ----------
-
-// Params: { channelId, watchedVideoId, returnTo }
-export async function renderUpNext(rootEl, profile, params, go) {
-  const { channelId, watchedVideoId, returnTo } = params || {};
-  const content = await mountShell(rootEl, profile, null, go);
-  content.appendChild(h('h1', { class: 'k-section-title', style: { fontSize: '28px' } }, 'Up next'));
-  content.appendChild(h('div', { class: 'k-empty' }, 'Loading…'));
-
-  let picks = [];
-  if (channelId) {
-    try {
-      const feed = await data.fetchFeedForChannel(profile.id, channelId);
-      picks = feed.filter(v => v.id !== watchedVideoId).slice(0, 3);
-    } catch { picks = []; }
-  }
-
-  content.innerHTML = '';
-  content.appendChild(h('h1', { class: 'k-section-title', style: { fontSize: '28px' } }, 'Up next'));
-
-  const grid = h('div', { class: 'k-up-next-grid' });
-  for (const v of picks) {
-    grid.appendChild(h('button', {
-      type: 'button',
-      class: 'k-up-next-tile',
-      onclick: () => go('videoPlayer', {
-        profileId: profile.id,
-        videoId: v.id,
-        title: v.title,
-        channelId: v.channel_id,
-        returnTo
-      })
-    },
-      h('div', { class: 'k-up-next-thumb', style: v.thumbnail_url ? { backgroundImage: `url("${v.thumbnail_url}")` } : {} },
-        h('div', { class: 'k-up-next-play', html: icon(ICONS.play) })
-      ),
-      h('div', { class: 'k-up-next-title' }, v.title || '')
-    ));
-  }
-  // Back tile — always present.
-  grid.appendChild(h('button', {
-    type: 'button',
-    class: 'k-up-next-tile back',
-    onclick: () => {
-      if (returnTo && returnTo.screen) go(returnTo.screen, returnTo.params || {});
-      else go('kidHome', { profileId: profile.id });
-    }
-  },
-    h('div', { class: 'k-up-next-thumb back-thumb' },
-      h('div', { class: 'k-up-next-back-icon', html: icon(ICONS.back) })
-    ),
-    h('div', { class: 'k-up-next-title' }, picks.length ? 'Back to where I was' : 'Back')
-  ));
-  content.appendChild(grid);
-}
+// (renderUpNext removed — Up Next is now rendered inline inside the
+// player overlay in coop/js/player.js after ENDED, over the paused
+// final frame. No standalone screen.)
