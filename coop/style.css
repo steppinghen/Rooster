@@ -216,26 +216,88 @@ input { font-family: inherit; font-size: 17px; }
   display: block;
 }
 
-/* Pause cover — shown whenever state ≠ PLAYING after the first play,
-   hides YouTube's pause UI, related-videos flash, "Watch on YouTube",
-   and share. Object-fit cover behaviour: background-image with
-   `background-size: cover` never stretches. */
-.k-player-cover {
-  position: absolute; inset: 0;
-  z-index: 4;
-  opacity: 0;
-  transition: opacity 120ms ease-out;
-  background: #000 center/cover no-repeat;
+/* Pause-time UI mask. We DON'T replace the paused frame with the
+   thumbnail (that stretches on iPhone portrait). Instead we hide only
+   the areas where YouTube draws pause chrome:
+     Portrait — the video is heavily letterboxed. Cover those bars with
+                solid black exactly matching the letterbox. YouTube's
+                title / share / "Watch on YouTube" / related-suggestions
+                live inside those regions so they disappear without
+                touching the paused frame.
+     Landscape (iPhone and iPad) — the video fills most of the screen.
+                Fade a soft dark gradient strip along the top and bottom
+                edges (thick enough to swallow YouTube's overlays) plus
+                a very light dim across the whole frame so our controls
+                still read against the paused image.
+   Our big centered Play button sits above all this to hide YouTube's
+   center pause flash. */
+.k-player-mask-top,
+.k-player-mask-bottom,
+.k-player-mask-dim {
+  position: absolute; left: 0; right: 0;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 140ms ease-out;
+  z-index: 5;
 }
-.k-player-cover.shown { opacity: 1; }
-.k-player-cover-scrim {
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.55));
+.k-player-mask-top    { top: 0; }
+.k-player-mask-bottom { bottom: 0; }
+.k-player-mask-dim    { top: 0; bottom: 0; }
+.k-player.paused-mask .k-player-mask-top,
+.k-player.paused-mask .k-player-mask-bottom,
+.k-player.paused-mask .k-player-mask-dim { opacity: 1; }
+
+@media (orientation: portrait) {
+  .k-player-mask-top {
+    background: #000000;
+    /* Cover the natural 16:9 letterbox bar + a couple extra pixels of
+       safety in case the iframe pads by a hair. Uses 100% (of the
+       fixed .k-player parent = current viewport height) so it stays
+       right when the iOS URL bar collapses/expands. */
+    height: calc((100% - 100vw * 9 / 16) / 2 + 4px);
+    min-height: 0;
+  }
+  .k-player-mask-bottom {
+    background: #000000;
+    height: calc((100% - 100vw * 9 / 16) / 2 + 4px);
+    min-height: 0;
+  }
+  .k-player-mask-dim { display: none; }
+}
+@media (orientation: landscape) {
+  .k-player-mask-top {
+    background: linear-gradient(to bottom,
+      rgba(0,0,0,0.85) 0%,
+      rgba(0,0,0,0.55) 55%,
+      rgba(0,0,0,0)    100%);
+    height: calc(112px + env(safe-area-inset-top));
+  }
+  .k-player-mask-bottom {
+    background: linear-gradient(to top,
+      rgba(0,0,0,0.85) 0%,
+      rgba(0,0,0,0.55) 55%,
+      rgba(0,0,0,0)    100%);
+    height: calc(128px + env(safe-area-inset-bottom));
+  }
+  .k-player-mask-dim { background: rgba(0,0,0,0.18); }
 }
 
-/* Intro (opening avatar + drawn ring). Above the cover so the intro
-   never shows a stale thumbnail during opening. */
+/* Thumbnail cover — only used during the very first moment BEFORE the
+   video plays (behind the avatar + ring). Never used post-first-play. */
+.k-player-intro-thumb {
+  position: absolute; inset: 0;
+  z-index: 4;
+  background: #000 center/cover no-repeat;
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+  filter: brightness(0.6) saturate(0.85);
+}
+/* opacity for .k-player-intro-thumb is toggled from JS in player.js
+   (visible only until first PLAYING fires, then faded out) so this
+   element does not need a companion selector rule. */
+
+/* Intro (opening avatar + drawn ring). Above the intro thumb so the
+   avatar reads cleanly during opening. */
 .k-player-intro {
   position: absolute; inset: 0;
   z-index: 5;
@@ -431,7 +493,7 @@ input { font-family: inherit; font-size: 17px; }
     animation: none !important;
     stroke-dashoffset: 0 !important;
   }
-  .k-player, .k-player-cover, .k-player-controls { transition: opacity 180ms ease-out !important; }
+  .k-player, .k-player-controls { transition: opacity 180ms ease-out !important; }
 }
 
 /* Up Next overlay — 3 tiles + Back tile, faded in over the paused frame. */

@@ -10,11 +10,13 @@
 // the ring gently pulses until it does. Same intro is used when the
 // kid taps an Up Next pick.
 //
-// Pause cover: whenever state ≠ PLAYING after the video has once
-// started, cover the iframe with the video's own thumbnail (object-fit
-// cover, no stretch) + a soft dark scrim. This hides YouTube's pause
-// UI (title bar, "Watch on YouTube", share, related suggestions).
-// Removed the instant PLAYING resumes.
+// Pause masking: whenever state ≠ PLAYING after the video has once
+// started, mask only the edges of the player so YouTube's pause chrome
+// (title, "Watch on YouTube", share, suggestions) is hidden while the
+// real paused video frame stays visible in the middle. Portrait puts
+// solid black over the letterbox bars; landscape fades dark strips
+// over the top/bottom edges plus a very light overall dim. Our own
+// big centered Play button covers YouTube's center pause flash.
 //
 // Controls: big centered Play/Pause in the kid's accent, back FAB
 // top-left, bottom bar with progress + time + ±10 s + CC. Tap the
@@ -42,7 +44,10 @@ let YT_NS = null;
 let container = null;
 let iframeWrap = null, iframeSlot = null;
 let tapShield = null;
-let cover = null;               // pause / non-PLAYING cover (video thumbnail + scrim)
+let introThumb = null;          // thumbnail behind intro (pre-first-play only)
+let maskTop = null;             // pause: covers YouTube UI at top edge / letterbox
+let maskBottom = null;          // pause: covers YouTube UI at bottom edge / letterbox
+let maskDim = null;             // pause: very light dim across the frame (landscape only)
 let intro = null;               // opening animation (avatar + ring)
 let introAvatar = null;
 let introRing = null;
@@ -135,11 +140,17 @@ function ensureDom() {
   tapShield = h('div', { class: 'k-player-shield', 'aria-hidden': 'true' });
   iframeWrap = h('div', { class: 'k-player-video' }, iframeSlot);
 
-  // Pause cover — hidden by default, shown when state ≠ PLAYING after
-  // first playback started.
-  cover = h('div', { class: 'k-player-cover', 'aria-hidden': 'true' },
-    h('div', { class: 'k-player-cover-scrim' })
-  );
+  // Pause masking. Portrait: solid black covers the letterbox bars so
+  // YouTube's title / share / suggestions don't peek through. Landscape:
+  // gradient strips at top/bottom + a very light overall dim. See
+  // style.css for the orientation-specific rules.
+  maskTop = h('div', { class: 'k-player-mask-top', 'aria-hidden': 'true' });
+  maskBottom = h('div', { class: 'k-player-mask-bottom', 'aria-hidden': 'true' });
+  maskDim = h('div', { class: 'k-player-mask-dim', 'aria-hidden': 'true' });
+
+  // Intro thumbnail — only shown while the video hasn't started yet,
+  // never after first playback.
+  introThumb = h('div', { class: 'k-player-intro-thumb', 'aria-hidden': 'true' });
 
   // Intro overlay — avatar + drawn accent ring. Shown during opening
   // and any time the video hasn't started yet.
@@ -221,7 +232,7 @@ function ensureDom() {
   upNextOverlay = h('div', { class: 'k-player-upnext', 'aria-hidden': 'true' });
 
   container = h('div', { class: 'k-player', 'aria-hidden': 'true', role: 'dialog' },
-    iframeWrap, cover, controls, intro, tapShield, hintLabel, fallbackPlay, upNextOverlay
+    iframeWrap, introThumb, maskTop, maskBottom, maskDim, intro, tapShield, controls, hintLabel, fallbackPlay, upNextOverlay
   );
   document.body.appendChild(container);
 
@@ -273,13 +284,13 @@ export function openPlayer(opts) {
   ccOn = false; ccAvailable = false;
   updateCcButton();
 
-  // Intro: avatar + ring.
+  // Intro: avatar + ring, thumbnail behind (dimmed).
   introAvatar.innerHTML = `<div class="avatar-img">${avatarSvg(opts.profile?.avatar || 'animals:fox')}</div>`;
-  // Reset ring animation by re-adding class.
   intro.classList.remove('showing', 'pulsing');
-  cover.classList.remove('shown');
-  cover.style.backgroundImage = opts.thumbnailUrl ? `url("${opts.thumbnailUrl}")` : '';
-  cover.style.opacity = '0';
+  introThumb.style.backgroundImage = opts.thumbnailUrl ? `url("${opts.thumbnailUrl}")` : '';
+  introThumb.style.opacity = '1';
+  // Ensure the pause-mask is off during the intro.
+  container.classList.remove('paused-mask');
 
   // Container fades in from black.
   container.setAttribute('aria-hidden', 'false');
@@ -330,16 +341,19 @@ export function openPlayer(opts) {
 function revealVideo() {
   if (!current) return;
   openInFlight = false;
-  // Fade video in and intro out simultaneously.
+  // Fade video in and intro (+ thumbnail behind it) out.
   iframeWrap.style.transition = 'opacity 250ms ease-out';
   iframeWrap.style.opacity = '1';
   intro.style.transition = 'opacity 250ms ease-out';
   intro.style.opacity = '0';
+  introThumb.style.transition = 'opacity 250ms ease-out';
+  introThumb.style.opacity = '0';
   setTimeout(() => {
     intro.classList.remove('showing', 'pulsing', 'draw');
     intro.style.opacity = '';
     intro.style.transition = '';
     iframeWrap.style.transition = '';
+    introThumb.style.transition = '';
   }, 280);
   // Apply CC preference if any.
   const wantCc = current.profileId ? readCcPref(current.profileId) : false;
@@ -358,6 +372,7 @@ function close() {
   savePosNow();
   const done = () => {
     container.classList.remove('open');
+    container.classList.remove('paused-mask');
     container.setAttribute('aria-hidden', 'true');
     document.documentElement.style.overflow = '';
     // Reset styles for next open.
@@ -365,7 +380,7 @@ function close() {
     iframeWrap.style.opacity = ''; iframeWrap.style.transition = '';
     intro.style.opacity = ''; intro.style.transition = '';
     intro.classList.remove('showing', 'pulsing', 'draw');
-    cover.classList.remove('shown'); cover.style.opacity = '0';
+    introThumb.style.opacity = '0'; introThumb.style.transition = '';
     upNextOverlay.classList.remove('shown'); upNextOverlay.innerHTML = '';
     try { ytPlayer && ytPlayer.stopVideo && ytPlayer.stopVideo(); } catch {}
     current = null;
@@ -583,8 +598,7 @@ function handleStateChange(e) {
         current.hasStarted = true;
         if (current.playingResolver) { current.playingResolver(); current.playingResolver = null; }
       }
-      cover.classList.remove('shown');
-      cover.style.opacity = '0';
+      hidePauseMask();
       startProgressTimer();
       updatePlayPauseIcon();
       scheduleAutoHide();
@@ -592,31 +606,30 @@ function handleStateChange(e) {
       setTimeout(refreshCcAvailability, 800);
       break;
     case S.PAUSED:
-      if (current && current.hasStarted) showCover();
+      if (current && current.hasStarted) showPauseMask();
       updatePlayPauseIcon();
       showControls();
       savePosNow();
       break;
     case S.BUFFERING:
-      if (current && current.hasStarted) showCover();
+      if (current && current.hasStarted) showPauseMask();
       break;
     case S.CUED:
-      if (current && current.hasStarted) showCover();
+      if (current && current.hasStarted) showPauseMask();
       break;
     case S.ENDED:
       stopProgressTimer();
       if (current) clearResumePos(current.profileId, current.videoId);
-      showCover();
+      showPauseMask();
       onEnded();
       break;
   }
 }
-function showCover() {
-  if (!current || !current.thumbnailUrl) return;
-  cover.style.backgroundImage = `url("${current.thumbnailUrl}")`;
-  cover.classList.add('shown');
-  cover.style.opacity = '1';
-}
+// The mask hides YouTube's pause chrome (title, share, watch-on-yt,
+// suggestions). Paused frame stays visible in the middle; only the
+// edges are covered. See style.css for portrait/landscape behaviour.
+function showPauseMask() { container.classList.add('paused-mask'); }
+function hidePauseMask() { container.classList.remove('paused-mask'); }
 
 // ---------- Up Next after ENDED ----------
 async function onEnded() {
@@ -681,8 +694,10 @@ function openInternal(v) {
   // Hide the old video, show the intro again.
   iframeWrap.style.transition = 'opacity 180ms ease-out';
   iframeWrap.style.opacity = '0';
-  cover.classList.remove('shown');
-  cover.style.backgroundImage = v.thumbnail_url ? `url("${v.thumbnail_url}")` : '';
+  container.classList.remove('paused-mask');
+  introThumb.style.backgroundImage = v.thumbnail_url ? `url("${v.thumbnail_url}")` : '';
+  introThumb.style.opacity = '1';
+  introThumb.style.transition = '';
   intro.classList.remove('showing', 'pulsing', 'draw');
   intro.style.opacity = '';
   // Force reflow, then re-run the animation.
