@@ -328,6 +328,46 @@ const OPS = {
     return { hide_shorts };
   },
 
+  async diagnose_channel({ handle }) {
+    if (!handle) throw new Error('handle required');
+    if (!YOUTUBE_API_KEY) throw new Error('YOUTUBE_API_KEY not set');
+    const clean = String(handle).replace(/^@/, '');
+    const chParams = new URLSearchParams({
+      part: 'snippet,contentDetails,statistics',
+      forHandle: clean,
+      key: YOUTUBE_API_KEY
+    });
+    const chRes = await fetch('https://www.googleapis.com/youtube/v3/channels?' + chParams);
+    const chBody = await chRes.text();
+    let chJson; try { chJson = JSON.parse(chBody); } catch { chJson = null; }
+    const item = chJson?.items?.[0];
+    const result = { handle: clean, channelStatus: chRes.status, channel: null, uploadsStatus: null, uploadsBody: null };
+    if (item) {
+      result.channel = {
+        id: item.id,
+        title: item.snippet.title,
+        customUrl: item.snippet.customUrl,
+        country: item.snippet.country,
+        subscribers: item.statistics?.subscriberCount,
+        uploadsPlaylistId: item.contentDetails.relatedPlaylists.uploads
+      };
+      const plParams = new URLSearchParams({
+        part: 'snippet,contentDetails',
+        playlistId: item.contentDetails.relatedPlaylists.uploads,
+        maxResults: '5',
+        key: YOUTUBE_API_KEY
+      });
+      const plRes = await fetch('https://www.googleapis.com/youtube/v3/playlistItems?' + plParams);
+      const plBody = await plRes.text();
+      result.uploadsStatus = plRes.status;
+      // Truncate to keep the response small.
+      result.uploadsBody = plBody.slice(0, 1200);
+    } else {
+      result.channelBody = chBody.slice(0, 800);
+    }
+    return result;
+  },
+
   async seed_starter_channels({ rc_profile_id, brody_profile_id }) {
     if (!rc_profile_id || !brody_profile_id) {
       throw new Error('rc_profile_id and brody_profile_id required');
