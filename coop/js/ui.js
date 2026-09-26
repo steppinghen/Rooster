@@ -11,7 +11,7 @@
 // stay stable through those redesigns.
 // ------------------------------------------------------------------------
 
-import { AVATAR_META, avatarSvg, KID_COLORS, DEFAULT_AVATAR_ID } from './avatars.js';
+import { AVATAR_META, avatarSvg, KID_COLORS, DEFAULT_AVATAR_ID, PACKS } from './avatars.js';
 import * as data from './data.js';
 import * as writer from './writer.js';
 import { createPlayer, destroyPlayer } from './youtube.js';
@@ -152,65 +152,122 @@ async function render() {
 // ============================================================
 const Screens = {};
 
-// --- Profile Select ---
+// --- Profile Select (dark, kid-themed) ---
 Screens.profileSelect = async (root) => {
-  const screen = h('div', { class: 'screen screen-scroll' });
-  root.appendChild(screen);
-  screen.appendChild(loadingBlock());
+  const page = h('div', { class: 'k-page centered profile-select' });
+  root.appendChild(page);
+  page.appendChild(h('div', { style: { color: 'var(--k-fg-muted)' } }, 'Loading…'));
 
   let profiles;
   try { profiles = await data.fetchProfiles(); }
-  catch (e) { screen.innerHTML = ''; screen.appendChild(h('p', {}, 'Could not load profiles: ' + e.message)); return; }
+  catch (e) { page.innerHTML = ''; page.appendChild(h('p', {}, 'Could not load profiles: ' + e.message)); return; }
 
-  screen.innerHTML = '';
-  screen.append(h('h1', { class: 'profile-select-title' }, profiles.length ? "Who's watching?" : "Let's add a profile"));
-  const grid = h('div', { class: 'profile-grid' });
-  for (const p of profiles) {
-    const cdef = KID_COLORS.find(c => c.color === p.color) || KID_COLORS[0];
-    const tile = h('button', { class: 'profile-tile', onclick: async () => {
-      const hasPin = await data.hasKidPin(p.id).catch(() => false);
-      if (hasPin) go('kidPin', { profileId: p.id });
-      else go('kidHome', { profileId: p.id });
-    }});
-    tile.append(
-      h('div', { class: 'profile-avatar', style: { background: cdef.soft, borderColor: cdef.color } },
-        h('div', { class: 'avatar-img', html: avatarSvg(p.avatar) })),
-      h('div', { class: 'profile-name' }, p.name)
+  // Check each kid's PIN presence in parallel — small N, cheap.
+  const pinFlags = await Promise.all(profiles.map(p => data.hasKidPin(p.id).catch(() => false)));
+
+  page.innerHTML = '';
+  page.append(h('h1', { class: 'k-profile-select-title' },
+    profiles.length ? "Who's watching?" : "Let's add a profile"));
+
+  const grid = h('div', { class: 'k-profile-grid' });
+  profiles.forEach((p, i) => {
+    const accent = p.accent_color || '#A9D3BE';
+    const hasPin = pinFlags[i];
+    const tile = h('button', {
+      class: 'k-profile-tile',
+      style: { '--tile-accent': accent },
+      onclick: () => {
+        if (hasPin) go('kidPin', { profileId: p.id });
+        else go('kidHome', { profileId: p.id });
+      }
+    },
+      h('div', { class: 'k-profile-avatar-wrap' },
+        h('div', { class: 'k-profile-avatar' },
+          h('div', { class: 'avatar-img', html: avatarSvg(p.avatar) })
+        ),
+        hasPin ? h('div', { class: 'k-profile-lock-badge', 'aria-label': 'PIN required', html: icon(ICONS.lock) }) : null
+      ),
+      h('div', { class: 'k-profile-name' }, p.name)
     );
     grid.appendChild(tile);
-  }
+  });
   if (!profiles.length) {
     grid.appendChild(h('button', {
-      class: 'add-profile-tile',
+      class: 'k-profile-tile',
+      style: { '--tile-accent': '#9CC8E8' },
       onclick: () => go('parentPin', { nextScreen: 'profileEdit', nextParams: { profileId: null } })
-    }, h('div', { style: { fontSize: '40px' } }, '+'), h('div', {}, 'Add a profile')));
+    },
+      h('div', { class: 'k-profile-avatar-wrap' },
+        h('div', { class: 'k-profile-avatar',
+          style: { border: '3px dashed rgba(255,255,255,0.25)', color: 'var(--k-fg-muted)', fontSize: '48px' } },
+          h('div', {}, '+')
+        )
+      ),
+      h('div', { class: 'k-profile-name' }, 'Add a profile')));
   }
-  screen.appendChild(grid);
+  page.appendChild(grid);
   root.appendChild(h('button', {
-    class: 'parent-mode-btn', onclick: () => go('parentPin'), title: 'Parent Mode', html: icon(ICONS.lock)
+    class: 'k-parent-mode-btn',
+    onclick: () => go('parentPin'),
+    title: 'Parent Mode',
+    'aria-label': 'Parent Mode',
+    html: icon(ICONS.lock)
   }));
 };
 
-// --- Kid PIN ---
+// --- Kid PIN (dark, per-kid accent) ---
 Screens.kidPin = async (root, { profileId }) => {
   const profiles = await data.fetchProfiles();
   const p = profiles.find(x => x.id === profileId);
   if (!p) return go('profileSelect');
-  const screen = h('div', { class: 'screen screen-centered' });
-  const cdef = KID_COLORS.find(c => c.color === p.color) || KID_COLORS[0];
-  screen.append(
-    h('button', { class: 'back-btn', style: { position: 'absolute', top: '20px', left: '20px' }, onclick: () => go('profileSelect'), html: icon(ICONS.back) }),
-    h('div', { class: 'profile-avatar', style: { background: cdef.soft, borderColor: cdef.color, marginBottom: '16px' } },
-      h('div', { class: 'avatar-img', html: avatarSvg(p.avatar) })),
-    h('h2', { style: { marginBottom: '8px' } }, `Hi, ${p.name}!`),
-    h('p', { style: { color: 'var(--text-muted)', marginBottom: '28px' } }, 'Enter your secret code'),
-    makePinEntry({ length: 4, onComplete: async (pin, onFail) => {
-      const ok = await data.verifyKidPin(profileId, pin).catch(() => false);
-      if (ok) go('kidHome', { profileId });
-      else { toast("That's not the right code"); onFail(); }
-    }})
+  const accent = p.accent_color || '#A9D3BE';
+  const onAccent = p.on_accent_text || '#14231C';
+  const page = h('div', {
+    class: 'k-page centered kid-pin',
+    style: { '--accent': accent, '--on-accent': onAccent }
+  });
+  root.appendChild(h('button', {
+    class: 'k-back-fab',
+    onclick: () => go('profileSelect'),
+    'aria-label': 'Back to profile select',
+    html: icon(ICONS.back)
+  }));
+
+  const pinDisplay = h('div', { class: 'k-pin-display' });
+  let pin = '';
+  function renderDots() {
+    pinDisplay.innerHTML = '';
+    for (let i = 0; i < 4; i++) {
+      pinDisplay.appendChild(h('div', { class: 'k-pin-dot' + (i < pin.length ? ' filled' : '') }));
+    }
+  }
+  function fail() {
+    pin = ''; renderDots();
+    pinDisplay.classList.add('k-pin-shake');
+    setTimeout(() => pinDisplay.classList.remove('k-pin-shake'), 400);
+  }
+  async function submitIfFull() {
+    if (pin.length !== 4) return;
+    const ok = await data.verifyKidPin(profileId, pin).catch(() => false);
+    if (ok) go('kidHome', { profileId });
+    else { toast("That's not the right code"); fail(); }
+  }
+  const numpad = h('div', { class: 'k-numpad' });
+  const press = (d) => { if (pin.length < 4) { pin += d; renderDots(); if (pin.length === 4) setTimeout(submitIfFull, 120); } };
+  for (let n = 1; n <= 9; n++) numpad.appendChild(h('button', { type: 'button', onclick: () => press(String(n)) }, String(n)));
+  numpad.appendChild(h('button', { type: 'button', class: 'action', onclick: () => { pin = ''; renderDots(); } }, 'Clear'));
+  numpad.appendChild(h('button', { type: 'button', onclick: () => press('0') }, '0'));
+  numpad.appendChild(h('button', { type: 'button', class: 'action', onclick: () => { pin = pin.slice(0, -1); renderDots(); }, html: '⌫' }));
+  renderDots();
+
+  page.append(
+    h('div', { class: 'k-pin-avatar' }, h('div', { class: 'avatar-img', html: avatarSvg(p.avatar) })),
+    h('div', { class: 'k-pin-title' }, `Hi, ${p.name}!`),
+    h('div', { class: 'k-pin-subtitle' }, 'Enter your secret code'),
+    pinDisplay,
+    numpad
   );
-  root.appendChild(screen);
+  root.appendChild(page);
 };
 
 // --- Kid screens (delegated to kid.js) ---
@@ -425,18 +482,41 @@ Screens.profileEdit = async (root, { profileId }) => {
     h('input', { class: 'input', type: 'text', id: 'edit-name', value: draft.name, placeholder: "Kid's name", oninput: (e) => draft.name = e.target.value })));
 
   card.appendChild(h('div', { class: 'field' }, h('label', {}, 'Avatar')));
-  const avatarGrid = h('div', { class: 'avatar-grid' });
-  function renderAvatars() {
-    avatarGrid.innerHTML = '';
-    for (const id of AVATAR_META) {
-      avatarGrid.appendChild(h('button', {
-        class: 'avatar-chip' + (id === draft.avatar ? ' selected' : ''),
-        onclick: () => { draft.avatar = id; renderAvatars(); }
-      }, h('div', { class: 'avatar-img', html: avatarSvg(id) })));
+  // Which pack to show. Default: pack of the current avatar; else animals.
+  let currentPack = (() => {
+    const spec = draft.avatar || DEFAULT_AVATAR_ID;
+    const idx = spec.indexOf(':');
+    return idx >= 0 ? spec.slice(0, idx) : 'animals';
+  })();
+  const packTabs = h('div', { class: 'pack-tabs' });
+  const packGrid = h('div', { class: 'pack-grid' });
+  function renderPackTabs() {
+    packTabs.innerHTML = '';
+    for (const p of PACKS) {
+      packTabs.appendChild(h('button', {
+        type: 'button',
+        class: currentPack === p.id ? 'active' : '',
+        onclick: () => { currentPack = p.id; renderPackTabs(); renderPackGrid(); }
+      }, p.label));
     }
   }
-  renderAvatars();
-  card.appendChild(avatarGrid);
+  function renderPackGrid() {
+    packGrid.innerHTML = '';
+    const pack = PACKS.find(x => x.id === currentPack) || PACKS[0];
+    for (const a of pack.avatars) {
+      const spec = `${pack.id}:${a.id}`;
+      packGrid.appendChild(h('button', {
+        type: 'button',
+        class: 'avatar-chip' + (spec === draft.avatar ? ' selected' : ''),
+        title: a.label || a.id,
+        onclick: () => { draft.avatar = spec; renderPackGrid(); }
+      }, h('div', { class: 'avatar-img', html: avatarSvg(spec) })));
+    }
+  }
+  renderPackTabs();
+  renderPackGrid();
+  card.appendChild(packTabs);
+  card.appendChild(packGrid);
 
   card.appendChild(h('div', { class: 'field', style: { marginTop: '16px' } }, h('label', {}, 'Color')));
   const colorGrid = h('div', { class: 'color-grid' });

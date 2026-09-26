@@ -39,6 +39,21 @@ To change the PIN: open the site → tap the padlock (Parent Mode) → enter `00
 - [ ] **iPad**: install as PWA, sign in as each kid, confirm feeds render.
 - [ ] Change parent PIN off `0000`.
 
+## Entry screens + avatar packs (2026-09-26)
+
+- **profileSelect** restyled in dark kid UI (`.k-page`): centered "Who's watching?" title, large 156px avatars ringed in each kid's `accent_color`, name below in Outfit 700. Kids with a PIN show a small glass lock badge tucked onto the avatar. Bottom-right glass circle → Parent Mode.
+- **kidPin** restyled to match: `.k-page.centered.kid-pin` scoped with the kid's `--accent`/`--on-accent`, 128px avatar ring, big Outfit-700 heading, four PIN dots in the accent color, and a 3×4 numpad with 84px buttons that flash accent on press. Back FAB top-left.
+- **Avatars**: replaced the DiceBear pack with original inline SVGs in a flat calm style (no outlines, muted palette that sits on `#1A2230`). All artwork original. Organized in `coop/js/avatars.js` as `PACKS`:
+  - **Animals** (12): fox, owl, bear, whale, lion, penguin, rabbit, octopus, turtle, elephant, bee, puppy
+  - **Dinosaurs** (6): T-Rex, triceratops, stegosaurus, brachiosaurus, pterodactyl, baby dino in an egg
+  - **Christmas** (6): Santa, reindeer, snowman, elf, gingerbread kid, penguin in a hat
+  - **Easter & Spring** (4): Easter bunny, chick, lamb, decorated egg
+  - **Halloween & Fall** (4): friendly pumpkin, friendly ghost, black cat, owl with a moon
+  - **Emoji** (56 curated glyphs): rendered as `<text>` in the platform emoji font
+- Stored as `pack:id` in `coop_profiles.avatar` (e.g. `animals:fox`, `dino:trex`, `emoji:🦖`). Legacy plain-id values (like `lion`, `bear` from earlier) still resolve — `avatarSvg()` treats colonless values as `animals:<id>`. RC's `lion` and Brody's `bear` still render because both exist in the new animals pack.
+- Parent Mode → profile edit now shows a pack tab strip and a scroll grid per pack.
+- No migration needed (backward compat handled in JS). No security surface touched (no new writes, no policy changes).
+
 ## Kid-side responsive: iPhone (2026-09-26)
 
 - Under 700px viewport width, the sidebar/rail is hidden and a fixed **bottom tab bar** takes over. Four tabs, 56px+ targets: Home, Search, All videos, and the kid's avatar (tap → switch kid). Bottom padding respects `env(safe-area-inset-bottom)` so the iPhone home indicator has room.
