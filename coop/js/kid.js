@@ -114,13 +114,48 @@ function renderRail(profile, currentScreen, go) {
   );
 }
 
+// Bottom tab bar for phone breakpoints. CSS hides the sidebar/rail and
+// shows this under 700px width. `nav_style` only affects iPad-sized
+// screens; phones always get the tab bar.
+function renderTabBar(profile, currentScreen, go) {
+  const tab = (screen, label, iconPath) => {
+    const attrs = {
+      type: 'button',
+      class: 'k-tab' + (currentScreen === screen ? ' active' : ''),
+      onclick: () => go(screen, { profileId: profile.id }),
+      'aria-label': label
+    };
+    if (currentScreen === screen) attrs['aria-current'] = 'page';
+    return h('button', attrs,
+      h('span', { html: icon(iconPath), style: { display: 'inline-flex' } }),
+      h('span', {}, label)
+    );
+  };
+  return h('nav', { class: 'k-tabbar', 'aria-label': `${profile.name} navigation` },
+    tab('kidHome',      'Home',       ICONS.home),
+    tab('kidSearch',    'Search',     ICONS.search),
+    tab('kidAllVideos', 'All videos', ICONS.grid),
+    h('button', {
+      type: 'button',
+      class: 'k-tab',
+      onclick: () => go('profileSelect'),
+      'aria-label': 'Switch kid'
+    },
+      h('div', { class: 'k-tab-avatar' },
+        h('div', { class: 'avatar-img', html: avatarSvg(profile.avatar) })),
+      h('span', {}, profile.name)
+    )
+  );
+}
+
 async function mountShell(root, profile, currentScreen, go) {
   const app = makeAppRoot(profile, currentScreen);
-  const nav = profile.nav_style === 'rail'
+  const sideNav = profile.nav_style === 'rail'
     ? renderRail(profile, currentScreen, go)
     : await renderSidebar(profile, currentScreen, go);
+  const tabBar = renderTabBar(profile, currentScreen, go);
   const content = h('div', { class: 'k-content' });
-  app.append(nav, content);
+  app.append(sideNav, content, tabBar);
   root.appendChild(app);
   return content;
 }

@@ -39,6 +39,15 @@ To change the PIN: open the site → tap the padlock (Parent Mode) → enter `00
 - [ ] **iPad**: install as PWA, sign in as each kid, confirm feeds render.
 - [ ] Change parent PIN off `0000`.
 
+## Kid-side responsive: iPhone (2026-09-26)
+
+- Under 700px viewport width, the sidebar/rail is hidden and a fixed **bottom tab bar** takes over. Four tabs, 56px+ targets: Home, Search, All videos, and the kid's avatar (tap → switch kid). Bottom padding respects `env(safe-area-inset-bottom)` so the iPhone home indicator has room.
+- `nav_style` only affects iPad-sized screens (>= 700px width). Both kids get the same tab bar on iPhone. Per-kid `accent_color` and `tile_size` still apply everywhere.
+- Hero shrinks to `min-height: 33vh` on phones with tighter typography.
+- Grids: 1 column in portrait, 2 columns in phone landscape (`max-width: 900px and (orientation: landscape) and max-height: 500px`). iPad landscape keeps the 3-column grid.
+- Video player: on phone landscape the topbar collapses to a slim translucent bar so the video fills the screen without noticeable chrome. Existing `returnTo` still works from the compact back button.
+- Both nav variants (side + tab bar) render on every kid screen; CSS decides which one shows. No JS resize handling needed.
+
 ## Kid-side redesign (2026-09-26)
 
 - Dark palette (`#1A2230` bg, `#EAF0EE` text, glass panels), Outfit + Figtree fonts, rounded pill buttons everywhere.
