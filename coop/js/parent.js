@@ -135,6 +135,8 @@ function segmentedCell({ title, options, value, onChange }) {
 
 // ---------- Bottom sheet ----------
 function openSheet({ title, cancel = 'Cancel', done, onDone, body, onOpen }) {
+  let root;
+  function close() { if (root) root.remove(); }
   const backdrop = h('div', { class: 'p-sheet-backdrop', onclick: (e) => { if (e.target === backdrop) close(); } });
   const sheet = h('div', { class: 'p-sheet', role: 'dialog', 'aria-modal': 'true' },
     h('div', { class: 'p-sheet-handle' }),
@@ -145,8 +147,8 @@ function openSheet({ title, cancel = 'Cancel', done, onDone, body, onOpen }) {
     ),
     h('div', { class: 'p-sheet-body' }, body)
   );
-  function close() { backdrop.remove(); sheet.remove(); }
-  document.body.append(backdrop, sheet);
+  root = h('div', { class: 'p-sheet-root' }, backdrop, sheet);
+  document.body.appendChild(root);
   if (onOpen) onOpen(close);
   return { close };
 }
@@ -170,10 +172,10 @@ function openConfirm({ title, message, destructive = 'Delete', cancel = 'Cancel'
 export async function renderParentHome(rootEl, go) {
   const { root, scroll } = shell({
     title: 'Parent',
-    back: 'Kids',
-    onBack: () => go('profileSelect'),
-    action: () => go('parentSettings'),
-    actionLabel: 'Done'
+    back: 'Profiles',
+    onBack: () => go('profileSelect')
+    // No trailing "Done" — the Settings row in the list already exposes
+    // Sign out. Keeping the nav bar minimal.
   });
   rootEl.appendChild(root);
 
