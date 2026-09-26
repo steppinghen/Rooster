@@ -15,11 +15,37 @@
 // renderer so kid.js doesn't import from ui.js (avoids circular ESM).
 // ------------------------------------------------------------------------
 
-import { h, icon, ICONS } from './dom.js';
-import { avatarSvg } from './avatars.js';
+import { h, icon, ICONS, toast } from './dom.js';
+import { avatarSvg, PACKS } from './avatars.js';
 import * as data from './data.js';
 
 const PAGE_SIZE = 24;
+
+// The 8 curated accent swatches. The kid Me screen and the parent-mode
+// Accent picker use this same list, and kid-update validates against it.
+const KID_ACCENT_SWATCHES = [
+  { hex: '#A9D3BE', name: 'Sage' },
+  { hex: '#9CC8E8', name: 'Sky' },
+  { hex: '#F5C6A5', name: 'Peach' },
+  { hex: '#F0B5C4', name: 'Rose' },
+  { hex: '#C6B8E5', name: 'Lilac' },
+  { hex: '#B7E3D6', name: 'Mint' },
+  { hex: '#F3DFA2', name: 'Butter' },
+  { hex: '#F2A79B', name: 'Coral' }
+];
+
+// POST /.netlify/functions/kid-update — narrow endpoint gated by the
+// kid's PIN (if any). Only avatar / accent_color are accepted server-side.
+async function callKidUpdate(profileId, patch) {
+  const pin = sessionStorage.getItem('coop_kid_pin_' + profileId) || undefined;
+  const res = await fetch('/.netlify/functions/kid-update', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ profile_id: profileId, pin, ...patch })
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || body.ok !== true) throw new Error(body.error || `HTTP ${res.status}`);
+  return body.profile;
+}
 
 // ---------- kid-app root + nav ----------
 
@@ -58,10 +84,12 @@ async function renderSidebar(profile, currentScreen, go) {
     h('div', { class: 'k-nav-header' },
       h('button', {
         class: 'k-nav-avatar',
-        onclick: () => go('profileSelect'),
-        'aria-label': 'Switch kid'
+        onclick: () => go('kidMe', { profileId: profile.id }),
+        'aria-label': 'Me'
       }, h('div', { class: 'avatar-img', html: avatarSvg(profile.avatar) })),
       h('div', { class: 'k-nav-name' }, profile.name),
+      // Kept: separate text link so sidebar users still have an
+      // obvious way to switch kids (avatar now opens Me).
       h('button', {
         class: 'k-nav-switch',
         onclick: () => go('profileSelect')
@@ -102,8 +130,8 @@ function renderRail(profile, currentScreen, go) {
     h('div', { class: 'k-nav-header' },
       h('button', {
         class: 'k-nav-avatar',
-        onclick: () => go('profileSelect'),
-        'aria-label': 'Switch kid'
+        onclick: () => go('kidMe', { profileId: profile.id }),
+        'aria-label': 'Me'
       }, h('div', { class: 'avatar-img', html: avatarSvg(profile.avatar) }))
     ),
     h('div', { class: 'k-nav-items' },
@@ -138,8 +166,8 @@ function renderTabBar(profile, currentScreen, go) {
     h('button', {
       type: 'button',
       class: 'k-tab',
-      onclick: () => go('profileSelect'),
-      'aria-label': 'Switch kid'
+      onclick: () => go('kidMe', { profileId: profile.id }),
+      'aria-label': 'Me'
     },
       h('div', { class: 'k-tab-avatar' },
         h('div', { class: 'avatar-img', html: avatarSvg(profile.avatar) })),
@@ -228,6 +256,7 @@ export async function renderHome(rootEl, profile, go) {
               profileId: profile.id,
               videoId: hero.id,
               title: hero.title,
+              channelId: hero.channel_id,
               returnTo: { screen: 'kidHome', params: { profileId: profile.id } }
             })
           }, h('span', { html: icon(ICONS.play) }), h('span', {}, 'Play')),
@@ -287,6 +316,7 @@ export async function renderAllVideos(rootEl, profile, go) {
     profileId: profile.id,
     videoId: v.id,
     title: v.title,
+    channelId: v.channel_id,
     returnTo: { screen: 'kidAllVideos', params: { profileId: profile.id } }
   })), 'grid-3col');
 }
@@ -335,6 +365,7 @@ export async function renderChannel(rootEl, profile, channelId, go) {
     profileId: profile.id,
     videoId: v.id,
     title: v.title,
+    channelId: v.channel_id || channelId,
     returnTo: { screen: 'kidChannel', params: { profileId: profile.id, channelId } }
   })), 'grid-3col');
 }
@@ -394,6 +425,7 @@ export async function renderSearch(rootEl, profile, go) {
       profileId: profile.id,
       videoId: v.id,
       title: v.title,
+      channelId: v.channel_id,
       returnTo: { screen: 'kidSearch', params: { profileId: profile.id } }
     })), 'grid-3col');
   }
@@ -405,4 +437,171 @@ export async function renderSearch(rootEl, profile, go) {
   });
 
   setTimeout(() => input.focus(), 30);
+}
+
+// ---------- ME (kid-owned avatar + accent picker) ----------
+
+export async function renderMe(rootEl, profile, go) {
+  const content = await mountShell(rootEl, profile, null, go);
+
+  // Header: big avatar + name + clear "Switch kid" button (since the
+  // avatar in the side/rail/tab bar now opens this Me screen).
+  const header = h('div', { class: 'k-me-header' },
+    h('div', { class: 'k-me-avatar', 'aria-live': 'polite' },
+      h('div', { class: 'avatar-img', html: avatarSvg(profile.avatar) })),
+    h('div', { class: 'k-me-name' }, profile.name),
+    h('button', {
+      class: 'k-btn k-btn-ghost',
+      type: 'button',
+      onclick: () => go('profileSelect')
+    }, 'Switch kid')
+  );
+  content.appendChild(header);
+
+  // Local mutable state so the screen updates instantly on tap. Server
+  // is called in the background; if it fails the UI reverts + toasts.
+  let currentAvatar = profile.avatar;
+  let currentAccent = profile.accent_color || KID_ACCENT_SWATCHES[0].hex;
+
+  function applyAccentPreview(hex) {
+    // Update the shell's --accent so hero/nav/tab styling reflect it
+    // immediately, without waiting for the next fetch.
+    const app = rootEl.querySelector('.k-app');
+    if (app) app.style.setProperty('--accent', hex);
+  }
+  function applyAvatarPreview(spec) {
+    header.querySelector('.k-me-avatar .avatar-img').innerHTML = avatarSvg(spec);
+    // Also update the nav/rail/tab-bar avatars if they're present.
+    for (const el of rootEl.querySelectorAll('.k-nav-avatar .avatar-img, .k-tab-avatar .avatar-img')) {
+      el.innerHTML = avatarSvg(spec);
+    }
+  }
+
+  // Pack tabs + grid
+  let activePack = (currentAvatar || 'animals:fox').split(':')[0];
+  const packTabs = h('div', { class: 'k-me-pack-tabs' });
+  const packGrid = h('div', { class: 'k-me-pack-grid' });
+  function drawTabs() {
+    packTabs.innerHTML = '';
+    for (const p of PACKS) packTabs.appendChild(h('button', {
+      type: 'button',
+      class: activePack === p.id ? 'active' : '',
+      onclick: () => { activePack = p.id; drawTabs(); drawGrid(); }
+    }, p.label));
+  }
+  function drawGrid() {
+    packGrid.innerHTML = '';
+    const pack = PACKS.find(x => x.id === activePack) || PACKS[0];
+    for (const a of pack.avatars) {
+      const spec = `${pack.id}:${a.id}`;
+      packGrid.appendChild(h('button', {
+        type: 'button',
+        class: 'k-me-avatar-chip' + (spec === currentAvatar ? ' selected' : ''),
+        title: a.label || a.id,
+        onclick: async () => {
+          const prev = currentAvatar;
+          currentAvatar = spec;
+          drawGrid();
+          applyAvatarPreview(spec);
+          try { await callKidUpdate(profile.id, { avatar: spec }); }
+          catch (e) {
+            currentAvatar = prev; drawGrid(); applyAvatarPreview(prev);
+            toast(e.message === 'wrong pin' ? 'Enter your code first' : 'Try again');
+          }
+        }
+      }, h('div', { class: 'avatar-img', html: avatarSvg(spec) })));
+    }
+  }
+  drawTabs(); drawGrid();
+
+  const swatchRow = h('div', { class: 'k-me-swatches' });
+  function drawSwatches() {
+    swatchRow.innerHTML = '';
+    for (const sw of KID_ACCENT_SWATCHES) {
+      swatchRow.appendChild(h('button', {
+        type: 'button',
+        class: 'k-me-swatch' + (sw.hex.toLowerCase() === currentAccent.toLowerCase() ? ' selected' : ''),
+        style: { background: sw.hex },
+        title: sw.name,
+        onclick: async () => {
+          const prev = currentAccent;
+          currentAccent = sw.hex;
+          drawSwatches();
+          applyAccentPreview(sw.hex);
+          try { await callKidUpdate(profile.id, { accent_color: sw.hex }); }
+          catch (e) {
+            currentAccent = prev; drawSwatches(); applyAccentPreview(prev);
+            toast(e.message === 'wrong pin' ? 'Enter your code first' : 'Try again');
+          }
+        }
+      }));
+    }
+  }
+  drawSwatches();
+
+  content.appendChild(h('section', { class: 'k-me-section' },
+    h('h2', { class: 'k-section-title' }, 'Avatar'),
+    packTabs,
+    packGrid
+  ));
+  content.appendChild(h('section', { class: 'k-me-section' },
+    h('h2', { class: 'k-section-title' }, 'Color'),
+    swatchRow
+  ));
+}
+
+// ---------- UP NEXT (shown after a video ends) ----------
+
+// Params: { channelId, watchedVideoId, returnTo }
+export async function renderUpNext(rootEl, profile, params, go) {
+  const { channelId, watchedVideoId, returnTo } = params || {};
+  const content = await mountShell(rootEl, profile, null, go);
+  content.appendChild(h('h1', { class: 'k-section-title', style: { fontSize: '28px' } }, 'Up next'));
+  content.appendChild(h('div', { class: 'k-empty' }, 'Loading…'));
+
+  let picks = [];
+  if (channelId) {
+    try {
+      const feed = await data.fetchFeedForChannel(profile.id, channelId);
+      picks = feed.filter(v => v.id !== watchedVideoId).slice(0, 3);
+    } catch { picks = []; }
+  }
+
+  content.innerHTML = '';
+  content.appendChild(h('h1', { class: 'k-section-title', style: { fontSize: '28px' } }, 'Up next'));
+
+  const grid = h('div', { class: 'k-up-next-grid' });
+  for (const v of picks) {
+    grid.appendChild(h('button', {
+      type: 'button',
+      class: 'k-up-next-tile',
+      onclick: () => go('videoPlayer', {
+        profileId: profile.id,
+        videoId: v.id,
+        title: v.title,
+        channelId: v.channel_id,
+        returnTo
+      })
+    },
+      h('div', { class: 'k-up-next-thumb', style: v.thumbnail_url ? { backgroundImage: `url("${v.thumbnail_url}")` } : {} },
+        h('div', { class: 'k-up-next-play', html: icon(ICONS.play) })
+      ),
+      h('div', { class: 'k-up-next-title' }, v.title || '')
+    ));
+  }
+  // Back tile — always present.
+  grid.appendChild(h('button', {
+    type: 'button',
+    class: 'k-up-next-tile back',
+    onclick: () => {
+      if (returnTo && returnTo.screen) go(returnTo.screen, returnTo.params || {});
+      else go('kidHome', { profileId: profile.id });
+    }
+  },
+    h('div', { class: 'k-up-next-thumb back-thumb' },
+      h('div', { class: 'k-up-next-back-icon', html: icon(ICONS.back) })
+    ),
+    h('div', { class: 'k-up-next-title' }, picks.length ? 'Back to where I was' : 'Back')
+  ));
+  content.appendChild(grid);
 }

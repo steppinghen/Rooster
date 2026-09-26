@@ -73,5 +73,6 @@ export const unhideVideo           = (profile_id, video_id) => callOp('unhide_vi
 export const addBlocklistKeyword   = (keyword)          => callOp('add_blocklist_keyword', { keyword });
 export const removeBlocklistKeyword = (keyword)         => callOp('remove_blocklist_keyword', { keyword });
 export const setHideShorts         = (hide_shorts)      => callOp('set_hide_shorts',       { hide_shorts });
+export const setShowUpNext         = (show_up_next)     => callOp('set_show_up_next',      { show_up_next });
 export const seedStarterChannels   = (rc_profile_id, brody_profile_id) =>
                                       callOp('seed_starter_channels', { rc_profile_id, brody_profile_id });

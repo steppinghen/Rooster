@@ -880,6 +880,21 @@ export async function renderSettings(rootEl, go) {
   }));
 
   scroll.appendChild(section({
+    header: 'Playback',
+    footer: 'When on, videos end at a chooser screen (three next-newest tiles + a Back tile). When off, the app returns straight to where the kid was.',
+    children: group([
+      toggleCell({
+        title: 'Show Up Next after videos',
+        checked: settings.show_up_next !== false,
+        onChange: async (checked) => {
+          try { await writer.setShowUpNext(checked); toast('Saved'); }
+          catch (e) { toast('Error: ' + e.message); }
+        }
+      })
+    ])
+  }));
+
+  scroll.appendChild(section({
     header: 'Sync',
     footer: `Automatic sync every 6 h. Last synced ${lastSync}.`,
     children: group([

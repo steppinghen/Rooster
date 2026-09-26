@@ -71,7 +71,7 @@ export async function verifyKidPin(profileId, pin) {
 export async function fetchPublicSettings() {
   const { data, error } = await supabase
     .from('coop_public_settings')
-    .select('hide_shorts')
+    .select('hide_shorts, show_up_next')
     .eq('id', 1)
     .single();
   if (error) throw error;

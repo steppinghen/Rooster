@@ -172,8 +172,12 @@ Screens.kidAllVideos  = async (root, { profileId }) => kidScreen(root, profileId
 Screens.kidSearch     = async (root, { profileId }) => kidScreen(root, profileId, 'renderSearch');
 Screens.kidChannel    = async (root, { profileId, channelId }) =>
   kidScreen(root, profileId, 'renderChannel', channelId);
-// Screens.kidMe is wired up in part 5 (needs the kid-update Netlify
-// function which is under separate review before deploy).
+Screens.kidMe         = async (root, { profileId }) => kidScreen(root, profileId, 'renderMe');
+Screens.kidUpNext     = async (root, params) => {
+  const profile = (await data.fetchProfiles()).find(x => x.id === params.profileId);
+  if (!profile) return go('profileSelect');
+  await kid.renderUpNext(root, profile, params, go);
+};
 
 async function kidScreen(root, profileId, method, extraArg) {
   const profile = (await data.fetchProfiles()).find(x => x.id === profileId);
@@ -183,13 +187,29 @@ async function kidScreen(root, profileId, method, extraArg) {
 }
 
 // --- Video Player ---
+// On video end: if the Show Up Next setting is on AND we know the
+// video's channel, route to the Up Next screen; otherwise fall back to
+// the caller's returnTo (or kidHome). The back button always uses
+// returnTo — Up Next is only for natural end-of-video transitions.
 let ytPlayer = null;
 Screens.videoPlayer = async (root, { profileId, videoId, title, returnTo, channelId }) => {
-  const goBack = () => {
-    destroyPlayer(ytPlayer); ytPlayer = null;
+  const settings = await data.fetchPublicSettings().catch(() => ({}));
+  const showUpNext = settings.show_up_next !== false;
+
+  const goHome = () => {
     if (returnTo && returnTo.screen) go(returnTo.screen, returnTo.params || {});
     else go('kidHome', { profileId });
   };
+  const goBack = () => { destroyPlayer(ytPlayer); ytPlayer = null; goHome(); };
+  const onEnded = () => {
+    destroyPlayer(ytPlayer); ytPlayer = null;
+    if (showUpNext && channelId) {
+      go('kidUpNext', { profileId, channelId, watchedVideoId: videoId, returnTo });
+    } else {
+      goHome();
+    }
+  };
+
   const wrap = h('div', { class: 'player-screen' });
   wrap.appendChild(h('div', { class: 'player-topbar' },
     h('button', { class: 'back-btn', onclick: goBack, html: icon(ICONS.back) }),
@@ -199,7 +219,7 @@ Screens.videoPlayer = async (root, { profileId, videoId, title, returnTo, channe
   wrap.appendChild(frameWrap);
   root.appendChild(wrap);
   destroyPlayer(ytPlayer);
-  ytPlayer = await createPlayer('yt-player', videoId, { onEnded: goBack });
+  ytPlayer = await createPlayer('yt-player', videoId, { onEnded });
 };
 
 // --- Parent PIN (dark, iOS style) ---

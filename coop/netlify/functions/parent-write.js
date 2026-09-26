@@ -466,6 +466,16 @@ const OPS = {
     return { hide_shorts };
   },
 
+  async set_show_up_next({ show_up_next }) {
+    if (typeof show_up_next !== 'boolean') throw new Error('show_up_next must be boolean');
+    const { error } = await supabase
+      .from('coop_public_settings')
+      .update({ show_up_next, updated_at: new Date().toISOString() })
+      .eq('id', 1);
+    if (error) throw error;
+    return { show_up_next };
+  },
+
   async diagnose_channel({ handle }) {
     if (!handle) throw new Error('handle required');
     if (!YOUTUBE_API_KEY) throw new Error('YOUTUBE_API_KEY not set');
