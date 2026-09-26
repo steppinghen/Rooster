@@ -18,8 +18,11 @@
 
 # Local preview: `netlify dev` from inside coop/ (or
 # `npm run dev:coop` from the repo root).
+#
+# We deliberately omit `framework = "#static"` here (other rooster sites
+# set it) — with it, netlify dev skips function autoload. This site has
+# functions, so dev needs the full pipeline.
 [dev]
-  framework  = "#static"
   publish    = "."
   port       = 8893
   autoLaunch = false

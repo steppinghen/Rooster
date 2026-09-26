@@ -56,10 +56,13 @@ async function yt(endpoint, params) {
 }
 
 async function probeShort(videoId) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
   try {
     const res = await fetch(`https://www.youtube.com/shorts/${videoId}`, {
       method: 'HEAD',
-      redirect: 'manual'
+      redirect: 'manual',
+      signal: controller.signal
     });
     // 200 → is a Short. Any 3xx → redirected to /watch, not a Short.
     if (res.status === 200) return true;
@@ -67,7 +70,24 @@ async function probeShort(videoId) {
     return null;   // caller falls back
   } catch {
     return null;   // caller falls back
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+// Run promise-producing tasks with limited concurrency and preserve order.
+async function mapConcurrent(items, limit, fn) {
+  const out = new Array(items.length);
+  let i = 0;
+  const workers = new Array(Math.min(limit, items.length)).fill(0).map(async () => {
+    while (true) {
+      const idx = i++;
+      if (idx >= items.length) return;
+      out[idx] = await fn(items[idx], idx);
+    }
+  });
+  await Promise.all(workers);
+  return out;
 }
 
 async function fetchAllPages(endpoint, baseParams, itemsCap = 50) {
@@ -126,11 +146,10 @@ async function syncChannel(channel, blocklistRegex) {
     .in('id', ids);
   const existingById = new Map((existing || []).map(r => [r.id, r]));
 
-  // 4. Build upsert rows.
-  const rows = [];
-  for (const id of ids) {
+  // 4. Build upsert rows. Shorts probes run in parallel (bounded).
+  const rows = await mapConcurrent(ids, 20, async (id) => {
     const v = detailsById.get(id);
-    if (!v) continue;   // API dropped it — will be caught in disappearance sweep
+    if (!v) return null;   // API dropped it — disappearance sweep handles it
     const title = v.snippet?.title || '';
     const duration_seconds = parseIsoDuration(v.contentDetails?.duration);
     const live = v.snippet?.liveBroadcastContent;
@@ -148,7 +167,7 @@ async function syncChannel(channel, blocklistRegex) {
       }
     }
 
-    rows.push({
+    return {
       id,
       channel_id: channel.id,
       title,
@@ -163,21 +182,20 @@ async function syncChannel(channel, blocklistRegex) {
       is_upcoming,
       availability: 'available',
       blocked_by_keyword,
-      // is_oneoff intentionally omitted from the row — the upsert's
-      // onConflict update ignores it, so an existing is_oneoff=true row
-      // keeps its flag. For NEW rows, DB default is false.
+      // is_oneoff intentionally omitted — the upsert never touches it.
       synced_at: new Date().toISOString()
-    });
-  }
+    };
+  });
+  const filteredRows = rows.filter(Boolean);
 
-  if (rows.length) {
+  if (filteredRows.length) {
     // supabase-js upsert with default onConflict on the PK.
-    const { error } = await supabase.from('coop_videos').upsert(rows, {
+    const { error } = await supabase.from('coop_videos').upsert(filteredRows, {
       onConflict: 'id',
       ignoreDuplicates: false
     });
     if (error) stats.errors.push(`upsert: ${error.message}`);
-    else stats.upserted = rows.length;
+    else stats.upserted = filteredRows.length;
   }
 
   // 6. Disappearance sweep. Any DB row for this channel not in the fresh
@@ -239,10 +257,8 @@ export default async () => {
   const { data: kws } = await supabase.from('coop_blocklist_keywords').select('keyword');
   const blocklistRegex = compileBlocklist((kws || []).map(k => k.keyword));
 
-  const perChannel = [];
-  for (const ch of channels || []) {
-    perChannel.push(await syncChannel(ch, blocklistRegex));
-  }
+  // Channels sync in parallel (bounded) — no interdependence between them.
+  const perChannel = await mapConcurrent(channels || [], 4, (ch) => syncChannel(ch, blocklistRegex));
   const summary = {
     ok: true,
     channels_synced: perChannel.length,
