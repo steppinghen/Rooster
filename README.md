@@ -11,6 +11,7 @@ Personal projects monorepo. One GitHub repo, several independent Netlify sites �
 | [`hvac-visits/`](hvac-visits/CLAUDE.md) | Visit-tracking tool | _tbd_ | **Yes** | No | 8890 |
 | [`lab/`](lab/CLAUDE.md) | Experiments playground | _tbd_ | **Yes** | No | 8891 |
 | [`knee-program/`](knee-program/CLAUDE.md) | Knee rehab tracker — on-device only | [live](https://rooster-knee.netlify.app) | No | No | 8892 |
+| [`coop/`](coop/CLAUDE.md) | Curated YouTube PWA for the boys' iPads | _tbd_ | No | No | 8893 |
 | [`_shared/`](_shared/) | Library — copied from, never deployed | — | — | — | — |
 
 **No site is indexed, by design.** `X-Robots-Tag: noindex` plus a `robots` meta tag on every site, public ones included — these are shared by link, not found by search. New sites inherit it.
@@ -92,7 +93,8 @@ rooster/
 ├── dad-contracting/
 ├── hvac-visits/
 ├── lab/
-└── knee-program/
+├── knee-program/
+└── coop/
 ```
 
 ## Netlify sites

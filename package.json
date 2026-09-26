@@ -9,8 +9,9 @@
     "dev:hvac-visits": "cd hvac-visits && netlify dev",
     "dev:lab": "cd lab && netlify dev",
     "dev:knee-program": "cd knee-program && netlify dev",
+    "dev:coop": "cd coop && netlify dev",
     "sync:auth": "for s in hvac-visits lab; do cp _shared/auth-overlay.js _shared/auth-overlay.css \"$s/vendor/\"; echo \"synced $s\"; done",
-    "check:noindex": "for p in 8888 8889 8890 8891 8892; do printf '%s ' $p; curl -sI \"http://localhost:$p\" | grep -i x-robots-tag || echo 'NOT RUNNING / NO HEADER'; done"
+    "check:noindex": "for p in 8888 8889 8890 8891 8892 8893; do printf '%s ' $p; curl -sI \"http://localhost:$p\" | grep -i x-robots-tag || echo 'NOT RUNNING / NO HEADER'; done"
   },
   "engines": {
     "node": ">=18"

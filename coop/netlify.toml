@@ -1,0 +1,44 @@
+# =============================================================
+# Coop — Netlify site config
+# One folder = one Netlify site. In the Netlify UI set:
+#   Base directory:      coop
+#   Publish directory:   coop
+#   Build command:       (empty — static)
+#   Functions directory: coop/netlify/functions (set here below)
+# =============================================================
+
+[build]
+  publish   = "."
+  command   = ""
+  functions = "netlify/functions"
+
+[functions]
+  directory     = "netlify/functions"
+  node_bundler  = "esbuild"
+
+# Local preview: `netlify dev` from inside coop/ (or
+# `npm run dev:coop` from the repo root).
+[dev]
+  framework  = "#static"
+  publish    = "."
+  port       = 8893
+  autoLaunch = false
+  # Netlify's internal static server defaults to 3999 for EVERY site,
+  # so without a unique port here the second site you start dies with
+  # EADDRINUSE. Pinning both ports is what lets sites run side by side.
+  staticServerPort = 3996
+
+# ── noindex — see _shared/noindex-headers ────────────────────
+# Applied to every path so nothing here reaches Google.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive, nosnippet, noimageindex"
+
+# Netlify serves .webmanifest as application/octet-stream, which Chrome
+# rejects — the manifest is then ignored and the site isn't installable
+# on Android. iOS doesn't care.
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"

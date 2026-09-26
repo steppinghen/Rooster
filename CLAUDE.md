@@ -22,6 +22,7 @@ Every project folder has its own `CLAUDE.md` (stable guidance) and `STATUS.md` (
 | `hvac-visits/` | `rooster-hvac` | `8956daf6-d01c-4042-b89f-0dc3748bcaa3` |
 | `lab/` | `rooster-lab` | `a57208ba-f912-4996-a075-5c23ed3336f8` |
 | `knee-program/` | `rooster-knee` | `25eff7d5-147c-432b-86da-24c8af851fd8` |
+| `coop/` | `rooster-coop` | `44fc9f31-1923-4b86-a377-a9a3f20ff5e4` |
 
 `NETLIFY_AUTH_TOKEN` and `SUPABASE_ACCESS_TOKEN` come from `.claude/settings.local.json` (gitignored). Never print, log, or commit them.
 
