@@ -71,7 +71,7 @@ function parseChannelRef(input) {
 
 async function ytChannelLookup(ref) {
   const params = new URLSearchParams({
-    part: 'snippet,contentDetails',
+    part: 'snippet,contentDetails,statistics',
     key: YOUTUBE_API_KEY
   });
   if (ref.channelId) params.set('id', ref.channelId);
@@ -86,9 +86,20 @@ async function ytChannelLookup(ref) {
     id: item.id,
     handle: ref.handle || null,
     title: item.snippet.title,
+    custom_url: item.snippet.customUrl || null,
+    country: item.snippet.country || null,
+    subscribers: item.statistics?.subscriberCount ? Number(item.statistics.subscriberCount) : null,
     thumbnail_url: item.snippet.thumbnails?.default?.url || null,
     uploads_playlist_id: item.contentDetails.relatedPlaylists.uploads
   };
+}
+
+// Check the uploads playlist actually returns items — catches lookalike
+// channels that resolve but have no accessible uploads.
+async function ytPlaylistOk(playlistId) {
+  const params = new URLSearchParams({ part: 'id', playlistId, maxResults: '1', key: YOUTUBE_API_KEY });
+  const res = await fetch('https://www.googleapis.com/youtube/v3/playlistItems?' + params);
+  return res.ok;
 }
 
 async function ytOEmbed(videoId) {
@@ -144,13 +155,39 @@ const OPS = {
     return { profile: data };
   },
 
-  async edit_profile({ profile_id, name, avatar, color, sort_order }) {
+  async edit_profile({ profile_id, name, avatar, color, sort_order,
+                       accent_color, on_accent_text, nav_style, tile_size }) {
     if (!profile_id) throw new Error('profile_id required');
+    const HEX = /^#[0-9A-Fa-f]{6}$/;
+    const NAV = new Set(['sidebar', 'rail']);
+    const TILE = new Set(['regular', 'large']);
     const patch = {};
     if (name !== undefined) patch.name = name;
     if (avatar !== undefined) patch.avatar = avatar;
     if (color !== undefined) patch.color = color;
     if (sort_order !== undefined) patch.sort_order = sort_order;
+    // Validate theme fields BEFORE the write. DB CHECK constraints would
+    // catch bad values too, but we want a clean error and no DB round-trip.
+    if (accent_color !== undefined) {
+      if (typeof accent_color !== 'string' || !HEX.test(accent_color)) {
+        throw new Error('accent_color must match ^#[0-9A-Fa-f]{6}$');
+      }
+      patch.accent_color = accent_color;
+    }
+    if (on_accent_text !== undefined) {
+      if (typeof on_accent_text !== 'string' || !HEX.test(on_accent_text)) {
+        throw new Error('on_accent_text must match ^#[0-9A-Fa-f]{6}$');
+      }
+      patch.on_accent_text = on_accent_text;
+    }
+    if (nav_style !== undefined) {
+      if (!NAV.has(nav_style)) throw new Error("nav_style must be 'sidebar' or 'rail'");
+      patch.nav_style = nav_style;
+    }
+    if (tile_size !== undefined) {
+      if (!TILE.has(tile_size)) throw new Error("tile_size must be 'regular' or 'large'");
+      patch.tile_size = tile_size;
+    }
     const { data, error } = await supabase
       .from('coop_profiles')
       .update(patch)
@@ -171,14 +208,34 @@ const OPS = {
     return {};
   },
 
-  async add_channel({ input, profile_ids = [] }) {
+  // Preview only — never writes. Client calls this, shows the returned
+  // info to the user, and only then calls add_channel with the channel_id.
+  // Handles alone aren't safe: an @-handle can resolve to a lookalike
+  // (see @disneyjunior). The preview lets the parent eyeball title,
+  // customUrl, subscriber count, and whether uploads are fetchable
+  // before committing.
+  async resolve_channel({ input }) {
     if (!YOUTUBE_API_KEY) throw new Error('YOUTUBE_API_KEY not set');
     const ref = parseChannelRef(input);
     if (!ref) throw new Error('Could not parse channel input');
     const ch = await ytChannelLookup(ref);
+    const uploads_ok = await ytPlaylistOk(ch.uploads_playlist_id);
+    return { channel: { ...ch, uploads_ok } };
+  },
+
+  // Requires an explicit channel_id (UC…). Re-fetches by ID (not by
+  // handle) so the client can't be tricked into approving one channel
+  // and saving a different one. If the caller wants handle resolution,
+  // they call resolve_channel first and pass its `channel.id` here.
+  async add_channel({ channel_id, profile_ids = [] }) {
+    if (!YOUTUBE_API_KEY) throw new Error('YOUTUBE_API_KEY not set');
+    if (!channel_id || !/^UC[A-Za-z0-9_-]{22}$/.test(channel_id)) {
+      throw new Error('channel_id must be a UC-prefixed 24-char YouTube channel ID');
+    }
+    const ch = await ytChannelLookup({ channelId: channel_id });
     const { error: chErr } = await supabase.from('coop_channels').upsert({
       id: ch.id,
-      handle: ch.handle,
+      handle: ch.custom_url ? ch.custom_url.replace(/^@/, '') : null,
       title: ch.title,
       thumbnail_url: ch.thumbnail_url,
       uploads_playlist_id: ch.uploads_playlist_id
@@ -190,6 +247,68 @@ const OPS = {
       if (pcErr) throw pcErr;
     }
     return { channel: ch };
+  },
+
+  // Batch info for all channels in coop_channels: live data from
+  // YouTube channels.list (title, customUrl, country, subs). Flags
+  // anything under `min_subscribers` (default 100k) or with non-ASCII
+  // combining marks in the title (spoof detector). Read-only.
+  async audit_channels({ min_subscribers = 100000 } = {}) {
+    if (!YOUTUBE_API_KEY) throw new Error('YOUTUBE_API_KEY not set');
+    const { data: rows, error } = await supabase
+      .from('coop_channels')
+      .select('id, handle, title, uploads_playlist_id, added_at, last_synced_at')
+      .order('title', { ascending: true });
+    if (error) throw error;
+    const dbById = new Map((rows || []).map(r => [r.id, r]));
+    const ids = [...dbById.keys()];
+    if (ids.length === 0) return { channels: [] };
+    // channels.list accepts up to 50 IDs per call.
+    const params = new URLSearchParams({
+      part: 'snippet,contentDetails,statistics',
+      id: ids.join(','),
+      key: YOUTUBE_API_KEY,
+      maxResults: '50'
+    });
+    const res = await fetch('https://www.googleapis.com/youtube/v3/channels?' + params);
+    if (!res.ok) throw new Error(`YouTube channels.list failed: ${res.status}`);
+    const data = await res.json();
+    const liveById = new Map((data.items || []).map(i => [i.id, i]));
+
+    // Spoof detector: Unicode combining marks (Mn category) or unusual
+    // characters in the title compared to plain ASCII+diacritics.
+    const combining = /[̀-ͯ᪰-᫿᷀-᷿⃐-⃿︠-︯]/;
+    const nonstandard = /[^\p{L}\p{N}\s\p{P}]/u;
+
+    const out = [];
+    for (const id of ids) {
+      const db = dbById.get(id);
+      const live = liveById.get(id);
+      const flags = [];
+      if (!live) {
+        flags.push('not returned by channels.list — channel may be private/deleted');
+        out.push({ id, seed_title: db.title, seed_handle: db.handle, flags });
+        continue;
+      }
+      const title = live.snippet.title || '';
+      const customUrl = live.snippet.customUrl || null;
+      const subs = live.statistics?.subscriberCount ? Number(live.statistics.subscriberCount) : null;
+      if (subs !== null && subs < min_subscribers) flags.push(`subs ${subs} < ${min_subscribers}`);
+      if (combining.test(title)) flags.push('title contains combining marks (spoof-glyph risk)');
+      if (nonstandard.test(title)) flags.push('title contains unusual characters');
+      out.push({
+        id,
+        title,
+        customUrl,
+        country: live.snippet.country || null,
+        subscribers: subs,
+        seed_handle: db.handle,
+        seed_title: db.title,
+        last_synced_at: db.last_synced_at,
+        flags
+      });
+    }
+    return { channels: out, min_subscribers };
   },
 
   async remove_channel({ channel_id }) {

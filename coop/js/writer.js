@@ -60,7 +60,9 @@ export const clearKidPin           = (profile_id)       => callOp('clear_kid_pin
 export const addProfile            = (payload)          => callOp('add_profile',           payload);
 export const editProfile           = (payload)          => callOp('edit_profile',          payload);
 export const deleteProfile         = (profile_id)       => callOp('delete_profile',        { profile_id });
-export const addChannel            = (input, profile_ids = []) => callOp('add_channel',    { input, profile_ids });
+export const resolveChannel        = (input)                    => callOp('resolve_channel', { input });
+export const addChannel            = (channel_id, profile_ids = []) => callOp('add_channel', { channel_id, profile_ids });
+export const auditChannels         = (min_subscribers)          => callOp('audit_channels', min_subscribers != null ? { min_subscribers } : {});
 export const removeChannel         = (channel_id)       => callOp('remove_channel',        { channel_id });
 export const setProfileChannels    = (profile_id, channel_ids) => callOp('set_profile_channels', { profile_id, channel_ids });
 export const addOneoffVideo        = (input, profile_ids = []) => callOp('add_oneoff_video', { input, profile_ids });

@@ -15,56 +15,58 @@ import { AVATAR_META, avatarSvg, KID_COLORS, DEFAULT_AVATAR_ID } from './avatars
 import * as data from './data.js';
 import * as writer from './writer.js';
 import { createPlayer, destroyPlayer } from './youtube.js';
+import { h, icon, ICONS, toast, confirmDialog, loadingBlock } from './dom.js';
+import * as kid from './kid.js';
 
-// ---------- tiny helpers ----------
+// Preset accent pairs for the kid theme picker. Extendable — the parent
+// can still type an arbitrary hex + pick a text color. Ordering keeps
+// the two current kids' defaults first.
+const ACCENT_PRESETS = [
+  { name: 'Sage',    accent: '#A9D3BE', onAccent: '#14231C' },
+  { name: 'Sky',     accent: '#9CC8E8', onAccent: '#0F1E2A' },
+  { name: 'Peach',   accent: '#F5C6A5', onAccent: '#3A200F' },
+  { name: 'Rose',    accent: '#F0B5C4', onAccent: '#3A1421' },
+  { name: 'Lilac',   accent: '#C6B8E5', onAccent: '#241A3D' },
+  { name: 'Mint',    accent: '#B7E3D6', onAccent: '#0F2A22' },
+  { name: 'Butter',  accent: '#F3DFA2', onAccent: '#3A2F0A' },
+  { name: 'Coral',   accent: '#F2A79B', onAccent: '#3A160E' }
+];
 
-function h(tag, attrs = {}, ...children) {
-  const el = document.createElement(tag);
-  for (const k in attrs) {
-    if (k === 'class') el.className = attrs[k];
-    else if (k === 'style' && typeof attrs[k] === 'object') Object.assign(el.style, attrs[k]);
-    else if (k.startsWith('on') && typeof attrs[k] === 'function') el.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
-    else if (k === 'html') el.innerHTML = attrs[k];
-    else el.setAttribute(k, attrs[k]);
-  }
-  for (const c of children.flat()) {
-    if (c == null || c === false) continue;
-    el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
-  }
-  return el;
-}
-function icon(path) {
-  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
-}
-const ICONS = {
-  back:  '<path d="M15 18l-6-6 6-6"/>',
-  home:  '<path d="M3 12l9-9 9 9v9a2 2 0 0 1-2 2h-4v-7H10v7H6a2 2 0 0 1-2-2z"/>',
-  lock:  '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
-  plus:  '<path d="M12 5v14M5 12h14"/>',
-  gear:  '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
-  trash: '<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>',
-  play:  '<polygon points="5 3 19 12 5 21"/>'
-};
-function toast(msg, ms = 2200) {
-  const t = h('div', { class: 'toast' }, msg);
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), ms);
-}
-function confirmDialog(title, msg, onYes) {
-  const modal = h('div', { class: 'modal-backdrop', onclick: (e) => { if (e.target === modal) modal.remove(); } },
+// Preview modal shown between `resolve_channel` and `add_channel`. Handles
+// alone aren't safe — @-handles can point at lookalikes — so the parent
+// eyeballs title, custom URL, subscriber count, and the uploads probe
+// before we commit.
+function confirmChannelAdd(channel, onConfirm) {
+  const subs = channel.subscribers != null ? channel.subscribers.toLocaleString() : '—';
+  const modal = h('div', { class: 'modal-backdrop', onclick: (e) => { if (e.target === modal) modal.remove(); } });
+  modal.appendChild(
     h('div', { class: 'modal' },
-      h('h3', {}, title),
-      h('p', { style: { marginBottom: '20px', color: 'var(--text-muted)' } }, msg),
+      h('h3', {}, 'Add this channel?'),
+      h('div', { style: { display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' } },
+        channel.thumbnail_url ? h('img', { src: channel.thumbnail_url, style: { width: '48px', height: '48px', borderRadius: '50%' } }) : null,
+        h('div', { style: { flex: 1, minWidth: 0 } },
+          h('div', { style: { fontWeight: '700', fontSize: '18px', wordBreak: 'break-word' } }, channel.title || '(no title)'),
+          h('div', { style: { fontSize: '13px', color: 'var(--text-muted)' } }, channel.custom_url || 'no custom URL')
+        )
+      ),
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px', fontSize: '14px', marginBottom: '16px' } },
+        h('div', { style: { color: 'var(--text-muted)' } }, 'ID'),
+        h('div', { style: { fontFamily: 'monospace' } }, channel.id),
+        h('div', { style: { color: 'var(--text-muted)' } }, 'Subscribers'),
+        h('div', {}, subs),
+        h('div', { style: { color: 'var(--text-muted)' } }, 'Country'),
+        h('div', {}, channel.country || '—'),
+        h('div', { style: { color: 'var(--text-muted)' } }, 'Uploads'),
+        h('div', { style: { color: channel.uploads_ok === false ? 'var(--danger)' : 'inherit' } },
+          channel.uploads_ok === false ? '⚠ playlist returned 404 — likely no accessible videos' : 'reachable')
+      ),
       h('div', { class: 'btn-row' },
         h('button', { class: 'btn btn-secondary', style: { flex: 1 }, onclick: () => modal.remove() }, 'Cancel'),
-        h('button', { class: 'btn btn-danger', style: { flex: 1 }, onclick: () => { modal.remove(); onYes(); } }, 'Yes')
+        h('button', { class: 'btn btn-primary', style: { flex: 1 }, onclick: () => { modal.remove(); onConfirm(); } }, 'Add')
       )
     )
   );
   document.body.appendChild(modal);
-}
-function loadingBlock(msg = 'Loading…') {
-  return h('div', { class: 'empty-state' }, h('div', { class: 'big-emoji' }, '⏳'), h('p', {}, msg));
 }
 
 // ---------- numpad ----------
@@ -115,10 +117,14 @@ export function go(screen, params = {}) {
 function back() {
   const s = current.screen;
   if (['profileEdit', 'contentManage'].includes(s)) go('parentHome');
-  else if (['kidHome', 'kidPin'].includes(s)) go('profileSelect');
+  else if (['kidHome', 'kidAllVideos', 'kidChannel', 'kidSearch', 'kidPin'].includes(s)) go('profileSelect');
   else if (s === 'parentPin' || s === 'parentHome') go('profileSelect');
   else go('profileSelect');
 }
+
+// The kid screens use their own theming (see js/kid.js + .k-app in
+// style.css) and don't need the warm --profile-color hooks.
+const KID_SCREENS = new Set(['kidHome', 'kidAllVideos', 'kidChannel', 'kidSearch']);
 
 async function render() {
   const app = document.getElementById('app');
@@ -207,72 +213,40 @@ Screens.kidPin = async (root, { profileId }) => {
   root.appendChild(screen);
 };
 
-// --- Kid Home ---
-Screens.kidHome = async (root, { profileId }) => {
-  const profiles = await data.fetchProfiles();
-  const p = profiles.find(x => x.id === profileId);
-  if (!p) return go('profileSelect');
+// --- Kid screens (delegated to kid.js) ---
+Screens.kidHome       = async (root, { profileId }) => kidScreen(root, profileId, 'renderHome');
+Screens.kidAllVideos  = async (root, { profileId }) => kidScreen(root, profileId, 'renderAllVideos');
+Screens.kidSearch     = async (root, { profileId }) => kidScreen(root, profileId, 'renderSearch');
+Screens.kidChannel    = async (root, { profileId, channelId }) =>
+  kidScreen(root, profileId, 'renderChannel', channelId);
 
-  const cdef = KID_COLORS.find(c => c.color === p.color) || KID_COLORS[0];
-  const screen = h('div', { class: 'screen screen-scroll' });
-  screen.append(
-    h('div', { class: 'kid-header' },
-      h('div', { class: 'avatar', style: { background: cdef.soft, borderColor: cdef.color } },
-        h('div', { class: 'avatar-img', html: avatarSvg(p.avatar) })),
-      h('div', { class: 'greeting' },
-        h('div', { class: 'hi' }, 'HI THERE'),
-        h('div', { class: 'name' }, p.name)
-      ),
-      h('button', { class: 'home-btn', onclick: () => go('profileSelect'), title: 'Home', html: icon(ICONS.home) })
-    )
-  );
-  const contentEl = h('div');
-  screen.appendChild(contentEl);
-  root.appendChild(screen);
-  contentEl.appendChild(loadingBlock());
-
-  let videos;
-  try { videos = await data.fetchFeedForProfile(profileId); }
-  catch (e) { contentEl.innerHTML = ''; contentEl.appendChild(h('p', {}, 'Error: ' + e.message)); return; }
-
-  contentEl.innerHTML = '';
-  if (!videos.length) {
-    contentEl.appendChild(h('div', { class: 'empty-state' },
-      h('div', { class: 'big-emoji' }, '🌱'),
-      h('h3', { style: { marginBottom: '8px' } }, 'No videos yet'),
-      h('p', {}, 'Ask a grown-up to add some videos for you.')));
-    return;
-  }
-  const grid = h('div', { class: 'video-grid' });
-  for (const v of videos) {
-    grid.appendChild(h('button', {
-      class: 'video-tile',
-      onclick: () => go('videoPlayer', { profileId, videoId: v.id, title: v.title })
-    },
-      h('div', { class: 'video-thumb', style: { backgroundImage: `url(${v.thumbnail_url})` } },
-        h('div', { class: 'video-play-icon', html: icon(ICONS.play) })
-      ),
-      h('div', { class: 'video-info' }, h('div', { class: 'video-title' }, v.title))
-    ));
-  }
-  contentEl.appendChild(grid);
-};
+async function kidScreen(root, profileId, method, extraArg) {
+  const profile = (await data.fetchProfiles()).find(x => x.id === profileId);
+  if (!profile) return go('profileSelect');
+  if (extraArg !== undefined) await kid[method](root, profile, extraArg, go);
+  else await kid[method](root, profile, go);
+}
 
 // --- Video Player ---
+// Return-to: caller provides { screen, params } via `returnTo`; player's
+// back button and onEnded honor it. Falls back to kidHome for older callers.
 let ytPlayer = null;
-Screens.videoPlayer = async (root, { profileId, videoId, title }) => {
+Screens.videoPlayer = async (root, { profileId, videoId, title, returnTo }) => {
+  const goBack = () => {
+    destroyPlayer(ytPlayer); ytPlayer = null;
+    if (returnTo && returnTo.screen) go(returnTo.screen, returnTo.params || {});
+    else go('kidHome', { profileId });
+  };
   const wrap = h('div', { class: 'player-screen' });
   wrap.appendChild(h('div', { class: 'player-topbar' },
-    h('button', { class: 'back-btn', onclick: () => { destroyPlayer(ytPlayer); ytPlayer = null; go('kidHome', { profileId }); }, html: icon(ICONS.back) }),
+    h('button', { class: 'back-btn', onclick: goBack, html: icon(ICONS.back) }),
     h('div', { class: 'title' }, title || 'Video')));
   const frameWrap = h('div', { class: 'player-frame-wrap' });
   frameWrap.appendChild(h('div', { id: 'yt-player' }));
   wrap.appendChild(frameWrap);
   root.appendChild(wrap);
   destroyPlayer(ytPlayer);
-  ytPlayer = await createPlayer('yt-player', videoId, {
-    onEnded: () => { destroyPlayer(ytPlayer); ytPlayer = null; go('kidHome', { profileId }); }
-  });
+  ytPlayer = await createPlayer('yt-player', videoId, { onEnded: goBack });
 };
 
 // --- Parent PIN ---
@@ -430,7 +404,12 @@ Screens.profileEdit = async (root, { profileId }) => {
   const isNew = !p;
   const draft = p
     ? { ...p, pin: '' }   // never prefill kid PIN — anon can't see it
-    : { name: '', avatar: DEFAULT_AVATAR_ID, color: KID_COLORS[0].color, pin: '', sort_order: (profiles.length || 0) };
+    : {
+        name: '', avatar: DEFAULT_AVATAR_ID, color: KID_COLORS[0].color,
+        pin: '', sort_order: (profiles.length || 0),
+        accent_color: ACCENT_PRESETS[0].accent, on_accent_text: ACCENT_PRESETS[0].onAccent,
+        nav_style: 'sidebar', tile_size: 'regular'
+      };
   const hasPin = p ? await data.hasKidPin(p.id).catch(() => false) : false;
 
   const screen = h('div', { class: 'screen screen-scroll' });
@@ -474,6 +453,82 @@ Screens.profileEdit = async (root, { profileId }) => {
   renderColors();
   card.appendChild(colorGrid);
 
+  // Kid theme (accent + on-accent) — swatch row + custom-hex escape hatch.
+  card.appendChild(h('div', { class: 'field', style: { marginTop: '20px' } },
+    h('label', {}, 'Kid theme accent'),
+    h('p', { style: { color: 'var(--text-muted)', fontSize: '14px', marginBottom: '8px' } },
+      'Accent color used in the kid view for the Play button, "New from" label, and selected nav item.')));
+  const accentRow = h('div', { class: 'color-grid' });
+  function renderAccents() {
+    accentRow.innerHTML = '';
+    for (const preset of ACCENT_PRESETS) {
+      const selected = preset.accent.toLowerCase() === (draft.accent_color || '').toLowerCase();
+      accentRow.appendChild(h('button', {
+        class: 'color-chip' + (selected ? ' selected' : ''),
+        style: { background: preset.accent }, title: preset.name,
+        onclick: () => {
+          draft.accent_color = preset.accent;
+          draft.on_accent_text = preset.onAccent;
+          renderAccents();
+          const hex = document.getElementById('edit-accent-hex');
+          if (hex) hex.value = preset.accent;
+        }
+      }));
+    }
+  }
+  renderAccents();
+  card.appendChild(accentRow);
+  card.appendChild(h('div', { style: { display: 'flex', gap: '8px', marginTop: '12px' } },
+    h('input', {
+      class: 'input', id: 'edit-accent-hex', type: 'text',
+      value: draft.accent_color || '', placeholder: '#RRGGBB',
+      style: { maxWidth: '160px' },
+      oninput: (e) => {
+        const v = e.target.value.trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(v)) draft.accent_color = v;
+      }
+    }),
+    h('button', { class: 'btn btn-secondary', type: 'button', onclick: () => {
+      // Toggle on-accent between near-black and off-white.
+      draft.on_accent_text = draft.on_accent_text === '#EAF0EE' ? '#14231C' : '#EAF0EE';
+      toast('Text-on-accent: ' + draft.on_accent_text);
+    }}, 'Flip text color')
+  ));
+
+  // Nav style
+  card.appendChild(h('div', { class: 'field', style: { marginTop: '20px' } }, h('label', {}, 'Navigation')));
+  const navSeg = h('div', { class: 'segmented', style: { display: 'flex', width: '100%' } });
+  function renderNav() {
+    navSeg.innerHTML = '';
+    for (const opt of [['sidebar', 'Sidebar'], ['rail', 'Rail']]) {
+      const [val, label] = opt;
+      navSeg.appendChild(h('button', {
+        type: 'button',
+        class: draft.nav_style === val ? 'active' : '',
+        onclick: () => { draft.nav_style = val; renderNav(); }
+      }, label));
+    }
+  }
+  renderNav();
+  card.appendChild(navSeg);
+
+  // Tile size
+  card.appendChild(h('div', { class: 'field', style: { marginTop: '20px' } }, h('label', {}, 'Tile size')));
+  const tileSeg = h('div', { class: 'segmented', style: { display: 'flex', width: '100%' } });
+  function renderTile() {
+    tileSeg.innerHTML = '';
+    for (const opt of [['regular', 'Regular'], ['large', 'Large']]) {
+      const [val, label] = opt;
+      tileSeg.appendChild(h('button', {
+        type: 'button',
+        class: draft.tile_size === val ? 'active' : '',
+        onclick: () => { draft.tile_size = val; renderTile(); }
+      }, label));
+    }
+  }
+  renderTile();
+  card.appendChild(tileSeg);
+
   card.appendChild(h('div', { class: 'field', style: { marginTop: '20px' } },
     h('label', {}, hasPin ? "Kid's Secret Code — set" : "Kid's Secret Code (optional)"),
     h('p', { style: { color: 'var(--text-muted)', fontSize: '14px', marginBottom: '8px' } },
@@ -494,13 +549,30 @@ Screens.profileEdit = async (root, { profileId }) => {
   actions.appendChild(h('button', { class: 'btn btn-primary', style: { flex: 1 }, onclick: async () => {
     if (!draft.name.trim()) { toast('Please enter a name'); return; }
     if (draft.pin && draft.pin.length !== 4) { toast('PIN must be 4 digits (or empty)'); return; }
+    // Basic hex sanity on client — server enforces the same via CHECK constraints.
+    const HEX = /^#[0-9A-Fa-f]{6}$/;
+    if (!HEX.test(draft.accent_color || '')) { toast('Accent color must be #RRGGBB'); return; }
+    if (!HEX.test(draft.on_accent_text || '')) { toast('On-accent text color must be #RRGGBB'); return; }
     try {
       let profileIdOut;
       if (isNew) {
-        const res = await writer.addProfile({ name: draft.name.trim(), avatar: draft.avatar, color: draft.color, sort_order: draft.sort_order });
+        const res = await writer.addProfile({
+          name: draft.name.trim(), avatar: draft.avatar, color: draft.color, sort_order: draft.sort_order
+        });
         profileIdOut = res.profile?.id;
+        // add_profile op doesn't take theme fields — apply via edit_profile.
+        await writer.editProfile({
+          profile_id: profileIdOut,
+          accent_color: draft.accent_color, on_accent_text: draft.on_accent_text,
+          nav_style: draft.nav_style, tile_size: draft.tile_size
+        });
       } else {
-        await writer.editProfile({ profile_id: p.id, name: draft.name.trim(), avatar: draft.avatar, color: draft.color });
+        await writer.editProfile({
+          profile_id: p.id,
+          name: draft.name.trim(), avatar: draft.avatar, color: draft.color,
+          accent_color: draft.accent_color, on_accent_text: draft.on_accent_text,
+          nav_style: draft.nav_style, tile_size: draft.tile_size
+        });
         profileIdOut = p.id;
       }
       if (draft.pin) await writer.setKidPin(profileIdOut, draft.pin);
@@ -565,7 +637,7 @@ Screens.contentManage = async (root, { profileId }) => {
       h('p', { style: { color: 'var(--text-muted)', fontSize: '14px', marginBottom: '12px' } },
         'Paste a channel URL or @handle. Approved for this profile.'),
       h('div', { style: { display: 'flex', gap: '8px' } },
-        h('input', { class: 'input', id: 'add-chan-input', placeholder: 'https://youtube.com/@Bluey' }),
+        h('input', { class: 'input', id: 'add-chan-input', placeholder: '@handle, UC… ID, or channel URL' }),
         h('button', { class: 'btn btn-primary', onclick: async (ev) => {
           const input = document.getElementById('add-chan-input');
           const val = input.value.trim();
@@ -573,9 +645,14 @@ Screens.contentManage = async (root, { profileId }) => {
           const btn = ev.currentTarget;
           btn.disabled = true; btn.textContent = '…';
           try {
-            const res = await writer.addChannel(val, [profileId]);
-            toast(`Added ${res.channel?.title || 'channel'}`);
-            input.value = ''; renderContent();
+            const { channel } = await writer.resolveChannel(val);
+            confirmChannelAdd(channel, async () => {
+              try {
+                await writer.addChannel(channel.id, [profileId]);
+                toast(`Added ${channel.title}`);
+                input.value = ''; renderContent();
+              } catch (e) { toast('Error: ' + e.message, 3500); }
+            });
           } catch (e) { toast('Error: ' + e.message, 3500); }
           finally { btn.disabled = false; btn.textContent = 'Add'; }
         }}, 'Add'))

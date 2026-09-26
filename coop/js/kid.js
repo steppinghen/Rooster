@@ -1,0 +1,373 @@
+// ------------------------------------------------------------------------
+// coop/js/kid.js
+//
+// The kid-side UI. Reads only via data.js; writes never happen here.
+// Screens exported: renderHome, renderAllVideos, renderChannel, renderSearch.
+//
+// Every render:
+//   1. Wraps content in a `.k-app` root with the kid's --accent + --on-accent
+//      CSS custom properties and layout classes (nav-sidebar/nav-rail,
+//      tile-regular/tile-large).
+//   2. Draws the persistent nav column (sidebar or rail per profile).
+//   3. Renders the content into `.k-content` inside the same root.
+//
+// The ui.js dispatcher passes a `go(screen, params)` callback into each
+// renderer so kid.js doesn't import from ui.js (avoids circular ESM).
+// ------------------------------------------------------------------------
+
+import { h, icon, ICONS } from './dom.js';
+import { avatarSvg } from './avatars.js';
+import * as data from './data.js';
+
+const PAGE_SIZE = 24;
+
+// ---------- kid-app root + nav ----------
+
+function makeAppRoot(profile, currentScreen) {
+  const root = h('div', {
+    class: `k-app nav-${profile.nav_style || 'sidebar'} tile-${profile.tile_size || 'regular'}`,
+    style: {
+      '--accent': profile.accent_color || '#A9D3BE',
+      '--on-accent': profile.on_accent_text || '#14231C'
+    }
+  });
+  return root;
+}
+
+function navItem({ id, label, iconPath, active, onclick, ariaLabel }) {
+  const attrs = {
+    class: 'k-nav-item' + (active ? ' active' : ''),
+    onclick,
+    'aria-label': ariaLabel || label,
+    type: 'button'
+  };
+  if (active) attrs['aria-current'] = 'page';
+  return h('button', attrs, h('span', { html: icon(iconPath), style: { display: 'inline-flex' } }), label ? h('span', {}, label) : null);
+}
+
+async function renderSidebar(profile, currentScreen, go) {
+  const channels = await data.fetchChannelsForProfile(profile.id).catch(() => []);
+  const item = (screen, label, iconPath) => navItem({
+    id: screen,
+    label,
+    iconPath,
+    active: currentScreen === screen,
+    onclick: () => go(screen, { profileId: profile.id })
+  });
+  return h('nav', { class: 'k-nav sidebar', 'aria-label': `${profile.name} navigation` },
+    h('div', { class: 'k-nav-header' },
+      h('button', {
+        class: 'k-nav-avatar',
+        onclick: () => go('profileSelect'),
+        'aria-label': 'Switch kid'
+      }, h('div', { class: 'avatar-img', html: avatarSvg(profile.avatar) })),
+      h('div', { class: 'k-nav-name' }, profile.name),
+      h('button', {
+        class: 'k-nav-switch',
+        onclick: () => go('profileSelect')
+      }, 'Switch kid')
+    ),
+    h('div', { class: 'k-nav-items' },
+      item('kidSearch',    'Search',     ICONS.search),
+      item('kidHome',      'Home',       ICONS.home),
+      item('kidAllVideos', 'All videos', ICONS.grid)
+    ),
+    channels.length ? h('div', { class: 'k-nav-divider' }) : null,
+    channels.length ? h('div', { class: 'k-nav-channels-label' }, 'My channels') : null,
+    channels.length ? h('div', { class: 'k-nav-channels-scroll' },
+      ...channels.map(c => h('button', {
+        class: 'k-nav-channel',
+        onclick: () => go('kidChannel', { profileId: profile.id, channelId: c.id })
+      },
+        h('div', {
+          class: 'k-nav-channel-avatar',
+          style: c.thumbnail_url ? { backgroundImage: `url("${c.thumbnail_url}")` } : {}
+        }),
+        h('span', {}, c.title)
+      ))
+    ) : null
+  );
+}
+
+function renderRail(profile, currentScreen, go) {
+  const item = (screen, label, iconPath) => navItem({
+    id: screen,
+    label: null,
+    iconPath,
+    active: currentScreen === screen,
+    onclick: () => go(screen, { profileId: profile.id }),
+    ariaLabel: label
+  });
+  return h('nav', { class: 'k-nav rail', 'aria-label': `${profile.name} navigation` },
+    h('div', { class: 'k-nav-header' },
+      h('button', {
+        class: 'k-nav-avatar',
+        onclick: () => go('profileSelect'),
+        'aria-label': 'Switch kid'
+      }, h('div', { class: 'avatar-img', html: avatarSvg(profile.avatar) }))
+    ),
+    h('div', { class: 'k-nav-items' },
+      item('kidSearch',    'Search',     ICONS.search),
+      item('kidHome',      'Home',       ICONS.home),
+      item('kidAllVideos', 'All videos', ICONS.grid)
+    )
+  );
+}
+
+async function mountShell(root, profile, currentScreen, go) {
+  const app = makeAppRoot(profile, currentScreen);
+  const nav = profile.nav_style === 'rail'
+    ? renderRail(profile, currentScreen, go)
+    : await renderSidebar(profile, currentScreen, go);
+  const content = h('div', { class: 'k-content' });
+  app.append(nav, content);
+  root.appendChild(app);
+  return content;
+}
+
+// ---------- reusable tiles ----------
+
+function videoTile(v, onclick) {
+  return h('button', { class: 'k-tile', onclick, type: 'button' },
+    h('div', { class: 'k-tile-thumb', style: v.thumbnail_url ? { backgroundImage: `url("${v.thumbnail_url}")` } : {} }),
+    h('div', { class: 'k-tile-body' },
+      h('div', { class: 'k-tile-title' }, v.title || ''),
+      v.channel_title ? h('div', { class: 'k-tile-channel' }, v.channel_title) : null
+    )
+  );
+}
+
+// Load ~PAGE_SIZE tiles at a time via IntersectionObserver on a sentinel.
+function pagedGrid(container, all, buildTile, gridClass = '') {
+  const grid = h('div', { class: 'k-grid ' + gridClass });
+  const sentinel = h('div', { class: 'k-sentinel', 'aria-hidden': 'true' });
+  container.append(grid, sentinel);
+
+  let cursor = 0;
+  const total = all.length;
+
+  function renderNext() {
+    const end = Math.min(cursor + PAGE_SIZE, total);
+    for (let i = cursor; i < end; i++) {
+      const el = buildTile(all[i]);
+      // Lazy-load any image src, and the thumbnail is a bg-image div — the browser
+      // won't fetch bg-images until the element is in the composited layout, so
+      // this behaves close to `loading="lazy"` for our thumbs.
+      grid.appendChild(el);
+    }
+    cursor = end;
+    if (cursor >= total) io.disconnect();
+  }
+
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) if (e.isIntersecting) renderNext();
+  }, { rootMargin: '400px 0px' });
+  io.observe(sentinel);
+  renderNext();
+}
+
+// ---------- HOME ----------
+
+export async function renderHome(rootEl, profile, go) {
+  const content = await mountShell(rootEl, profile, 'kidHome', go);
+  content.appendChild(h('div', { class: 'k-empty k-hero-loading' }, 'Loading…'));
+
+  const [hero, channels] = await Promise.all([
+    data.fetchHeroVideoForProfile(profile.id).catch(() => null),
+    data.fetchChannelsForProfile(profile.id).catch(() => [])
+  ]);
+  content.innerHTML = '';
+
+  // Hero — full-bleed newest video
+  if (hero) {
+    const heroBox = h('section', { class: 'k-hero', 'aria-label': 'Featured' },
+      h('div', { class: 'k-hero-bg', style: hero.thumbnail_url ? { backgroundImage: `url("${hero.thumbnail_url}")` } : {} }),
+      h('div', { class: 'k-hero-fade' }),
+      h('div', { class: 'k-hero-body' },
+        h('div', { class: 'k-eyebrow' }, 'New from ' + (hero.channel_title || 'your channels')),
+        h('h1', { class: 'k-hero-title' }, hero.title || ''),
+        h('div', { class: 'k-hero-actions' },
+          h('button', {
+            class: 'k-btn k-btn-play',
+            onclick: () => go('videoPlayer', {
+              profileId: profile.id,
+              videoId: hero.id,
+              title: hero.title,
+              returnTo: { screen: 'kidHome', params: { profileId: profile.id } }
+            })
+          }, h('span', { html: icon(ICONS.play) }), h('span', {}, 'Play')),
+          profile.nav_style === 'sidebar' && hero.channel_id ? h('button', {
+            class: 'k-btn k-btn-ghost',
+            onclick: () => go('kidChannel', { profileId: profile.id, channelId: hero.channel_id })
+          }, 'Open channel') : null
+        )
+      )
+    );
+    content.appendChild(heroBox);
+  }
+
+  // My channels row
+  content.appendChild(h('section', { class: 'k-section', 'aria-label': 'My channels' },
+    h('h2', { class: 'k-section-title' }, 'My channels'),
+    channels.length
+      ? h('div', { class: 'k-channels-row' },
+          ...channels.map(c => h('button', {
+            class: 'k-channel-tile',
+            onclick: () => go('kidChannel', { profileId: profile.id, channelId: c.id })
+          },
+            h('div', {
+              class: 'k-channel-tile-avatar',
+              style: c.thumbnail_url ? { backgroundImage: `url("${c.thumbnail_url}")` } : {}
+            }),
+            h('div', { class: 'k-channel-tile-name' }, c.title)
+          ))
+        )
+      : h('div', { class: 'k-empty' },
+          h('div', { class: 'k-empty-emoji' }, '🌱'),
+          h('div', {}, 'A grown-up hasn\'t added any channels yet.'))
+  ));
+}
+
+// ---------- ALL VIDEOS ----------
+
+export async function renderAllVideos(rootEl, profile, go) {
+  const content = await mountShell(rootEl, profile, 'kidAllVideos', go);
+  content.appendChild(h('h1', { class: 'k-section-title', style: { fontSize: '32px' } }, 'All videos'));
+  content.appendChild(h('div', { class: 'k-empty' }, 'Loading…'));
+
+  const feed = await data.fetchFeedForProfile(profile.id, { limit: 500 }).catch(() => []);
+  content.innerHTML = '';
+  content.appendChild(h('h1', { class: 'k-section-title', style: { fontSize: '32px' } }, 'All videos'));
+
+  if (!feed.length) {
+    content.appendChild(h('div', { class: 'k-empty' },
+      h('div', { class: 'k-empty-emoji' }, '🌱'),
+      h('div', {}, 'No videos yet.')));
+    return;
+  }
+
+  const listWrap = h('div');
+  content.appendChild(listWrap);
+  pagedGrid(listWrap, feed, (v) => videoTile(v, () => go('videoPlayer', {
+    profileId: profile.id,
+    videoId: v.id,
+    title: v.title,
+    returnTo: { screen: 'kidAllVideos', params: { profileId: profile.id } }
+  })), 'grid-3col');
+}
+
+// ---------- CHANNEL PAGE ----------
+
+export async function renderChannel(rootEl, profile, channelId, go) {
+  const content = await mountShell(rootEl, profile, null, go);
+
+  const backBar = h('div', { style: { marginBottom: '8px' } },
+    h('button', { class: 'k-back-btn', 'aria-label': 'Back to home',
+      onclick: () => go('kidHome', { profileId: profile.id }), html: icon(ICONS.back) })
+  );
+  content.appendChild(backBar);
+  content.appendChild(h('div', { class: 'k-empty' }, 'Loading…'));
+
+  const [channel, videos] = await Promise.all([
+    data.fetchChannelById(channelId).catch(() => null),
+    data.fetchFeedForChannel(profile.id, channelId).catch(() => [])
+  ]);
+  // Redraw
+  content.innerHTML = '';
+  content.appendChild(backBar);
+
+  if (!channel) {
+    content.appendChild(h('div', { class: 'k-empty' }, 'Channel not found.'));
+    return;
+  }
+
+  content.appendChild(h('header', { class: 'k-channel-header' },
+    h('div', { class: 'k-channel-avatar', style: channel.thumbnail_url ? { backgroundImage: `url("${channel.thumbnail_url}")` } : {} }),
+    h('h1', { class: 'k-channel-title' }, channel.title || ''),
+    h('div', { class: 'k-channel-meta' }, `${videos.length} video${videos.length === 1 ? '' : 's'}`)
+  ));
+
+  if (!videos.length) {
+    content.appendChild(h('div', { class: 'k-empty' },
+      h('div', { class: 'k-empty-emoji' }, '🌱'),
+      h('div', {}, 'No videos to show right now.')));
+    return;
+  }
+
+  const listWrap = h('div');
+  content.appendChild(listWrap);
+  pagedGrid(listWrap, videos, (v) => videoTile(v, () => go('videoPlayer', {
+    profileId: profile.id,
+    videoId: v.id,
+    title: v.title,
+    returnTo: { screen: 'kidChannel', params: { profileId: profile.id, channelId } }
+  })), 'grid-3col');
+}
+
+// ---------- SEARCH ----------
+
+export async function renderSearch(rootEl, profile, go) {
+  const content = await mountShell(rootEl, profile, 'kidSearch', go);
+
+  const input = h('input', {
+    type: 'search',
+    class: 'k-search-input',
+    placeholder: 'Search your channels',
+    'aria-label': 'Search your channels',
+    autocomplete: 'off',
+    autocapitalize: 'off',
+    autocorrect: 'off',
+    spellcheck: 'false'
+  });
+
+  const heading = h('div', { class: 'k-search-heading', style: { display: 'none' } });
+  const sub = h('div', { class: 'k-search-sub', style: { display: 'none' } }, 'Only from your channels');
+  const results = h('div');
+
+  content.append(input, heading, sub, results);
+
+  let debounce = null;
+  let lastQuery = '';
+
+  async function runSearch(q) {
+    if (q === lastQuery) return;
+    lastQuery = q;
+    if (!q) {
+      heading.style.display = 'none';
+      sub.style.display = 'none';
+      results.innerHTML = '';
+      return;
+    }
+    heading.style.display = '';
+    sub.style.display = '';
+    heading.textContent = `Videos about "${q}"`;
+    results.innerHTML = '';
+    results.appendChild(h('div', { class: 'k-empty' }, 'Searching…'));
+
+    let videos;
+    try { videos = await data.searchFeedForProfile(profile.id, q, { limit: 200 }); }
+    catch { videos = []; }
+    if (q !== lastQuery) return;   // a newer query came in; drop this result
+    results.innerHTML = '';
+    if (!videos.length) {
+      results.appendChild(h('div', { class: 'k-empty' }, 'Nothing here.'));
+      return;
+    }
+    const listWrap = h('div');
+    results.appendChild(listWrap);
+    pagedGrid(listWrap, videos, (v) => videoTile(v, () => go('videoPlayer', {
+      profileId: profile.id,
+      videoId: v.id,
+      title: v.title,
+      returnTo: { screen: 'kidSearch', params: { profileId: profile.id } }
+    })), 'grid-3col');
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounce);
+    const q = input.value.trim();
+    debounce = setTimeout(() => runSearch(q), 250);
+  });
+
+  setTimeout(() => input.focus(), 30);
+}

@@ -39,6 +39,20 @@ To change the PIN: open the site → tap the padlock (Parent Mode) → enter `00
 - [ ] **iPad**: install as PWA, sign in as each kid, confirm feeds render.
 - [ ] Change parent PIN off `0000`.
 
+## Kid-side redesign (2026-09-26)
+
+- Dark palette (`#1A2230` bg, `#EAF0EE` text, glass panels), Outfit + Figtree fonts, rounded pill buttons everywhere.
+- Per-kid theme columns on `coop_profiles`: `accent_color`, `on_accent_text`, `nav_style` (`sidebar`|`rail`), `tile_size` (`regular`|`large`). All `NOT NULL`, hex CHECK constraints on both colors. Migration `20260926000000_coop_profile_theme.sql`.
+- **RC**: sage accent (`#A9D3BE` / `#14231C`), sidebar, regular tiles. **Brody**: sky accent (`#9CC8E8` / `#0F1E2A`), rail, large tiles.
+- Kid screens now split into `coop/js/kid.js` (nav + Home + AllVideos + Channel + Search). Helpers extracted to `coop/js/dom.js`. CSS moved to `coop/style.css` with parent theme unchanged and kid theme scoped under `.k-app`.
+- Nav: fixed left glass panel. Sidebar (248px) shows Search / Home / All videos + a scrolling "My channels" list; Rail (96px) is icon-only. Avatar taps in either variant return to profile-select ("Switch kid").
+- Home: full-bleed hero (newest visible video) with fade to bg, accent-colored "New from &lt;channel&gt;" eyebrow, big Play button, plus "Open channel" for sidebar kids. Below: horizontal swipeable "My channels" row (tile size follows profile setting).
+- All videos: dedicated screen from the nav. 3-column grid, IntersectionObserver-paginated in batches of 24.
+- Channel page: 112px avatar, name, video count, same paged grid.
+- Search: rounded glass input labelled "Search your channels" (plain `<input type=search>` so iPad dictation works). Debounced 250ms. Results heading "Videos about '<q>'" + "Only from your channels" sub. Never calls YouTube search. Blocklisted queries → normal "Nothing here." empty state.
+- Video player: unchanged behavior; `returnTo: { screen, params }` on the `videoPlayer` route so the player returns to the exact screen the kid came from (Home / All videos / channel / search) — replaces the old always-return-to-kidHome.
+- Parent-mode `profileEdit` gained an accent-color picker (8 presets + hex input + "Flip text color"), a Sidebar/Rail toggle, and a Regular/Large toggle. `edit_profile` op validates hex, nav_style, and tile_size before writing (server-side, in addition to the DB CHECK constraints).
+
 ## Known gaps to revisit
 
 - **`netlify dev` locally**: this repo has a shared `.netlify` at root; running `netlify dev` from `coop/` still targets repo-root paths for functions. Not a production issue — `netlify dev:exec` works fine (that's what we used for the PIN script). Fix if it comes up: run with `--filter coop` or similar.

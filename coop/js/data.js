@@ -27,7 +27,7 @@ export const supabase = window.supabase.createClient(supabaseUrl, supabasePublis
 export async function fetchProfiles() {
   const { data, error } = await supabase
     .from('coop_profiles')
-    .select('id, name, avatar, color, sort_order')
+    .select('id, name, avatar, color, sort_order, accent_color, on_accent_text, nav_style, tile_size')
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: true });
   if (error) throw error;
@@ -104,7 +104,34 @@ export async function fetchChannelsForProfile(profileId) {
     .select('channel_id, coop_channels ( id, handle, title, thumbnail_url )')
     .eq('profile_id', profileId);
   if (error) throw error;
-  return (data || []).map(r => r.coop_channels).filter(Boolean);
+  return (data || [])
+    .map(r => r.coop_channels)
+    .filter(Boolean)
+    .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+}
+
+// Single channel row — used by the channel page header.
+export async function fetchChannelById(channelId) {
+  const { data, error } = await supabase
+    .from('coop_channels')
+    .select('id, handle, title, thumbnail_url, added_at')
+    .eq('id', channelId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// Feed narrowed to a single channel. Wraps fetchFeedForProfile so the
+// same read-time filters (blocklist, hidden, shorts, availability) apply.
+export async function fetchFeedForChannel(profileId, channelId, opts) {
+  const all = await fetchFeedForProfile(profileId, opts);
+  return all.filter(v => v.channel_id === channelId);
+}
+
+// Newest visible video across the kid's channels — hero pick.
+export async function fetchHeroVideoForProfile(profileId) {
+  const feed = await fetchFeedForProfile(profileId, { limit: 50 });
+  return feed[0] || null;
 }
 
 // -------- blocklist --------
