@@ -5,12 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>Coop TV</title>
 
-<!-- iPad home-screen / PWA -->
+<!-- iPad + iPhone home-screen / PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Coop TV">
-<meta name="theme-color" content="#1A2230">
 <meta name="mobile-web-app-capable" content="yes">
+<!-- Kid screens are dark; parent screens are warm. theme-color is
+     swapped at runtime by ui.js render() to match the current screen. -->
+<meta name="theme-color" content="#1A2230">
+<meta name="color-scheme" content="dark">
 <!-- Add a real apple-touch-icon.png (180x180) at site root when deployed -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">

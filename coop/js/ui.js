@@ -126,10 +126,27 @@ function back() {
 // style.css) and don't need the warm --profile-color hooks.
 const KID_SCREENS = new Set(['kidHome', 'kidAllVideos', 'kidChannel', 'kidSearch']);
 
+// Screens whose background is the warm parent palette. When any of
+// these renders, we swap <meta name="theme-color"> to the warm hex so
+// the iOS status-bar overlay matches the visible page. Everything else
+// (kid screens, profile-select, kid-pin, and the fullscreen player)
+// stays on the dark #1A2230 default.
+const WARM_SCREENS = new Set(['parentPin', 'parentHome', 'profileEdit', 'contentManage']);
+const THEME_COLORS = { dark: '#1A2230', warm: '#FFF7ED' };
+function setThemeColor(hex) {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta && meta.getAttribute('content') !== hex) meta.setAttribute('content', hex);
+}
+
 async function render() {
   const app = document.getElementById('app');
   app.innerHTML = '';
   if (!current.screen) current.screen = 'profileSelect';
+
+  // Keep the iOS status-bar / browser chrome color in sync with the
+  // visible page background. Dark by default (kid + entry screens);
+  // warm for parent screens only.
+  setThemeColor(WARM_SCREENS.has(current.screen) ? THEME_COLORS.warm : THEME_COLORS.dark);
 
   // Apply per-profile color if we know it
   const pid = current.params.profileId;
