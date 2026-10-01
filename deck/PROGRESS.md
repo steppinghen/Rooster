@@ -57,4 +57,42 @@ Open:
 - **Emoji style pick (blocking stop).**
 - **Verified:** turning off `enable_signup` blocks anonymous sign-ins too (`422 signup_disabled`). Asked the parent (REVIEW.md Q2); the recommended fix is a `before_user_created` hook allowlist with sign-ups left on.
 
-Next: after the pick, delete the unused style, set `ART_STYLE`, then slice 1 (schema and RLS).
+Emoji pick: **3D** (parent). Flat deleted. The Phase 1 art set (39 files) is vendored as WebP at the largest size each is shown (about 170 KiB) through `npm run art` and `src/art/manifest.json`. Wave Check faces always show their plain word.
+
+## Slice 1: Schema and RLS (done)
+
+Built:
+- `supabase/migrations/20261001000000_foundation.sql`:
+  - Revokes the CLI's default grants (tables, sequences, functions; EXECUTE to PUBLIC globally), so local matches hosted "auto-expose off".
+  - Adds the `private` schema and the session helpers.
+- `supabase/migrations/20261001000100_core_schema.sql`:
+  - The 13 Phase 1 tables, plus `parent_allowlist`, `pairing_attempts`, `pin_attempts` and `module_catalog`.
+  - Composite `(x_id, family_id)` foreign keys everywhere.
+  - Membership helpers: `private.is_parent_of` (aal2 and not anonymous), `is_device_of` (anonymous and unrevoked), `is_member_of`, `is_any_member`.
+  - RLS on every table, and explicit table and column grants (`anon`: nothing).
+- `supabase/seed.sql` (local only): the `tests` helpers and the `make_two_families()` fixture.
+- `supabase/checks/grants.sql`: a grant snapshot query. It is also the Gate 2 G2 check against the hosted project.
+- Tests: `001_grants.sql` (golden snapshot), `002_rls_core.sql`, and the rls-auditor's `audit_*.sql` (catalog-driven sweeps). **1,485 assertions pass.**
+
+rls-auditor (slice 1): 2 blocking findings, both fixed and covered by its own tests.
+- `module_catalog` was readable by any signed-in session. It's now members only, and the unlisted-user sweep covers every table.
+- An allowlist email-existence oracle across families. `parent_allowlist` is now keyed `(family_id, email)` with `NULLS NOT DISTINCT`.
+
+Hardening taken at the same time:
+- A device sees its own row only while anonymous.
+- `pairing_codes.used_by_device` FK includes `family_id`.
+- `code_hash` must look like bcrypt, and a trigger owns `created_at` and `expires_at`.
+- The `kid_focus` and `reset_plans` primary keys and the completions unique key lead with `family_id`, so there are no existence leaks.
+- `short_ids` limits device-writable arrays.
+- `check_completion_kid` is now security definer.
+- `kid_focus` has no client delete (Realtime doesn't apply RLS to DELETE).
+- The `tests` definer helpers are revoked from the API roles.
+
+Auditor items carried forward, still visible as `todo` tests:
+- **Slice 2:** require `email_confirmed_at` on join and create. An anonymous user can attach an email without the hook running; that user still has zero access. Joining needs explicit acceptance.
+- **Slice 3:** a global failure cap on pairing, fail closed if more than one code matches, and an atomic used-at update.
+- **Slice 6:** delete-family must also remove `pairing_attempts` rows and the family's auth users.
+- **Slice 10:** don't publish tables to Realtime `postgres_changes`. Use private Broadcast topics with RLS on `realtime.messages`.
+- **Known limit:** on a shared iPad the database can't tell which kid is holding it, so the PIN is a UI keep-out (CLAUDE.md req. 4).
+
+Next: slice 2.

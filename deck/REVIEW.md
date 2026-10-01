@@ -27,7 +27,8 @@ _Filled in slice 12._
 | # | Question | Default taken |
 |---|---|---|
 | Q1 | Emoji style: 3D or Flat | **Pending: the parent picks at the slice 0 stop** |
-| Q2 | How to close public sign-ups when "Allow new users to sign up" off also blocks anonymous (iPad) sign-ins | **Pending: asked at the slice 0 stop.** Recommended: leave the switch on and enforce the allowlist in a `before_user_created` Postgres auth hook that rejects any email sign-up not on the allowlist |
+| Q3 | Kid PIN on a shared iPad | Both kids share one device identity, so the database can't tell them apart. The PIN keeps a sibling out of the other's profile in the UI only, which is what CLAUDE.md req. 4 asks for; a determined sibling with dev tools could still read the other kid's routine data. Accepted. |
+| Q2 | How to close public sign-ups when "Allow new users to sign up" off also blocks anonymous (iPad) sign-ins | **Decided (parent):** the switch stays on; a `before_user_created` hook enforces the allowlist; a nightly job removes unpaired anonymous users and unlisted users. Fallback (no hook): an unlisted user has zero access to every table (`audit_unlisted_user.sql`) and is removed by the job. |
 
 ## 6. Device test list
 
