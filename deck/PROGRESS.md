@@ -95,4 +95,41 @@ Auditor items carried forward, still visible as `todo` tests:
 - **Slice 10:** don't publish tables to Realtime `postgres_changes`. Use private Broadcast topics with RLS on `realtime.messages`.
 - **Known limit:** on a shared iPad the database can't tell which kid is holding it, so the PIN is a UI keep-out (CLAUDE.md req. 4).
 
-Next: slice 2.
+## Slice 2: Parent auth, family setup, add kids (built; review pending with 3 and 4)
+
+- Migration `20261001000200_parent_auth.sql`:
+  - The `before_user_created` hook (`private.hook_before_user_created`) is enabled in config.toml. Verified against GoTrue: anonymous sign-ups pass; an unlisted email gets 403 and no user; a listed one gets a code.
+  - `whoami`; `create_family`, which consumes the bootstrap row atomically.
+  - `my_invites` and `accept_invite(family_id, name)`. Joining is explicit, and every allowlist decision uses `private.confirmed_email()`.
+  - `set_kid_pin` (bcrypt); new kids get a `kid_focus` row from a trigger; nightly `private.cleanup_orphans()` through pg_cron.
+- Screens: Welcome, Sign in (email, then a 6-digit code; no links), MFA (enroll: Add to Passwords link, QR, key; or verify), Setup, Join, No access, Back Office (Team Riders, Grown-ups, Family, You), data-driven parent nav.
+- Tests: `003_parent_auth.sql`; e2e `parent-auth.spec.ts` (iPhone). The e2e covers the full Parent A flow, Parent B joining, a returning TOTP sign-in, and an unlisted email refused. It also checks the email contains no link.
+
+## Slice 3: Device pairing and revocation (built; review pending)
+
+- Migration `20261001000300_device_pairing.sql`:
+  - `create_pairing_code`: 8 digits from the CSPRNG, bcrypt, 10 minutes, at most 3 open per family.
+  - `redeem_pairing_code`: returns a status rather than raising, so failed attempts persist. Locks out after 5 tries per user or 100 globally in 10 minutes. Colliding codes fail closed; the claim is atomic.
+  - `revoke_device` (one-way), `cancel_pairing_code`, `device_checkin`.
+  - Nothing is published to Realtime.
+- Screens: Back Office Devices (code with countdown; confirm before unpairing; forget unpaired devices), iPad Pair, and Unpaired. "Pair again" signs out and goes to /pair; signing out clears the device cache.
+- Tests: `004_pairing.sql`; e2e `pairing.spec.ts`, two contexts (phone and iPad): wrong code, right code, reload, unpair, then the iPad shows Unpaired with no cache left.
+
+## Slice 4: Kid profile picker and PIN (built; review pending)
+
+- Migration `20261001000400_kid_profiles.sql`:
+  - `verify_kid_pin`: server-side compare, 5 wrong per kid per device identity locks for 5 minutes, and attempts persist.
+  - `server_now`.
+  - `save_routine_progress` and `save_reset_plan`. These are security invoker: kid-device writes that PostgREST upsert can't do with column grants.
+- Kid shell (`src/kid/`):
+  - `KidStoreProvider`: an offline snapshot plus an outbox, with server time offset.
+  - `KidTheme`: volume is the quieter of the kid's default and the mode; Lights out is night; Auto ground from routine times.
+  - Picker ("Who's riding?", speaker button, Grown-ups explainer, offline chip), PinPad (80pt+ keys, gentle retry, lock message).
+  - `effectiveFocus` and `resolveGround` with unit tests.
+- Tests: `005_kid_profiles.sql`; e2e `picker.spec.ts` (tap sizes, no scroll, wrong then right PIN, a sibling can't open a profile by URL, reload keeps the profile).
+- Fixed: the ground cross-fade no longer runs on first paint (it caused a grey flash), and the PIN key icons are larger.
+- e2e fixtures (`e2e/helpers/fixtures.ts`) build real families through the APIs: email code from Mailpit, then TOTP, then pairing.
+
+Deviation: the reviewer agents run once over slices 2 to 4 together. Running the auditor while those slices' migrations were changing would have meant reviewing a moving target.
+
+Next: reviewers for 2–4, then slice 5 (kid home).

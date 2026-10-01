@@ -72,7 +72,7 @@ export function PinPad({ kid, ground, onCancel, onUnlocked }: { kid: Kid; ground
           <div className="pin-keys">
             {KEYS.map((k) => (
               <PressButton key={k} className="pin-key" aria-label={k === 'back' ? 'Delete' : k === 'clear' ? 'Clear' : k} onClick={() => press(k)} disabled={busy || !online}>
-                {k === 'back' ? <Icon name="back" size={32} /> : k === 'clear' ? <Icon name="close" size={30} /> : k}
+                {k === 'back' ? <Icon name="back" size={48} strokeWidth={3.4} /> : k === 'clear' ? <Icon name="close" size={44} strokeWidth={3.4} /> : k}
               </PressButton>
             ))}
           </div>

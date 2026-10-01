@@ -35,6 +35,7 @@ export function RootTheme({
     el.dataset.scene = theme.scene;
     const meta = document.querySelector('meta[name="theme-color"]');
     meta?.setAttribute('content', theme.ground === 'day' ? '#F2E6CC' : '#15122E');
+    if (!el.dataset.themeReady) requestAnimationFrame(() => requestAnimationFrame(() => (el.dataset.themeReady = '1')));
   }, [theme.volume, theme.ground, theme.scene]);
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }

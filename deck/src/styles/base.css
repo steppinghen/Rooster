@@ -24,6 +24,12 @@ body {
   background-image: var(--ground-image);
   background-size: var(--ground-image-size);
   color: var(--text);
+}
+
+/* Day and night cross-fade over about a second, but only for changes after the first paint
+   (RootTheme sets data-theme-ready once the initial theme is on screen). */
+[data-theme-ready] [data-ground][data-volume],
+[data-theme-ready][data-ground][data-volume] {
   transition:
     background-color var(--ground-fade) ease,
     color var(--ground-fade) ease;

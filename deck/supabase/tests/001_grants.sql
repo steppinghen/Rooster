@@ -121,7 +121,11 @@ select is(
     'rpc:my_invites()',
     'rpc:redeem_pairing_code(p_code text)',
     'rpc:revoke_device(p_device_id uuid)',
+    'rpc:save_reset_plan(p_kid_id uuid, p_body_signs text[], p_tools text[])',
+    'rpc:save_routine_progress(p_routine_id uuid, p_kid_id uuid, p_on_date date, p_steps text[])',
+    'rpc:server_now()',
     'rpc:set_kid_pin(p_kid_id uuid, p_pin text)',
+    'rpc:verify_kid_pin(p_kid_id uuid, p_pin text)',
     'rpc:whoami()',
     'usage_events:INSERT(action,duration_ms,family_id,kid_id,module_key,target_id)',
     'usage_events:SELECT'
