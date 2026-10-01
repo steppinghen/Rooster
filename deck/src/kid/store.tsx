@@ -194,7 +194,12 @@ export function KidStoreProvider({ children }: { children: ReactNode }) {
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
     const poll = setInterval(() => void refresh(), 5 * 60_000);
+    // Don't rely on the browser's 'online' event alone: retry queued writes every 10 seconds.
+    const retry = setInterval(() => {
+      if (outbox.current.length) void flush().then(() => setOnline(outbox.current.length === 0));
+    }, 10_000);
     return () => {
+      clearInterval(retry);
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
@@ -213,7 +218,7 @@ export function KidStoreProvider({ children }: { children: ReactNode }) {
         // Later writes of the same key (same routine/kid/day) replace earlier unsent ones.
         outbox.current = [...outbox.current.filter((i) => i.key !== item.key || i.kind === 'checkin' || i.kind === 'usage'), item];
         write(OUTBOX_KEY, outbox.current);
-        void flush().then(() => setOnline(outbox.current.length === 0 ? true : navigator.onLine));
+        void flush().then(() => setOnline(outbox.current.length === 0));
       },
       patch: (fn) =>
         setSnapshot((s) => {

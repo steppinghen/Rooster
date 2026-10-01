@@ -3,6 +3,8 @@ import type { Ground, Scene, Volume } from './volume';
 
 type Theme = { volume: Volume; ground: Ground; scene: Scene };
 
+let readyTimer: ReturnType<typeof setTimeout> | null = null;
+
 const ThemeContext = createContext<Theme>({ volume: 'normal', ground: 'night', scene: 'default' });
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -35,7 +37,9 @@ export function RootTheme({
     el.dataset.scene = theme.scene;
     const meta = document.querySelector('meta[name="theme-color"]');
     meta?.setAttribute('content', theme.ground === 'day' ? '#F2E6CC' : '#15122E');
-    if (!el.dataset.themeReady) requestAnimationFrame(() => requestAnimationFrame(() => (el.dataset.themeReady = '1')));
+    // Cross-fade only real ground changes: the splash and the first screen (which can follow
+    // it within a moment) appear at once.
+    if (!el.dataset.themeReady && !readyTimer) readyTimer = setTimeout(() => (el.dataset.themeReady = '1'), 2000);
   }, [theme.volume, theme.ground, theme.scene]);
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }
@@ -47,6 +51,7 @@ export function ThemeScope({
   scene = 'default',
   className,
   style,
+  role,
   children,
   ...rest
 }: {
@@ -55,6 +60,7 @@ export function ThemeScope({
   scene?: Scene;
   className?: string;
   style?: CSSProperties;
+  role?: string;
   children: ReactNode;
 } & Record<`data-${string}`, string | undefined>) {
   const theme = resolve({ volume, ground, scene });
@@ -63,6 +69,7 @@ export function ThemeScope({
       <div
         className={className}
         style={style}
+        role={role}
         data-volume={theme.volume}
         data-ground={theme.ground}
         data-scene={theme.scene}

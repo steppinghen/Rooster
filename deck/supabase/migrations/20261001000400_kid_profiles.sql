@@ -66,8 +66,11 @@ begin
   if fid is null then
     raise exception 'routine not found' using errcode = '42501';
   end if;
-  -- Only ids that exist in the routine are kept.
-  p_steps := array(select distinct s from unnest(coalesce(p_steps, '{}')) s where s = any (all_ids));
+  -- Only ids that exist in the routine are kept, once each, in the order they were done.
+  p_steps := array(
+    select u.s from unnest(coalesce(p_steps, '{}')) with ordinality u(s, n)
+    where u.s = any (all_ids)
+    group by u.s order by min(u.n));
   done := case when cardinality(p_steps) = cardinality(all_ids) then now() end;
   insert into public.routine_completions as rc (family_id, routine_id, kid_id, on_date, completed_steps, completed_at)
     values (fid, p_routine_id, p_kid_id, p_on_date, p_steps, done)

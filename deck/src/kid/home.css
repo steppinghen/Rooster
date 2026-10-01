@@ -1,0 +1,151 @@
+/* Grom Zone (kid home). Matches iPadGromZone / iPadDawnPatrolDay; fits 820×1180 without scrolling. */
+
+.home__title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.home__me {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.home__hero {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 3vw, 28px);
+}
+
+.home__hero-side {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.home__bubble {
+  align-self: flex-start;
+  padding: 16px 24px;
+  border-radius: 26px 26px 26px 6px;
+  box-shadow: 5px 5px 0 var(--ink);
+  --tilt: -2deg;
+}
+
+.home__bubble .dk-title {
+  font-size: clamp(26px, 4.4vw, 38px);
+}
+
+.home__upnext {
+  container-type: inline-size;
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2.4vw, 24px);
+  padding: clamp(14px, 2.4vw, 26px);
+}
+
+.home__upnext-art {
+  width: clamp(96px, 15vw, 136px);
+  height: clamp(96px, 15vw, 136px);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  border: var(--outline) solid var(--ink);
+  border-radius: 20px;
+  color: var(--ink);
+}
+
+.home__upnext-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home__upnext-label {
+  font-size: clamp(18px, 2.6vw, 24px);
+}
+
+.home__upnext-step {
+  font-size: clamp(30px, 9cqi, 58px);
+  line-height: 1.02;
+}
+
+.home__speak {
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+}
+
+.home__did {
+  min-height: 104px;
+  font-size: clamp(32px, 5vw, 42px);
+}
+
+.home__next-card {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home__next-card .dk-title {
+  font-size: 30px;
+}
+
+.home__tiles {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 20px);
+  margin-top: auto;
+}
+
+.home__tile {
+  min-height: 132px;
+  font-size: 20px;
+}
+
+.home--pre .home__tile {
+  min-height: 168px;
+  font-size: 24px;
+}
+
+.home__tile-label {
+  font-weight: 800;
+}
+
+.home__celebrate {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.home__celebrate-text {
+  font-size: 40px;
+}
+
+@media (max-width: 560px) {
+  .home__hero .dk-sticker {
+    --sticker-size: 110px !important;
+  }
+  .home__speak {
+    width: 72px;
+    height: 72px;
+  }
+  .home__did {
+    min-height: 88px;
+  }
+}

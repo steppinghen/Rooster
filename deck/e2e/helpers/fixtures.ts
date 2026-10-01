@@ -90,3 +90,28 @@ export async function useSession(context: BrowserContext, session: Session, extr
     [STORAGE_KEY, JSON.stringify(session), extra] as const,
   );
 }
+
+export const MORNING_STEPS = [
+  { id: 'teeth', text: 'Brush teeth', icon: 'toothbrush' },
+  { id: 'dress', text: 'Get dressed', icon: 'shirt' },
+  { id: 'breakfast', text: 'Breakfast', icon: 'breakfast' },
+];
+
+export async function addRoutine(p: ParentFixture, r: { name: string; slot: 'morning' | 'after_school' | 'bedtime'; starts_at: string; steps: { id: string; text: string; icon: string }[]; kid_id?: string | null }) {
+  return (ok(await p.db.from('routines').insert({ family_id: p.familyId, kid_id: r.kid_id ?? null, ...r }).select('id').single()) as { id: string }).id;
+}
+
+export async function addEvent(p: ParentFixture, e: { title: string; icon: string; on_date: string; kind?: string; visible_to_kids?: boolean; repeats_yearly?: boolean }) {
+  return (ok(await p.db.from('events').insert({ family_id: p.familyId, kind: 'other', visible_to_kids: true, repeats_yearly: false, ...e }).select('id').single()) as { id: string }).id;
+}
+
+/** Pin the app's clock: the browser's and the server_now RPC the app corrects against. */
+export async function pinClock(page: import('@playwright/test').Page, iso: string) {
+  await page.clock.install({ time: new Date(iso) });
+  await page.route('**/rest/v1/rpc/server_now', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(iso) }));
+}
+
+/** YYYY-MM-DD `days` from the pinned date. */
+export function dayFrom(iso: string, days: number): string {
+  return new Date(Date.parse(iso) + days * 86_400_000).toISOString().slice(0, 10);
+}
