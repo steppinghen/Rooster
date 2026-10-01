@@ -13,23 +13,56 @@ Every third-party or original asset in the app, with its source and license. Not
 
 The license texts ship inside each package (`node_modules/@fontsource/<name>/LICENSE`). OFL and Apache 2.0 both allow bundling in an app.
 
-## Art: Microsoft Fluent Emoji
+## Art: Microsoft Fluent Emoji 3D
 
-- Source: https://github.com/microsoft/fluentui-emoji (`assets/<name>/3D/*_3d.png` and `assets/<name>/Flat/*_flat.svg`)
+- Source: https://github.com/microsoft/fluentui-emoji (`assets/<Name>/3D/<name>_3d.png`)
 - License: MIT, © Microsoft Corporation. A copy is kept at `public/art/fluent/LICENSE`.
 - Attribution: not required by MIT beyond keeping the license; credited on the About screen anyway.
-- **Slice 0 only:** both the 3D and the Flat style are vendored for the style test. After the parent picks one, the other style's files are deleted.
+- Style: **3D**, the parent's pick in slice 0. The Flat test files were deleted.
+- Processing: `npm run art` (`scripts/vendor-art.mjs`) downloads only what is listed in `src/art/manifest.json`, resizes each file to the largest size the app shows it at, and writes `public/art/fluent/<key>.webp`. The 39 files total about 170 KiB of offline cache.
+- Rule: the four Wave Check faces always show their plain feeling word, because some 3D faces look alike at small sizes.
 
-| Key | Fluent name | 3D file | Flat file | Used for |
+| Key | Fluent name | Group | Shipped size | Label |
 |---|---|---|---|---|
-| rooster | Rooster | `public/art/fluent/3d/rooster.png` | `public/art/fluent/flat/rooster.svg` | Stand-in mascot (energy, time) |
-| turtle | Turtle | `.../3d/turtle.png` | `.../flat/turtle.svg` | Stand-in mascot (calm) |
-| pumping | Grinning face with big eyes | `.../3d/grinning_face_with_big_eyes.png` | `.../flat/grinning_face_with_big_eyes.svg` | Wave Check: Pumping (happy, excited) |
-| rolling | Relieved face | `.../3d/relieved_face.png` | `.../flat/relieved_face.svg` | Wave Check: Rolling (okay, calm) |
-| flat | Pensive face | `.../3d/pensive_face.png` | `.../flat/pensive_face.svg` | Wave Check: Flat (sad, tired) |
-| choppy | Angry face | `.../3d/angry_face.png` | `.../flat/angry_face.svg` | Wave Check: Choppy (upset, mad) |
-| toothbrush | Toothbrush | `.../3d/toothbrush.png` | `.../flat/toothbrush.svg` | Routine step: brush teeth |
-| shirt | T-shirt | `.../3d/t-shirt.png` | `.../flat/t-shirt.svg` | Routine step: get dressed |
+| `rooster` | Rooster | mascot | 256 px | Rooster |
+| `turtle` | Turtle | mascot | 256 px | Turtle |
+| `pumping` | Grinning face with big eyes | feeling | 256 px | Pumping |
+| `rolling` | Relieved face | feeling | 256 px | Rolling |
+| `flat` | Pensive face | feeling | 256 px | Flat |
+| `choppy` | Angry face | feeling | 256 px | Choppy |
+| `toothbrush` | Toothbrush | step | 256 px | Brush teeth |
+| `shirt` | T-shirt | step | 256 px | Get dressed |
+| `breakfast` | Bowl with spoon | step | 256 px | Breakfast |
+| `shoes` | Running shoe | step | 256 px | Shoes on |
+| `backpack` | Backpack | step | 256 px | Pack backpack |
+| `coat` | Coat | step | 256 px | Coat on |
+| `socks` | Socks | step | 256 px | Socks on |
+| `toilet` | Toilet | step | 256 px | Potty |
+| `soap` | Soap | step | 256 px | Wash hands |
+| `water` | Cup with straw | step | 256 px | Drink water |
+| `bath` | Bathtub | step | 256 px | Bath |
+| `book` | Open book | step | 256 px | Read |
+| `bed` | Bed | step | 256 px | Bed |
+| `teddy` | Teddy bear | step | 256 px | Cuddle |
+| `cake` | Birthday cake | event | 160 px | Birthday |
+| `beach` | Beach with umbrella | event | 160 px | Beach |
+| `plane` | Airplane | event | 160 px | Trip |
+| `gift` | Wrapped gift | event | 160 px | Gift |
+| `party` | Party popper | event | 160 px | Party |
+| `tree` | Christmas tree | event | 160 px | Holiday |
+| `pumpkin` | Jack-o-lantern | event | 160 px | Halloween |
+| `school` | School | event | 160 px | School |
+| `star` | Star | event | 160 px | Special day |
+| `tent` | Tent | event | 160 px | Camping |
+| `balloon` | Balloon | calm | 256 px | Balloon breathing |
+| `moon` | Crescent moon | calm | 256 px | Lights out |
+| `sparkles` | Sparkles | calm | 160 px | Sparkles |
+| `hot_face` | Hot face | body | 160 px | Hot face |
+| `heart` | Beating heart | body | 160 px | Fast heart |
+| `crying` | Crying face | body | 160 px | Tears |
+| `huffing` | Face with steam from nose | body | 160 px | Huffing |
+| `crayon` | Crayon | tool | 160 px | Draw it |
+| `headphone` | Headphone | tool | 160 px | Music |
 
 ## Original work (owned by the family)
 

@@ -94,7 +94,7 @@ test.describe('styleguide (slice 0)', () => {
         await page.locator('section', { has: page.locator('#sg-preview') }).screenshot({ path: `${SHOTS}/${info.project.name}-preview-${ground}-${volume}.png` });
       }
     }
-    await page.locator('section', { has: page.locator('#sg-emoji') }).screenshot({ path: `${SHOTS}/${info.project.name}-emoji-test.png` });
+    await page.locator('section', { has: page.locator('#sg-emoji') }).screenshot({ path: `${SHOTS}/${info.project.name}-art.png` });
     await page.screenshot({ path: `${SHOTS}/${info.project.name}-full.png`, fullPage: true });
   });
 });

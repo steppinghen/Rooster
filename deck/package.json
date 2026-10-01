@@ -15,7 +15,8 @@
     "render:reference": "node scripts/render-reference.mjs",
     "test:unit": "vitest run",
     "env:local": "node scripts/env-local.mjs",
-    "icons": "node scripts/make-icons.mjs"
+    "icons": "node scripts/make-icons.mjs",
+    "art": "node scripts/vendor-art.mjs"
   },
   "dependencies": {
     "@fontsource/archivo": "^5.3.0",

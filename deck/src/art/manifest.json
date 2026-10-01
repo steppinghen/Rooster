@@ -1,0 +1,46 @@
+{
+  "rooster": { "fluent": "Rooster", "px": 256, "group": "mascot", "label": "Rooster" },
+  "turtle": { "fluent": "Turtle", "px": 256, "group": "mascot", "label": "Turtle" },
+
+  "pumping": { "fluent": "Grinning face with big eyes", "px": 256, "group": "feeling", "label": "Pumping" },
+  "rolling": { "fluent": "Relieved face", "px": 256, "group": "feeling", "label": "Rolling" },
+  "flat": { "fluent": "Pensive face", "px": 256, "group": "feeling", "label": "Flat" },
+  "choppy": { "fluent": "Angry face", "px": 256, "group": "feeling", "label": "Choppy" },
+
+  "toothbrush": { "fluent": "Toothbrush", "px": 256, "group": "step", "label": "Brush teeth" },
+  "shirt": { "fluent": "T-shirt", "px": 256, "group": "step", "label": "Get dressed" },
+  "breakfast": { "fluent": "Bowl with spoon", "px": 256, "group": "step", "label": "Breakfast" },
+  "shoes": { "fluent": "Running shoe", "px": 256, "group": "step", "label": "Shoes on" },
+  "backpack": { "fluent": "Backpack", "px": 256, "group": "step", "label": "Pack backpack" },
+  "coat": { "fluent": "Coat", "px": 256, "group": "step", "label": "Coat on" },
+  "socks": { "fluent": "Socks", "px": 256, "group": "step", "label": "Socks on" },
+  "toilet": { "fluent": "Toilet", "px": 256, "group": "step", "label": "Potty" },
+  "soap": { "fluent": "Soap", "px": 256, "group": "step", "label": "Wash hands" },
+  "water": { "fluent": "Cup with straw", "px": 256, "group": "step", "label": "Drink water" },
+  "bath": { "fluent": "Bathtub", "px": 256, "group": "step", "label": "Bath" },
+  "book": { "fluent": "Open book", "px": 256, "group": "step", "label": "Read" },
+  "bed": { "fluent": "Bed", "px": 256, "group": "step", "label": "Bed" },
+  "teddy": { "fluent": "Teddy bear", "px": 256, "group": "step", "label": "Cuddle" },
+
+  "cake": { "fluent": "Birthday cake", "px": 160, "group": "event", "label": "Birthday" },
+  "beach": { "fluent": "Beach with umbrella", "px": 160, "group": "event", "label": "Beach" },
+  "plane": { "fluent": "Airplane", "px": 160, "group": "event", "label": "Trip" },
+  "gift": { "fluent": "Wrapped gift", "px": 160, "group": "event", "label": "Gift" },
+  "party": { "fluent": "Party popper", "px": 160, "group": "event", "label": "Party" },
+  "tree": { "fluent": "Christmas tree", "px": 160, "group": "event", "label": "Holiday" },
+  "pumpkin": { "fluent": "Jack-o-lantern", "px": 160, "group": "event", "label": "Halloween" },
+  "school": { "fluent": "School", "px": 160, "group": "event", "label": "School" },
+  "star": { "fluent": "Star", "px": 160, "group": "event", "label": "Special day" },
+  "tent": { "fluent": "Tent", "px": 160, "group": "event", "label": "Camping" },
+
+  "balloon": { "fluent": "Balloon", "px": 256, "group": "calm", "label": "Balloon breathing" },
+  "moon": { "fluent": "Crescent moon", "px": 256, "group": "calm", "label": "Lights out" },
+  "sparkles": { "fluent": "Sparkles", "px": 160, "group": "calm", "label": "Sparkles" },
+
+  "hot_face": { "fluent": "Hot face", "px": 160, "group": "body", "label": "Hot face" },
+  "heart": { "fluent": "Beating heart", "px": 160, "group": "body", "label": "Fast heart" },
+  "crying": { "fluent": "Crying face", "px": 160, "group": "body", "label": "Tears" },
+  "huffing": { "fluent": "Face with steam from nose", "px": 160, "group": "body", "label": "Huffing" },
+  "crayon": { "fluent": "Crayon", "px": 160, "group": "tool", "label": "Draw it" },
+  "headphone": { "fluent": "Headphone", "px": 160, "group": "tool", "label": "Music" }
+}

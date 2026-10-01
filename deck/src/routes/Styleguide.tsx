@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react';
-import { ART_KEYS, type ArtKey, type ArtStyle } from '../art/art';
+import { ART, ART_KEYS } from '../art/art';
 import { RootTheme, ThemeScope } from '../theme/ThemeScope';
 import type { Ground, Volume } from '../theme/volume';
 import { AvatarChip } from '../ui/AvatarChip';
@@ -21,17 +21,6 @@ const COMBOS: { ground: Ground; volume: Volume }[] = [
   { ground: 'day', volume: 'normal' },
   { ground: 'day', volume: 'focus' },
 ];
-
-const ART_LABELS: Record<ArtKey, string> = {
-  rooster: 'Rooster',
-  turtle: 'Turtle',
-  pumping: 'Pumping',
-  rolling: 'Rolling',
-  flat: 'Flat',
-  choppy: 'Choppy',
-  toothbrush: 'Brush teeth',
-  shirt: 'Get dressed',
-};
 
 const NAV: NavItem[] = [
   { key: 'today', label: 'Today', icon: 'sun' },
@@ -132,13 +121,13 @@ function ComponentSet({ age = 'reader' }: { age?: 'reader' | 'prereader' }) {
   );
 }
 
-function EmojiRow({ style }: { style: ArtStyle }) {
+function ArtGrid() {
   return (
     <div className="sg-emoji">
       {ART_KEYS.map((k) => (
         <figure key={k} className="sg-emoji__item">
-          <Sticker art={k} style={style} size={64} alt={ART_LABELS[k]} />
-          <figcaption>{ART_LABELS[k]}</figcaption>
+          <Sticker art={k} size={64} />
+          <figcaption>{ART[k].label}</figcaption>
         </figure>
       ))}
     </div>
@@ -162,19 +151,16 @@ export function Styleguide() {
 
         <section aria-labelledby="sg-emoji">
           <h2 id="sg-emoji" className="sg-h2">
-            Emoji style test: 3D vs Flat
+            Art (Fluent Emoji 3D, as stickers)
           </h2>
-          <p className="sg-note">Same art, sticker treatment, every ground and volume. Pick one before feature screens use art.</p>
+          <p className="sg-note">Every vendored file, in every ground and volume. Feelings always show their plain word too.</p>
           <div className="sg-matrix">
             {COMBOS.map((c) => (
               <ThemeScope key={`${c.ground}-${c.volume}`} {...c} className="sg-scope" data-testid={`emoji-${c.ground}-${c.volume}`}>
                 <p className="sg-scope__label">
                   {c.ground} · {c.volume}
                 </p>
-                <p className="sg-style-label">3D</p>
-                <EmojiRow style="3d" />
-                <p className="sg-style-label">Flat</p>
-                <EmojiRow style="flat" />
+                <ArtGrid />
               </ThemeScope>
             ))}
           </div>
