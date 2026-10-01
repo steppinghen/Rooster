@@ -75,6 +75,20 @@ Every item the plan marks → REVIEW.md (R1–R7), then the security-sensitive p
   - There is no MFA recovery path (Q10).
   - Hosted session limits (time-box, inactivity) must stay off, or iPads get signed out and need re-pairing (G4).
 
+### R1d. Device-test fix: TOTP enrollment survives leaving the app (P1)
+
+- **Bug:** switching to Passwords and back reloaded the MFA screen on iPhone, and each load deleted the pending factor and enrolled a new one, so the code from Passwords never matched.
+- **Fix:** `src/routes/parent/Mfa.tsx` and `src/lib/mfaPending.ts`.
+  - Enrollment runs once per signed-in user, never on focus, visibility or token refresh.
+  - Supabase only reveals a factor's secret at enroll time, so the pending enrollment (factor id, secret, QR) is kept in the app's `localStorage`.
+  - It's reused only for the same user, for at most 30 minutes, and only while that factor is still unverified on the server.
+  - Unverified factors whose secret isn't held on this device are removed, then one new factor is enrolled.
+  - The stored copy is erased once verified and on sign-out.
+- **Trade-off:** the not-yet-active TOTP secret sits in this phone's app storage for up to 30 minutes during setup. It's the same secret the QR code shows on screen.
+- **Tests:** e2e `mfa-resume.spec.ts`:
+  - background and foreground, a reload, and leaving and returning all keep the same secret and the same single factor, and the original secret verifies, after which nothing is stored;
+  - a stale factor is cleaned up and enrolled once.
+
 ### R1b. Hardening from the slice 2–4 security review (rls-auditor)
 
 The rls-auditor found two blocking problems; both are fixed and covered by its tests.

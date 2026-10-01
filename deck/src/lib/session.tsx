@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { clearDeviceCache } from '../kid/cache';
+import { clearPending } from './mfaPending';
 import { supabase } from './supabase';
 
 /**
@@ -136,6 +137,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       signOut: async () => {
         await supabase.auth.signOut();
         clearDeviceCache();
+        clearPending();
       },
     }),
     [who, session, refreshWith],

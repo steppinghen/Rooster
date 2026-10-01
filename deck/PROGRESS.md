@@ -329,3 +329,7 @@ Deviation: the reviewer agents run once over slices 2 to 4 together. Running the
 - Also fixed: X3 (a Modules switch in Back Office), X4 (a Wave Check prompt after a routine), X6 (an About section), X12 (these docs), and X13 (anti-framing headers).
 - Tests for those fixes: e2e `gate1-fixes.spec.ts` (runs on the Tailscale http origin).
 - **Stop: Gate 1.** Next is the parent's review and device tests; then Gate 2 (G0–G11 by the parent, C1–C8 after approval).
+
+## Gate 1 device-test fixes
+
+- **P1 (iPhone):** TOTP enrollment re-enrolled every time the app came back from Passwords. It now reuses the pending factor (`src/lib/mfaPending.ts`, kept up to 30 minutes, same user, cleared on verify or sign-out) and cleans up stale unverified factors. Covered by e2e `mfa-resume.spec.ts`. REVIEW.md R1d.

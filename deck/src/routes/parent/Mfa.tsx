@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { clearPending, readPending, savePending } from '../../lib/mfaPending';
 import { supabase } from '../../lib/supabase';
 import { useSession } from '../../lib/session';
 import { CodeField, Notice } from '../../ui/forms';
@@ -12,7 +13,8 @@ type Enrollment = { factorId: string; qr: string; secret: string; uri: string };
  * is a hard requirement, not a UI nicety.
  */
 export function Mfa() {
-  const { who, refresh, signOut } = useSession();
+  const { who, session, refresh, signOut } = useSession();
+  const userId = session?.user.id ?? null;
   const enrolled = who.role === 'needs_mfa' && who.enrolled;
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [factorId, setFactorId] = useState<string | null>(null);
@@ -21,24 +23,39 @@ export function Mfa() {
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
 
+  // Runs once per signed-in user (not on focus, visibility or token refresh): reuse a pending
+  // enrollment if we still hold its secret, otherwise clear stale ones and enroll once.
   useEffect(() => {
-    if (started.current) return;
+    if (!userId || started.current) return;
     started.current = true;
     void (async () => {
       const { data, error } = await supabase.auth.mfa.listFactors();
       if (error) return setError(error.message);
       const verified = data.totp.find((f) => f.status === 'verified');
-      if (verified) return setFactorId(verified.id);
-      // Clear half-finished enrollments (e.g. the page was reloaded), then start a fresh one.
-      for (const f of data.all.filter((f) => f.factor_type === 'totp' && f.status === 'unverified')) {
-        await supabase.auth.mfa.unenroll({ factorId: f.id });
+      if (verified) {
+        clearPending();
+        return setFactorId(verified.id);
       }
+      const unverified = data.all.filter((f) => f.factor_type === 'totp' && f.status === 'unverified');
+      const pending = readPending(userId);
+      const reuse = pending && unverified.some((f) => f.id === pending.factorId) ? pending : null;
+      // Stale half-finished enrollments (secret no longer known here) are removed.
+      for (const f of unverified) {
+        if (f.id !== reuse?.factorId) await supabase.auth.mfa.unenroll({ factorId: f.id });
+      }
+      if (reuse) {
+        setEnrollment({ factorId: reuse.factorId, qr: reuse.qr, secret: reuse.secret, uri: reuse.uri });
+        return setFactorId(reuse.factorId);
+      }
+      clearPending();
       const res = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'The Deck', issuer: 'The Deck' });
       if (res.error) return setError(res.error.message);
-      setEnrollment({ factorId: res.data.id, qr: res.data.totp.qr_code, secret: res.data.totp.secret, uri: res.data.totp.uri });
+      const next = { factorId: res.data.id, qr: res.data.totp.qr_code, secret: res.data.totp.secret, uri: res.data.totp.uri };
+      savePending({ ...next, userId, at: Date.now() });
+      setEnrollment(next);
       setFactorId(res.data.id);
     })();
-  }, []);
+  }, [userId]);
 
   async function verify(e: FormEvent) {
     e.preventDefault();
@@ -52,6 +69,7 @@ export function Mfa() {
       setCode('');
       return;
     }
+    clearPending();
     await refresh();
   }
 
