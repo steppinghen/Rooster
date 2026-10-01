@@ -97,7 +97,8 @@ test('focus modes from the phone reach the iPad live; reload and offline cannot 
   await expect(k.getByTestId('session-celebrate')).toBeVisible({ timeout: 15_000 });
   await expect(k.getByTestId('session-celebrate')).toHaveAttribute('data-volume', 'normal'); // the payoff is loud
   await k.screenshot({ path: `${SHOTS}/ipad-session-done.png` });
-  await k.getByRole('button', { name: 'Back to Grom Zone' }).click();
+  // It goes by itself after a few seconds, back to Grom Zone.
+  await expect(k.getByTestId('session-celebrate')).toBeHidden({ timeout: 10_000 });
   await expect(k.getByTestId('up-next')).toBeVisible();
   await expect(cardA.getByTestId('session-summary')).toContainText('Session ended', { timeout: 15_000 });
   await p.screenshot({ path: `${SHOTS}/iphone-today.png`, fullPage: true });

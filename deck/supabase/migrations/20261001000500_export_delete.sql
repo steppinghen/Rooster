@@ -87,6 +87,10 @@ begin
   delete from public.families where id = fid;
   -- No leftover bootstrap rows for these parents either.
   delete from public.parent_allowlist where family_id is null and email = any (v_emails);
+  -- Realtime keeps sent messages for a few days; the family's (and its iPads') go now.
+  delete from realtime.messages m
+    where m.topic in ('family:' || fid::text, 'parents:' || fid::text)
+       or m.topic = any (select 'device:' || u::text from unnest(v_users) u);
   -- GoTrue's audit log holds their emails, ids and IP addresses: gone too.
   delete from auth.audit_log_entries a
     where a.payload ->> 'actor_id' = any (v_users::text[])

@@ -67,7 +67,7 @@ async function fetchSnapshot(familyId: string, device: Snapshot['device']): Prom
     supabase.from('kids').select(KID_COLUMNS).eq('family_id', familyId).order('sort_order').order('created_at'),
     supabase.from('routines').select('id, family_id, kid_id, slot, name, starts_at, steps, sort_order').eq('family_id', familyId).order('starts_at'),
     supabase.from('events').select('id, family_id, title, icon, on_date, kind, visible_to_kids, repeats_yearly').eq('family_id', familyId).order('on_date'),
-    supabase.from('kid_focus').select('kid_id, family_id, mode, since, ends_at, return_mode, pending_mode, switch_at, pending_ends_at, pinned, updated_at').eq('family_id', familyId),
+    supabase.from('kid_focus').select('kid_id, family_id, mode, since, ends_at, return_mode, pending_mode, switch_at, pending_ends_at, pending_return_mode, pinned, updated_at').eq('family_id', familyId),
     loadModules(familyId),
     supabase.from('devices').select('id, label, ground').eq('id', device.id).maybeSingle(),
     supabase.from('reset_plans').select('kid_id, body_signs, tools').eq('family_id', familyId),

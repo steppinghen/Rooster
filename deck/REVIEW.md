@@ -82,18 +82,30 @@ All three are `security definer` in `private`, not callable through the API, and
 
 ### R6. Focus modes: parents-only writes, live push (slice 10): `supabase/migrations/20261001000700_focus_modes.sql`
 
-- **Write policy:** `kid_focus` insert and update are allowed only when `private.is_parent_of(family_id)`, meaning aal2 and a parents row; see the core migration. No role can delete through the API; rows go with their kid.
-- **`set_focus(kids, mode, minutes, now)`** is **SECURITY INVOKER**, so the parents-only RLS is the only thing that lets it write.
-  - It works out each kid's current mode on server time first: a heads-up whose time has come is live, and a timed mode that has run out has returned.
-  - It then switches either now or after a 2-minute heads-up.
-  - If any kid in the list isn't writable, the whole call fails.
-- **`cancel_focus_switch`** calls off a pending heads-up.
+- **Write path:** `kid_focus` has **no write grants at all**. The only writers are `set_focus(kids, mode, minutes, now)` and `cancel_focus_switch(kids)`. Both are SECURITY DEFINER, check `private.is_parent_of(family)` (aal2) for **every** kid, and fail the whole call if any kid isn't the caller's.
+  - Duplicate kids are de-duplicated, and nulls are refused.
+  - CHECKs make only real states possible:
+    - Everything is never timed.
+    - A return needs an end time.
+    - A pending end belongs to a pending switch and comes after it.
+    - `pinned` holds short id strings only.
+- **Timing (all on server time):** `set_focus` first works out the kid's current mode. Then it switches now, or after a 2-minute heads-up.
+  - A heads-up leaves a running timed mode's timer alone, and cancelling it changes only the pending switch.
+  - Where a timed switch returns to is stored per switch: `return_mode` for the current one, `pending_return_mode` for the pending one.
+  - Re-timing the same mode keeps its own return.
 - **Realtime:** nothing uses `postgres_changes`.
-  - Triggers call `realtime.send()` with a payload-free `{table}` on the private topic `family:<id>`, and send `revoked` on `device:<auth uid>`.
-  - The RLS policy `deck_private_topics` on `realtime.messages` is select-only. It admits family members to their family topic, and an anonymous iPad to its own device topic. There's no insert policy, so clients can't broadcast.
-- **Clients:** devices refetch through RLS on every message, on every (re)subscribe, when they come back to the foreground, and every 60 s. The last two are fallbacks for missed messages.
-- **Fail closed:** the effective mode is computed from the timestamps in the row, so a reload can't escape a mode, and an offline iPad keeps the last row it got.
-- **Tests:** `008_focus.sql` (device and aal1 refused, mixed families refused, heads-up and durations, topic access matrix, data-free signals) and e2e `focus-modes.spec.ts` (live heads-up, switch now, reload and URL can't escape, offline keeps the mode, timed Session end and celebration, a device's direct RPC call refused).
+  - Triggers call `realtime.send()` with a payload-free `{table}` on private topics:
+    - `family:<id>`: what the iPads may know about;
+    - `parents:<id>`: parents-only events, so iPads don't even learn those changed;
+    - `device:<auth uid>`: `revoked`.
+  - The RLS policy `deck_private_topics` on `realtime.messages` is select-only. It admits members to their family topic (canonical UUID spelling only), parents to their parents topic, and an anonymous iPad to its own device topic. There's no insert policy, so clients can't broadcast.
+  - `delete_family` removes the family's message rows.
+- **Clients:** they refetch through RLS on every message, on every (re)subscribe, when they come back to the foreground, and on a fallback timer (iPad 60 s, phone 30 s). The effective mode is computed from the row's timestamps, so a reload can't escape a mode and offline keeps the last one.
+- **Tests:**
+  - `008_focus.sql`.
+  - rls-auditor `audit_focus_realtime.sql`: a 7-role refusal matrix, no partial updates, edge inputs, the real-policy topic matrix with about 30 malformed topics, signal coverage and content, delete cleanup, and the state checks.
+  - e2e: `focus-modes.spec.ts`, plus kid-ux-tester's `slice10-11-*.spec.ts` (live push in about 0.8 s, heads-up, timed ends, Lights out, fail closed).
+- **Accepted (non-blocking):** an iPad revoked *while connected* keeps hearing payload-free "changed" signals until its access token expires (at most 1 hour). A fresh join is refused, and every data read is refused at once. Shortening anonymous-user JWT expiry would tighten this.
 
 ### R1c. From the second security review (slices 6 and 9)
 
@@ -148,6 +160,8 @@ _Filled in slice 12._
 _Filled in slice 12. Items Playwright can't cover are collected here as slices land:_
 
 - Installed-PWA storage: sign in from the home-screen app, close it, reopen it, and check you're still signed in.
+- Realtime catch-up after the iPad sleeps, or after Wi-Fi drops and returns: a mode switch should land within a minute, through the resubscribe refetch or the 60 s fallback.
+- Heads-up banner and the time-left chip against the home indicator (safe area). Lights out brightness on a real screen at night.
 - The styleguide on the real iPad and iPhone, both grounds, both volumes, and Reduce Motion on.
 
 ## 7. Go-live checklist (Gate 2)

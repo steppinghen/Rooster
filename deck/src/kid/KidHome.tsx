@@ -49,7 +49,7 @@ export function KidHome({ kid }: { kid: Kid }) {
   const stepUndo = useStepUndo(kid.id);
   const nav = useNavigate();
   const log = useLogUsage(kid.id);
-  const now = useNow(30_000);
+  const now = useNow(1000);
   const reduced = useReducedMotion();
   const [celebrate, setCelebrate] = useState<string | null>(null);
   const [undo, setUndo] = useState<{ routineId: string; done: string[] } | null>(null);
@@ -115,7 +115,7 @@ export function KidHome({ kid }: { kid: Kid }) {
   }
 
   const mascot: ArtKey = rn.kind !== 'none' && 'routine' in rn && rn.routine.slot === 'bedtime' ? 'turtle' : 'rooster';
-  const title = rn.kind === 'active' || rn.kind === 'finished' ? rn.routine.name : 'Grom Zone';
+  const title = focus.mode === 'session' ? 'Session' : rn.kind === 'active' || rn.kind === 'finished' ? rn.routine.name : 'Grom Zone';
   const scene = (rn.kind === 'active' || rn.kind === 'finished') && rn.routine.slot === 'bedtime' ? 'lastrun' : undefined;
   const cols = prereader ? 2 : tiles.length <= 4 ? 2 : 3;
 
@@ -145,8 +145,13 @@ export function KidHome({ kid }: { kid: Kid }) {
 
         {focus.mode === 'session' ? (
           <TaskCard className="home__session" data-testid="session-home">
-            <Sticker art="turtle" size={120} decorative />
-            <span className="dk-title home__session-title">Session time</span>
+            <Sticker art="rooster" size={120} decorative />
+            <span className="home__session-row">
+              <span className="dk-title home__session-title">Session time</span>
+              <PressButton round aria-label="Read it to me" className="home__speak" onClick={() => speak('Session time. Tap Start Session.')}>
+                <Icon name="speaker" size={32} />
+              </PressButton>
+            </span>
             <PressButton
               variant="ink"
               block

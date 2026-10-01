@@ -212,6 +212,15 @@ create index pin_attempts_kid on public.pin_attempts (kid_id, user_id, attempted
 -- Routines
 -- ---------------------------------------------------------------------------------------------
 
+-- A JSON array of short id strings (kid_focus.pinned).
+create function private.short_id_list(j jsonb) returns boolean
+language sql immutable
+set search_path = ''
+as $$
+  select jsonb_typeof(j) = 'array' and jsonb_array_length(j) <= 20
+     and not exists (select 1 from jsonb_array_elements(j) e where jsonb_typeof(e) <> 'string' or char_length(e #>> '{}') not between 1 and 80)
+$$;
+
 -- Arrays devices may write hold short ids only.
 create function private.short_ids(arr text[], max_items int) returns boolean
 language sql immutable
@@ -446,13 +455,21 @@ create table public.kid_focus (
   pending_mode public.focus_mode,
   switch_at timestamptz,
   pending_ends_at timestamptz,
-  pinned jsonb not null default '[]' check (jsonb_typeof(pinned) = 'array' and jsonb_array_length(pinned) <= 20),
+  pending_return_mode public.focus_mode,
+  -- Pinned activity/item ids (Phase 2): short strings only.
+  pinned jsonb not null default '[]' check (private.short_id_list(pinned)),
   updated_by uuid references auth.users (id) on delete set null,
   updated_at timestamptz not null default now(),
   primary key (family_id, kid_id),
   foreign key (kid_id, family_id) references public.kids (id, family_id) on delete cascade,
   check ((pending_mode is null) = (switch_at is null)),
-  check (ends_at is null or ends_at > since)
+  check (ends_at is null or ends_at > since),
+  -- Only real states: Everything is never timed, a return needs an end, and a pending end
+  -- belongs to a pending switch and comes after it.
+  check (ends_at is null or mode <> 'everything'),
+  check (return_mode is null or ends_at is not null),
+  check (pending_ends_at is null or (pending_mode is not null and pending_mode <> 'everything' and pending_ends_at > switch_at)),
+  check (pending_return_mode is null or pending_ends_at is not null)
 );
 -- Server stamps who changed the mode and when; clients can't set these.
 create function private.kid_focus_stamp() returns trigger
@@ -642,6 +659,7 @@ grant execute on function private.is_any_member() to anon, authenticated;
 -- valid_routine_steps backs a CHECK constraint, which runs with the writer's privileges.
 grant execute on function private.valid_routine_steps(jsonb) to authenticated;
 grant execute on function private.short_ids(text[], int) to authenticated;
+grant execute on function private.short_id_list(jsonb) to authenticated;
 
 -- ---------------------------------------------------------------------------------------------
 -- Grants (explicit; nothing is exposed by default). `anon` gets nothing.
@@ -699,9 +717,9 @@ grant select on public.family_modules to authenticated;
 grant insert (family_id, module_key, enabled, settings) on public.family_modules to authenticated;
 grant update (enabled, settings) on public.family_modules to authenticated;
 
+-- kid_focus: read-only through the API. Every write goes through set_focus /
+-- cancel_focus_switch (parents only), so only states those functions create can exist.
 grant select on public.kid_focus to authenticated;
-grant insert (kid_id, family_id, mode, since, ends_at, return_mode, pending_mode, switch_at, pending_ends_at, pinned) on public.kid_focus to authenticated;
-grant update (mode, since, ends_at, return_mode, pending_mode, switch_at, pending_ends_at, pinned) on public.kid_focus to authenticated;
 
 grant select on public.usage_events to authenticated;
 grant insert (family_id, kid_id, module_key, action, target_id, duration_ms) on public.usage_events to authenticated;

@@ -39,10 +39,9 @@ select lives_ok($$insert into public.kids (family_id, nickname, age_band) values
   'parent: can add a kid to their own family');
 select results_eq($$with u as (update public.kids set nickname = 'Hacked' where id = '00000000-0000-4000-8000-0000000000cc' returning 1) select count(*)::int from u$$,
   'values (0)', 'parent: cannot rename another family''s kid');
-select results_eq($$with u as (update public.kid_focus set mode = 'lights_out' where kid_id = '00000000-0000-4000-8000-0000000000ca' returning 1) select count(*)::int from u$$,
-  'values (1)', 'parent: can change their kid''s focus mode');
-select results_eq($$with u as (update public.kid_focus set mode = 'lights_out' where kid_id = '00000000-0000-4000-8000-0000000000cc' returning 1) select count(*)::int from u$$,
-  'values (0)', 'parent: cannot change another family''s focus mode');
+select is(public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'lights_out', null, true), 1, 'parent: can change their kid''s focus mode (set_focus)');
+select throws_ok($$select public.set_focus(array['00000000-0000-4000-8000-0000000000cc']::uuid[], 'lights_out', null, true)$$, '42501', null, 'parent: cannot change another family''s focus mode');
+select throws_ok($$update public.kid_focus set mode = 'everything'$$, '42501', null, 'parent: no direct writes to kid_focus (only set_focus)');
 select results_eq($$select updated_by from public.kid_focus where kid_id = '00000000-0000-4000-8000-0000000000ca'$$,
   $$values ('00000000-0000-4000-8000-0000000000a1'::uuid)$$, 'kid_focus.updated_by is stamped by the server');
 select throws_ok($$insert into public.parents (family_id, user_id, display_name) values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000e1', 'Mallory')$$,
@@ -66,8 +65,7 @@ select is_empty('select 1 from public.kids', 'aal1 parent: sees no kids');
 select is_empty('select 1 from public.feelings_checkins', 'aal1 parent: sees no check-ins');
 select throws_ok($$insert into public.kids (family_id, nickname, age_band) values ('00000000-0000-4000-8000-0000000000f1', 'X', 'reader')$$,
   '42501', null, 'aal1 parent: cannot add a kid');
-select results_eq($$with u as (update public.kid_focus set mode = 'lights_out' returning 1) select count(*)::int from u$$,
-  'values (0)', 'aal1 parent: cannot change focus modes');
+select throws_ok($$select public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'lights_out', null, true)$$, '42501', null, 'aal1 parent: cannot change focus modes');
 reset role;
 
 -- A parent's id presented as an anonymous session is not a parent.
@@ -113,7 +111,8 @@ select throws_ok($$insert into public.kids (family_id, nickname, age_band) value
   '42501', null, 'device: cannot add a kid');
 select results_eq($$with u as (update public.kids set nickname = 'X' returning 1) select count(*)::int from u$$, 'values (0)', 'device: cannot edit kids');
 select results_eq($$with u as (delete from public.kids returning 1) select count(*)::int from u$$, 'values (0)', 'device: cannot delete kids');
-select results_eq($$with u as (update public.kid_focus set mode = 'everything' returning 1) select count(*)::int from u$$, 'values (0)', 'device: cannot change focus modes');
+select throws_ok($$update public.kid_focus set mode = 'everything'$$, '42501', null, 'device: cannot change focus modes directly');
+select throws_ok($$select public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'everything', null, true)$$, '42501', null, 'device: cannot change focus modes via set_focus');
 select throws_ok($$insert into public.kid_focus (kid_id, family_id, mode) values ('00000000-0000-4000-8000-0000000000cb', '00000000-0000-4000-8000-0000000000f1', 'everything')$$,
   '42501', null, 'device: cannot create a focus mode row');
 select throws_ok('delete from public.kid_focus', '42501', null, 'device: cannot delete focus modes (nobody can; rows go with their kid)');

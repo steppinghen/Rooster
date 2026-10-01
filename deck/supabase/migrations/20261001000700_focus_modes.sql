@@ -1,10 +1,11 @@
 -- The Deck: slice 10. Focus modes (parent-controlled), pushed to iPads with private Realtime
 -- Broadcast.
 --
--- Writes to kid_focus stay parents-only (RLS from the core migration). set_focus is SECURITY
--- INVOKER, so that policy is what lets it write. It works on server time: a switch either
--- happens now or after a 2-minute heads-up (pending_mode + switch_at), optionally for a set
--- number of minutes after which the kid returns to the mode they were in.
+-- kid_focus has no write grants: set_focus and cancel_focus_switch (security definer, aal2
+-- parents of the kids' family only, all kids or none) are the only writers, so only states
+-- they create exist. They work on server time: a switch happens now or after a 2-minute
+-- heads-up (pending_mode + switch_at), optionally for a set number of minutes, after which
+-- the kid returns to where they were (pending_return_mode / return_mode).
 --
 -- Realtime: no table is published with postgres_changes (it doesn't apply RLS to DELETE).
 -- Instead, triggers send a payload-free "changed" message to the private topic
@@ -14,79 +15,108 @@
 
 create function public.set_focus(p_kid_ids uuid[], p_mode public.focus_mode, p_minutes integer default null, p_now boolean default false)
 returns integer
-language plpgsql volatile security invoker
+language plpgsql volatile security definer
 set search_path = ''
 as $$
 declare
+  ids uuid[];
   r record;
   eff public.focus_mode;
   ret public.focus_mode;
   ends timestamptz;
+  next_return public.focus_mode;
+  at timestamptz;
   n int := 0;
 begin
   if p_minutes is not null and (p_minutes not between 1 and 240 or p_mode = 'everything') then
     raise exception 'a duration is 1 to 240 minutes, and only for Session or Lights out' using errcode = '22023';
   end if;
+  if p_kid_ids is null or array_position(p_kid_ids, null) is not null then
+    raise exception 'kid ids are required' using errcode = '22023';
+  end if;
+  select coalesce(array_agg(distinct k), '{}') into ids from unnest(p_kid_ids) k;
 
-  for r in select * from public.kid_focus f where f.kid_id = any (p_kid_ids) for update loop
-    -- Where is this kid right now? (A pending switch whose time has come is live; a timed
-    -- mode that has run out has returned.)
+  -- Parents of the kids' family only (aal2). All kids or none.
+  if exists (
+    select 1 from unnest(ids) k
+    where not exists (select 1 from public.kid_focus f where f.kid_id = k and private.is_parent_of(f.family_id))
+  ) then
+    raise exception 'not allowed' using errcode = '42501';
+  end if;
+
+  for r in select * from public.kid_focus f where f.kid_id = any (ids) order by f.kid_id for update loop
+    -- Where is this kid right now? A pending switch whose time has come is live; a timed mode
+    -- that has run out has returned.
     eff := r.mode;
     ret := r.return_mode;
     ends := r.ends_at;
-    if r.pending_mode is not null and r.switch_at <= now() then
-      ret := coalesce(r.return_mode, r.mode);
-      eff := r.pending_mode;
-      ends := r.pending_ends_at;
-    end if;
-    if ends is not null and ends <= now() then
+    if ends is not null and ends <= now() and not (r.switch_at is not null and r.switch_at <= ends) then
       eff := coalesce(ret, 'everything');
       ret := null;
       ends := null;
     end if;
+    if r.pending_mode is not null and r.switch_at <= now() then
+      ret := r.pending_return_mode;
+      eff := r.pending_mode;
+      ends := r.pending_ends_at;
+      if ends is not null and ends <= now() then
+        eff := coalesce(ret, 'everything');
+        ret := null;
+        ends := null;
+      end if;
+    end if;
+
+    at := case when p_now then now() else now() + interval '2 minutes' end;
+    -- Where a timed switch returns to: the mode the kid will be in when it starts (re-timing
+    -- the same mode keeps that mode's own return).
+    next_return := case
+      when p_minutes is null then null
+      when p_mode = eff then coalesce(ret, 'everything')
+      when ends is not null and ends <= at then coalesce(ret, 'everything')
+      else eff end;
 
     if p_now or p_mode = eff then
       update public.kid_focus set
         mode = p_mode, since = now(),
         ends_at = case when p_minutes is not null then now() + make_interval(mins => p_minutes) end,
-        return_mode = case when p_minutes is not null then eff end,
-        pending_mode = null, switch_at = null, pending_ends_at = null
+        return_mode = next_return,
+        pending_mode = null, switch_at = null, pending_ends_at = null, pending_return_mode = null
       where family_id = r.family_id and kid_id = r.kid_id;
     else
-      -- Heads-up: stay in the current mode for two more minutes, then switch.
+      -- Heads-up: the current mode (and its timer) carries on for two more minutes.
       update public.kid_focus set
         mode = eff,
         since = case when eff = r.mode then r.since else coalesce(r.switch_at, now()) end,
-        ends_at = null,
-        return_mode = case when p_minutes is not null then eff end,
+        ends_at = ends,
+        return_mode = ret,
         pending_mode = p_mode,
-        switch_at = now() + interval '2 minutes',
-        pending_ends_at = case when p_minutes is not null then now() + interval '2 minutes' + make_interval(mins => p_minutes) end
+        switch_at = at,
+        pending_ends_at = case when p_minutes is not null then at + make_interval(mins => p_minutes) end,
+        pending_return_mode = next_return
       where family_id = r.family_id and kid_id = r.kid_id;
-    end if;
-    if not found then
-      raise exception 'not allowed' using errcode = '42501';
     end if;
     n := n + 1;
   end loop;
-
-  if n < coalesce(cardinality(p_kid_ids), 0) then
-    raise exception 'not allowed' using errcode = '42501';
-  end if;
   return n;
 end;
 $$;
 
 create function public.cancel_focus_switch(p_kid_ids uuid[])
 returns integer
-language plpgsql volatile security invoker
+language plpgsql volatile security definer
 set search_path = ''
 as $$
 declare
   n int;
 begin
-  update public.kid_focus set pending_mode = null, switch_at = null, pending_ends_at = null,
-    return_mode = case when ends_at is null then null else return_mode end
+  if exists (
+    select 1 from unnest(coalesce(p_kid_ids, '{}')) k
+    where not exists (select 1 from public.kid_focus f where f.kid_id = k and private.is_parent_of(f.family_id))
+  ) then
+    raise exception 'not allowed' using errcode = '42501';
+  end if;
+  -- Only the pending switch is called off; a running timed mode keeps its timer.
+  update public.kid_focus set pending_mode = null, switch_at = null, pending_ends_at = null, pending_return_mode = null
   where kid_id = any (p_kid_ids) and pending_mode is not null and switch_at > now();
   get diagnostics n = row_count;
   return n;
@@ -94,6 +124,7 @@ end;
 $$;
 
 revoke execute on function public.set_focus(uuid[], public.focus_mode, integer, boolean) from public, anon;
+-- (definer functions: callable by authenticated, and they check the caller themselves)
 revoke execute on function public.cancel_focus_switch(uuid[]) from public, anon;
 grant execute on function public.set_focus(uuid[], public.focus_mode, integer, boolean) to authenticated;
 grant execute on function public.cancel_focus_switch(uuid[]) to authenticated;
@@ -109,9 +140,13 @@ as $$
 declare
   row_data jsonb := to_jsonb(coalesce(new, old));
   fid text := case when tg_table_name = 'families' then row_data ->> 'id' else row_data ->> 'family_id' end;
+  parents_only boolean := tg_table_name = 'events'
+    and not coalesce((to_jsonb(new) ->> 'visible_to_kids')::boolean, false)
+    and not coalesce((to_jsonb(old) ->> 'visible_to_kids')::boolean, false);
 begin
   if fid is not null then
-    perform realtime.send(jsonb_build_object('table', tg_table_name), 'changed', 'family:' || fid, true);
+    -- A parents-only event is none of the iPads' business, not even that it changed.
+    perform realtime.send(jsonb_build_object('table', tg_table_name), 'changed', (case when parents_only then 'parents:' else 'family:' end) || fid, true);
   end if;
   return null;
 end;
@@ -157,7 +192,8 @@ create policy deck_private_topics on realtime.messages for select to authenticat
   using (
     realtime.messages.extension = 'broadcast'
     and (
-      (realtime.topic() ~ '^family:[0-9a-f-]{36}$' and (select private.is_member_of(substring(realtime.topic() from 8)::uuid)))
+      (realtime.topic() ~ '^family:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' and (select private.is_member_of(substring(realtime.topic() from 8)::uuid)))
+      or (realtime.topic() ~ '^parents:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' and (select private.is_parent_of(substring(realtime.topic() from 9)::uuid)))
       or (realtime.topic() = 'device:' || (select auth.uid())::text and (select private.is_anonymous_session()))
     )
   );

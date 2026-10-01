@@ -58,6 +58,7 @@ export type KidFocus = {
   pending_mode: FocusMode | null;
   switch_at: string | null;
   pending_ends_at: string | null;
+  pending_return_mode?: FocusMode | null;
   pinned: unknown[];
   updated_at: string;
 };

@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { artSrc, isArtKey } from '../../art/art';
 import { familyDate } from '../../kid/cache';
 import { sleepsLabel, upcomingCountdowns } from '../../kid/dates';
-import { effectiveFocus, MODE_LABEL } from '../../kid/focus';
+import { effectiveFocus, MODE_LABEL, timeLeft } from '../../kid/focus';
 import { doneCount, formatTime, routineNow, routinesForKid } from '../../kid/routine';
 import { FEELINGS, SIZES } from '../../kid/wave/feelings';
 import { useSession } from '../../lib/session';
@@ -31,7 +31,7 @@ const DURATIONS = [
 ];
 
 const mmss = (ms: number) => {
-  const s = Math.max(0, Math.ceil(ms / 1000));
+  const s = Math.max(0, Math.round(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
@@ -45,7 +45,7 @@ async function load(familyId: string, timezone: string) {
     supabase.from('routines').select('id, family_id, kid_id, slot, name, starts_at, steps, sort_order').eq('family_id', familyId),
     supabase.from('routine_completions').select('routine_id, kid_id, on_date, completed_steps, completed_at').eq('family_id', familyId).eq('on_date', today),
     supabase.from('events').select('id, family_id, title, icon, on_date, kind, visible_to_kids, repeats_yearly').eq('family_id', familyId),
-    supabase.from('kid_focus').select('kid_id, family_id, mode, since, ends_at, return_mode, pending_mode, switch_at, pending_ends_at, pinned, updated_at').eq('family_id', familyId),
+    supabase.from('kid_focus').select('kid_id, family_id, mode, since, ends_at, return_mode, pending_mode, switch_at, pending_ends_at, pending_return_mode, pinned, updated_at').eq('family_id', familyId),
     supabase.from('feelings_checkins').select('kid_id, feeling, size, moment, created_at').eq('family_id', familyId).gte('created_at', since).order('created_at', { ascending: false }),
     supabase.from('usage_events').select('kid_id, module_key, action, created_at').eq('family_id', familyId).gte('created_at', new Date(Date.now() - 4 * 3600_000).toISOString()),
     supabase.rpc('server_now'),
@@ -85,19 +85,23 @@ export function Today() {
   useEffect(() => {
     if (!familyId) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    const channels: ReturnType<typeof supabase.channel>[] = [];
     let cancelled = false;
+    const soon = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => void reload(), 300);
+    };
     void supabase.realtime.setAuth().then(() => {
       if (cancelled) return;
-      channel = supabase
-        .channel(`family:${familyId}`, { config: { private: true } })
-        .on('broadcast', { event: 'changed' }, () => {
-          clearTimeout(timer);
-          timer = setTimeout(() => void reload(), 300);
-        })
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') void reload();
-        });
+      // family: is everything the iPads see; parents: carries parents-only changes.
+      for (const topic of [`family:${familyId}`, `parents:${familyId}`]) {
+        channels.push(
+          supabase
+            .channel(topic, { config: { private: true } })
+            .on('broadcast', { event: 'changed' }, soon)
+            .subscribe((status) => status === 'SUBSCRIBED' && soon()),
+        );
+      }
     });
     // A Realtime message can be missed (sleep, network): refresh on return and every 30 s too.
     const poll = setInterval(() => void reload(), 30_000);
@@ -108,7 +112,7 @@ export function Today() {
       clearTimeout(timer);
       clearInterval(poll);
       document.removeEventListener('visibilitychange', onVisible);
-      if (channel) void supabase.removeChannel(channel);
+      for (const c of channels) void supabase.removeChannel(c);
     };
   }, [familyId, reload]);
 
@@ -143,7 +147,9 @@ export function Today() {
       .filter((e) => (e.repeats_yearly ? e.on_date.slice(5) === d.today.slice(5) : e.on_date === d.today))
       .map((e) => ({ key: e.id, at: '', title: e.title, meta: e.visible_to_kids ? 'Tour Dates' : 'Parents only', icon: e.icon, routine: null as Routine | null })),
   ].sort((a, b) => (a.at || '99').localeCompare(b.at || '99'));
-  const live = [...d.routines].filter((r) => r.starts_at.slice(0, 5) <= `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`).sort((a, b) => a.starts_at.localeCompare(b.starts_at)).pop();
+  // NOW: the routine that started most recently, for up to 3 hours.
+  const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+  const live = [...d.routines].filter((r) => toMin(r.starts_at) <= minutes && minutes - toMin(r.starts_at) <= 180).sort((a, b) => a.starts_at.localeCompare(b.starts_at)).pop();
   const countdowns = upcomingCountdowns(d.events, d.kids, d.today).slice(0, 3);
 
   return (
@@ -157,14 +163,16 @@ export function Today() {
         <p className="dk-muted">
           Hi, {who.displayName}. {board.length} things on the board today.
         </p>
-        <div className="today__kids" role="list">
+        <ul className="today__kids">
           {d.kids.map((k) => (
-            <a key={k.id} href={`#kid-${k.id}`} className="today__kid-chip" role="listitem">
-              <KidAvatar nickname={k.nickname} avatar={k.avatar} accent={k.accent} size={52} />
-              <span>{k.nickname}</span>
-            </a>
+            <li key={k.id}>
+              <a href={`#kid-${k.id}`} className="today__kid-chip">
+                <KidAvatar nickname={k.nickname} avatar={k.avatar} accent={k.accent} size={52} />
+                <span>{k.nickname}</span>
+              </a>
+            </li>
           ))}
-        </div>
+        </ul>
       </header>
 
       <Panel className="p-section today__board">
@@ -191,10 +199,10 @@ export function Today() {
       </Panel>
 
       <div className="today__cards">
-        {d.kids.length > 1 && <FocusSwitcher kids={d.kids} focus={d.focus} now={now} tz={tz} label="Everyone" onDone={() => void data.reload()} />}
         {d.kids.map((k) => (
           <KidCard key={k.id} kid={k} d={d} now={now} minutes={minutes} tz={tz} onChanged={() => void data.reload()} />
         ))}
+        {d.kids.length > 1 && <FocusSwitcher kids={d.kids} focus={d.focus} now={now} tz={tz} label="Everyone" onDone={() => void data.reload()} />}
       </div>
     </div>
   );
@@ -208,7 +216,7 @@ function KidCard({ kid, d, now, minutes, tz, onChanged }: { kid: Kid; d: Awaited
   const focus = effectiveFocus(d.focus.find((f) => f.kid_id === kid.id), now);
   const mine = routinesForKid(d.routines, kid.id);
   const ended = focus.ended && now - focus.ended.at < 2 * 3600_000 ? focus.ended : null;
-  const sessionUse = ended ? d.usage.filter((u) => u.kid_id === kid.id && Date.parse(u.created_at) <= ended.at && Date.parse(u.created_at) >= ended.at - 4 * 3600_000) : [];
+  const sessionUse = ended ? d.usage.filter((u) => u.kid_id === kid.id && Date.parse(u.created_at) <= ended.at && Date.parse(u.created_at) >= ended.from) : [];
 
   return (
     <section id={`kid-${kid.id}`} className="dk-accent-block today__kid" style={{ '--accent': accentVar(kid.accent) } as CSSProperties} data-testid="kid-card">
@@ -217,7 +225,7 @@ function KidCard({ kid, d, now, minutes, tz, onChanged }: { kid: Kid; d: Awaited
         <h2 className="dk-title today__kid-name">{kid.nickname}</h2>
         <span className="today__mode" data-testid="kid-mode">
           {MODE_LABEL[focus.mode]}
-          {focus.endsAt && ` · ${mmss(focus.endsAt - now)} left`}
+          {focus.endsAt && ` · ${mmss(timeLeft(focus, now))} left`}
         </span>
       </header>
 
@@ -277,7 +285,7 @@ function KidCard({ kid, d, now, minutes, tz, onChanged }: { kid: Kid; d: Awaited
       )}
 
       {ended && (
-        <p className="today__small" data-testid="session-summary">
+        <p className="today__summary" data-testid="session-summary">
           {MODE_LABEL[ended.mode]} ended {time(new Date(ended.at).toISOString(), tz)}.{' '}
           {sessionUse.length ? `${sessionUse.filter((u) => u.action === 'opened').length} opened, ${sessionUse.filter((u) => u.action === 'completed').length} finished.` : 'Nothing opened.'}
         </p>
@@ -307,7 +315,10 @@ function FocusSwitcher({ kids, focus, now, tz, label, onDone }: { kids: Kid[]; f
   }
 
   async function now_(m: FocusMode) {
-    const { error } = await supabase.rpc('set_focus', { p_kid_ids: ids, p_mode: m, p_minutes: null, p_now: true });
+    // Keep the duration the pending switch was scheduled with.
+    const row = focus.find((f) => f.kid_id === ids[0] && f.pending_mode === m);
+    const mins = row?.pending_ends_at && row.switch_at ? Math.round((Date.parse(row.pending_ends_at) - Date.parse(row.switch_at)) / 60_000) : null;
+    const { error } = await supabase.rpc('set_focus', { p_kid_ids: ids, p_mode: m, p_minutes: mins, p_now: true });
     if (error) return setError(error.message);
     onDone();
   }
@@ -322,8 +333,8 @@ function FocusSwitcher({ kids, focus, now, tz, label, onDone }: { kids: Kid[]; f
     <div className={label ? 'dk-card switcher switcher--all' : 'switcher'} data-testid={label ? 'switcher-all' : 'switcher'}>
       {label && <h2 className="p-section__title">{label}</h2>}
       {pending ? (
-        <div className="switcher__pending" role="status">
-          <span>
+        <div className="switcher__pending">
+          <span aria-live="off">
             <strong>{MODE_LABEL[pending.mode]}</strong> in {mmss(pending.at - now)} (at {time(new Date(pending.at).toISOString(), tz)}). The kids see a heads-up.
           </span>
           <span className="p-actions">

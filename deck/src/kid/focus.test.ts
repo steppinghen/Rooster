@@ -37,14 +37,27 @@ describe('effectiveFocus', () => {
   });
 
   it('runs a timed pending session and returns to the mode it replaced', () => {
-    const r = row({ mode: 'everything', pending_mode: 'session', switch_at: iso(-10), pending_ends_at: iso(10) });
+    const r = row({ mode: 'everything', pending_mode: 'session', switch_at: iso(-10), pending_ends_at: iso(10), pending_return_mode: 'everything' });
     expect(effectiveFocus(r, T)).toMatchObject({ mode: 'session', endsAt: T + 600_000, ended: null });
-    expect(effectiveFocus(r, T + 11 * 60_000)).toMatchObject({ mode: 'everything', ended: { mode: 'session', at: T + 600_000 } });
+    expect(effectiveFocus(r, T + 11 * 60_000)).toMatchObject({ mode: 'everything', ended: { mode: 'session', at: T + 600_000, from: T - 600_000 } });
   });
 
   it('a timed mode with an explicit return mode goes there when it ends', () => {
     const r = row({ mode: 'session', since: iso(-20), ends_at: iso(-1), return_mode: 'lights_out' });
     expect(effectiveFocus(r, T)).toMatchObject({ mode: 'lights_out', ended: { mode: 'session' } });
+  });
+
+  it('a heads-up during a timed Session keeps the Session timer; the kid returns on time if the switch is cancelled', () => {
+    const r = row({ mode: 'session', since: iso(-5), ends_at: iso(15), return_mode: 'everything', pending_mode: 'everything', switch_at: iso(2) });
+    expect(effectiveFocus(r, T)).toMatchObject({ mode: 'session', endsAt: T + 900_000, headsUp: { mode: 'everything' } });
+    const cancelled = { ...r, pending_mode: null, switch_at: null };
+    expect(effectiveFocus(cancelled, T + 16 * 60_000)).toMatchObject({ mode: 'everything', ended: { mode: 'session' } });
+  });
+
+  it('a timed mode that ends before a pending switch returns first, then switches', () => {
+    const r = row({ mode: 'session', since: iso(-10), ends_at: iso(1), return_mode: 'everything', pending_mode: 'lights_out', switch_at: iso(2) });
+    expect(effectiveFocus(r, T + 90_000)).toMatchObject({ mode: 'everything', headsUp: { mode: 'lights_out' }, ended: { mode: 'session' } });
+    expect(effectiveFocus(r, T + 150_000)).toMatchObject({ mode: 'lights_out', ended: null });
   });
 
   it('a device clock running fast cannot end a session early when server time is used', () => {

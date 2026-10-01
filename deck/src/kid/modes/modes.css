@@ -71,7 +71,7 @@
 
 .focus-left {
   position: fixed;
-  top: max(10px, env(safe-area-inset-top));
+  bottom: max(20px, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 30;
@@ -92,7 +92,6 @@
   justify-content: center;
   text-align: center;
   background: #0b0a18;
-  filter: brightness(0.82);
 }
 
 .lightsout__sky {
@@ -144,4 +143,34 @@
 .session-card__sub {
   font-size: 22px;
   font-weight: 700;
+}
+
+/* Room for the heads-up banner / time-left chip, so they never cover a tile. During a
+   heads-up the mascot hero on home steps aside (the rooster is in the banner). */
+html[data-focus-reserve='headsup'] .kid {
+  padding-bottom: calc(max(28px, env(safe-area-inset-bottom)) + 150px);
+}
+
+html[data-focus-reserve='headsup'] .home__hero {
+  display: none;
+}
+
+html[data-focus-reserve='chip'] .kid {
+  padding-bottom: calc(max(28px, env(safe-area-inset-bottom)) + 64px);
+}
+
+.focus-celebrate__btn {
+  min-height: 88px;
+  font-size: 28px;
+  padding-inline: 32px;
+}
+
+/* Lights out is dim: the one button is quiet, not cream. */
+.lightsout__breathe {
+  --btn-bg: #221e45;
+  --btn-fg: #d9d1ea;
+}
+
+.lightsout {
+  filter: brightness(0.72);
 }

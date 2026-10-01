@@ -20,9 +20,9 @@ insert into public.pin_attempts (kid_id, user_id) values
   ('00000000-0000-4000-8000-0000000000ca', '00000000-0000-4000-8000-0000000000d1');
 insert into public.pairing_attempts (user_id) values ('00000000-0000-4000-8000-0000000000d1');
 -- Nested JSON a parent can write: make family 2's carry a marker, family 1's carry its own.
-update public.kid_focus set pinned = '[{"id":"f2-secret-pin"}]' where family_id = '00000000-0000-4000-8000-0000000000f2';
+update public.kid_focus set pinned = '["f2-secret-pin"]' where family_id = '00000000-0000-4000-8000-0000000000f2';
 update public.family_modules set settings = '{"note":"f2-secret-setting"}' where family_id = '00000000-0000-4000-8000-0000000000f2';
-update public.kid_focus set pinned = '[{"id":"f1-pin"}]' where family_id = '00000000-0000-4000-8000-0000000000f1';
+update public.kid_focus set pinned = '["f1-pin"]' where family_id = '00000000-0000-4000-8000-0000000000f1';
 -- Bootstrap (family_id null) rows are never family data.
 insert into public.parent_allowlist (email, family_id) values ('audit-bootstrap@example.test', null);
 

@@ -9,9 +9,7 @@ select tests.make_two_families();
 -- ----- who may switch -----
 select tests.authenticate('00000000-0000-4000-8000-0000000000d1', 'aal1', true);
 select throws_ok($$select public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'lights_out')$$, '42501', null, 'set_focus: a device cannot switch modes');
-select throws_ok($$select public.cancel_focus_switch(array['00000000-0000-4000-8000-0000000000ca']::uuid[])$$, '42501', null, 'cancel: a device cannot cancel (no update rights)')
-  where false;
-select is(public.cancel_focus_switch(array['00000000-0000-4000-8000-0000000000ca']::uuid[]), 0, 'cancel: a device changes nothing');
+select throws_ok($$select public.cancel_focus_switch(array['00000000-0000-4000-8000-0000000000ca']::uuid[])$$, '42501', null, 'cancel: a device is refused');
 reset role;
 select tests.authenticate('00000000-0000-4000-8000-0000000000a2', 'aal1');
 select throws_ok($$select public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'lights_out')$$, '42501', null, 'set_focus: an aal1 parent cannot');
@@ -34,12 +32,22 @@ select results_eq($$select mode::text, pending_mode is null from public.kid_focu
 select public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'session', 20, true);
 select results_eq($$select mode::text, return_mode::text, ends_at between now() + interval '1199 seconds' and now() + interval '1201 seconds', pending_mode is null from public.kid_focus where kid_id = '00000000-0000-4000-8000-0000000000ca'$$,
   $$values ('session'::text, 'everything'::text, true, true)$$, 'switch now: Session for 20 minutes, then back to Everything');
+-- A heads-up during the timed Session keeps its timer; cancelling leaves it running.
+select public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'lights_out');
+select results_eq($$select mode::text, ends_at is not null, return_mode::text, pending_mode::text from public.kid_focus where kid_id = '00000000-0000-4000-8000-0000000000ca'$$,
+  $$values ('session'::text, true, 'everything'::text, 'lights_out'::text)$$, 'heads-up during a timed Session: the Session timer keeps running');
+select public.cancel_focus_switch(array['00000000-0000-4000-8000-0000000000ca']::uuid[]);
+select results_eq($$select mode::text, ends_at is not null, return_mode::text, pending_mode is null from public.kid_focus where kid_id = '00000000-0000-4000-8000-0000000000ca'$$,
+  $$values ('session'::text, true, 'everything'::text, true)$$, 'cancel: the Session keeps its end time');
+-- Re-timing the same mode keeps its own return.
+select public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'session', 10, true);
+select is((select return_mode::text from public.kid_focus where kid_id = '00000000-0000-4000-8000-0000000000ca'), 'everything', 're-timing Session returns to Everything, not to Session');
 select throws_ok($$select public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'session', 0, true)$$, '22023', null, 'duration: at least 1 minute');
 select throws_ok($$select public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'everything', 10, true)$$, '22023', null, 'duration: Everything is never timed');
 reset role;
 
 -- A timed session that already ran out counts as over when the next switch is computed.
-update public.kid_focus set since = now() - interval '30 minutes', ends_at = now() - interval '10 minutes' where kid_id = '00000000-0000-4000-8000-0000000000ca';
+update public.kid_focus set since = now() - interval '30 minutes', ends_at = now() - interval '10 minutes', return_mode = 'everything' where kid_id = '00000000-0000-4000-8000-0000000000ca';
 select tests.authenticate('00000000-0000-4000-8000-0000000000a1');
 select public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'lights_out');
 select results_eq($$select mode::text, pending_mode::text from public.kid_focus where kid_id = '00000000-0000-4000-8000-0000000000ca'$$,
@@ -51,7 +59,8 @@ update public.kid_focus set switch_at = now() - interval '1 minute' where kid_id
 select tests.authenticate('00000000-0000-4000-8000-0000000000a1');
 select public.set_focus(array['00000000-0000-4000-8000-0000000000ca']::uuid[], 'session', 15);
 select results_eq($$select mode::text, pending_mode::text, return_mode::text from public.kid_focus where kid_id = '00000000-0000-4000-8000-0000000000ca'$$,
-  $$values ('lights_out'::text, 'session'::text, 'lights_out'::text)$$, 'past heads-up: Lights out is current; a timed Session returns to it');
+  $$values ('lights_out'::text, 'session'::text, null::text)$$, 'past heads-up: Lights out is current (untimed, so no return of its own)');
+select is((select pending_return_mode::text from public.kid_focus where kid_id = '00000000-0000-4000-8000-0000000000ca'), 'lights_out', 'past heads-up: the timed Session returns to Lights out');
 reset role;
 
 -- ----- private Realtime topics -----

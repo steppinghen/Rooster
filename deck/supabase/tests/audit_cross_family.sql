@@ -240,8 +240,8 @@ reset role;
 -- Requires knowing another family's kid uuid, so non-blocking.
 select tests.authenticate('00000000-0000-4000-8000-0000000000a1');
 select is(audit.probe('public.kid_focus', 'insert', '00000000-0000-4000-8000-0000000000f2',
-          '{"family_id":"00000000-0000-4000-8000-0000000000f1"}'), 'blocked:23503',
-  'parent A: relabelled kid_focus insert fails on the FK, not on family 2''s existing row');
+          '{"family_id":"00000000-0000-4000-8000-0000000000f1"}'), 'denied',
+  'parent A: no direct kid_focus insert at all (writes only through set_focus), so no existence leak');
 select is(audit.probe('public.reset_plans', 'insert', '00000000-0000-4000-8000-0000000000f2',
           '{"family_id":"00000000-0000-4000-8000-0000000000f1"}'), 'blocked:23503',
   'parent A: relabelled reset_plans insert fails on the FK, not on family 2''s existing row');

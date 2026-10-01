@@ -14,7 +14,7 @@ import { useNow } from './useNow';
  */
 export function KidTheme({ kid, scene, volume: forced, children }: { kid: Kid; scene?: Scene; volume?: Volume; children: ReactNode }) {
   const { snapshot } = useKidStore();
-  const now = useNow(15_000);
+  const now = useNow(1000);
   const ground = useDeviceGround(snapshot!, now);
   const focus = effectiveFocus(snapshot!.focus.find((f) => f.kid_id === kid.id), now);
   const effectiveScene: Scene = scene ?? (focus.mode === 'lights_out' ? 'lastrun' : 'default');

@@ -280,4 +280,39 @@ Deviation: the reviewer agents run once over slices 2 to 4 together. Running the
 - Fixed a real bug: effects that depended on `useAsync`'s whole object re-ran every render. Today re-subscribed to Realtime every second, which made updates flaky, and the Devices timer was affected too.
 - e2e `today.spec.ts` (iPhone and iPad landscape).
 
-Next: slice 12 (Guided Access / Screen Time section of SETUP.md, phase-reviewer, REVIEW.md, then stop at Gate 1).
+## Reviews of slices 10–11 (done)
+
+- **rls-auditor:** 1 blocking finding (`delete_family` left `realtime.messages` rows), fixed. Its non-blocking items led to a stricter design (REVIEW.md R6):
+  - `kid_focus` has no write grants, so `set_focus` and `cancel_focus_switch` (definer, parent check per kid) are the only writers;
+  - CHECKs allow only real states;
+  - a `pending_return_mode` column;
+  - a canonical-UUID topic regex;
+  - a `parents:` topic for parents-only events.
+- **kid-ux-tester:** 10 blocking findings, all fixed:
+  - The heads-up and time-left chip reserve space at the bottom, so tiles (Wave Check included) are never covered, and the hero steps aside during a heads-up.
+  - Mode changes show within a second (1 s clocks in home and theme).
+  - "Switch now" keeps a pending switch's duration.
+  - Cancelling a heads-up keeps a running Session's timer (SQL).
+  - A timed Lights out ends quietly: no SHRED!, and no chip at bedtime.
+  - The celebration never interrupts Wave Check, Breathe or the reset plan.
+  - The celebration button is 88pt, and the celebration dismisses itself after 6 s and goes home.
+  - Overlay text follows the kid rules (no selection).
+  - The reset plan is reachable in Lights out.
+  - The Session home headline says "Session".
+- Also fixed from that report:
+  - the heads-up bar uses each kid's own accent;
+  - the Session card has the rooster and read-aloud;
+  - Lights out is dimmer, with a quiet button;
+  - the session summary counts only that session;
+  - NOW is limited to 3 hours;
+  - the Everyone switcher sits after the kid cards;
+  - on iPad landscape the kid cards fill the right column from the top, like iPadHub;
+  - the pending countdown is not re-announced by VoiceOver;
+  - the avatar list semantics are fixed;
+  - time left never shows more than the mode's length.
+- The reviewer specs were updated where the intended behaviour changed: definer functions, refusals instead of no-ops, Q8, and the reset path.
+
+## Slice 12: Review packet (in progress)
+
+- SETUP.md: iPad setup, Guided Access and Screen Time.
+- Next: run phase-reviewer, finish REVIEW.md, then stop at **Gate 1**.

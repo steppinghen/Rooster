@@ -55,7 +55,7 @@ export function resetFamily(f: Fam) {
   sql(`delete from public.routine_completions where family_id = ${lit(f.parent.familyId)};
        delete from public.feelings_checkins where family_id = ${lit(f.parent.familyId)};
        delete from public.reset_plans where family_id = ${lit(f.parent.familyId)};
-       update public.kid_focus set mode = 'everything', ends_at = null, pending_mode = null, switch_at = null where family_id = ${lit(f.parent.familyId)};
+       update public.kid_focus set mode = 'everything', since = now(), ends_at = null, return_mode = null, pending_mode = null, switch_at = null, pending_ends_at = null, pending_return_mode = null where family_id = ${lit(f.parent.familyId)};
        update public.devices set ground = 'auto' where family_id = ${lit(f.parent.familyId)};`);
   f.ground = 'auto';
 }
@@ -66,7 +66,7 @@ export function setGround(f: Fam, g: 'auto' | 'day' | 'night' | 'device') {
 }
 
 export function setMode(f: Fam, kid: string, mode: 'everything' | 'session' | 'lights_out') {
-  sql(`update public.kid_focus set mode = ${lit(mode)} where kid_id = ${lit(f.ids[kid]!)}`);
+  sql(`update public.kid_focus set mode = ${lit(mode)}, since = now(), ends_at = null, return_mode = null, pending_mode = null, switch_at = null, pending_ends_at = null, pending_return_mode = null where kid_id = ${lit(f.ids[kid]!)}`);
 }
 
 /** Open a kid screen on a fresh iPad context with the clock pinned. */

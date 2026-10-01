@@ -55,7 +55,7 @@ function KidScope() {
   const visible = new Set(kidVisibleModules(snapshot!.modules, focus.mode).map((m) => m.key));
   if (screen && SCREEN_MODULE[screen] && !visible.has(SCREEN_MODULE[screen]!)) return <Navigate to={`/kid/${kid.id}`} replace />;
   // Lights out: the bedtime screen and nothing else, except breathing (Wave Check is never locked out).
-  if (focus.mode === 'lights_out' && screen !== 'breathe' && screen !== 'wave') {
+  if (focus.mode === 'lights_out' && !['breathe', 'wave', 'reset'].includes(screen)) {
     return (
       <>
         <LightsOut kid={kid} />
