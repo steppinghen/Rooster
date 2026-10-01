@@ -232,8 +232,8 @@ reset role;
 -- an email is on another family's allowlist: listed -> 23505, unlisted -> success. Emails are
 -- guessable (unlike uuids), so this is a cross-family PII read.
 select tests.authenticate('00000000-0000-4000-8000-0000000000b1');
-select lives_ok($$insert into public.parent_allowlist (email, family_id) values ('parent-a@example.test', '00000000-0000-4000-8000-0000000000f2')$$,
-  'BLOCKING: parent B cannot learn that parent-a@example.test is on family 1''s allowlist (unique-violation oracle)');
+select lives_ok($$insert into public.parent_allowlist (email, family_id) values ('fx-parent-a@example.test', '00000000-0000-4000-8000-0000000000f2')$$,
+  'BLOCKING: parent B cannot learn that fx-parent-a@example.test is on family 1''s allowlist (unique-violation oracle)');
 reset role;
 
 -- Same oracle class through primary keys keyed only by kid_id / (routine_id, kid_id, on_date):

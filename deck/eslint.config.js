@@ -17,6 +17,11 @@ export default tseslint.config(
     },
   },
   {
+    // Playwright fixtures require an object pattern even when no fixture is used: ({}, info).
+    files: ['e2e/**/*.ts'],
+    rules: { 'no-empty-pattern': 'off' },
+  },
+  {
     files: ['scripts/**/*.mjs'],
     languageOptions: { globals: globals.node },
     extends: [js.configs.recommended],

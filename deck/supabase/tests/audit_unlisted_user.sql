@@ -127,7 +127,7 @@ select audit.capture();
 -- ---- end harness ------------------------------------------------------------------------------
 
 -- Extra identities for this file.
-select tests.create_user('invited@example.test', false, '00000000-0000-4000-8000-0000000000e3');  -- on family 2's allowlist, never joined
+select tests.create_user('fx-invited@example.test', false, '00000000-0000-4000-8000-0000000000e3');  -- on family 2's allowlist, never joined
 select tests.create_user('bootstrap@example.test', false, '00000000-0000-4000-8000-0000000000e4'); -- on a bootstrap (family_id null) row
 insert into public.parent_allowlist (email, family_id) values ('bootstrap@example.test', null);
 select audit.capture();

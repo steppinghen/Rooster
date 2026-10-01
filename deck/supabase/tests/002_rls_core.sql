@@ -181,7 +181,7 @@ select is_empty('select 1 from public.devices', 'stranger: no devices');
 select is_empty('select 1 from public.pairing_codes', 'stranger: no pairing codes');
 select throws_ok($$insert into public.kids (family_id, nickname, age_band) values ('00000000-0000-4000-8000-0000000000f1', 'X', 'reader')$$,
   '42501', null, 'stranger: cannot add a kid');
-select throws_ok($$insert into public.parent_allowlist (email, family_id) values ('stranger@example.test', '00000000-0000-4000-8000-0000000000f1')$$,
+select throws_ok($$insert into public.parent_allowlist (email, family_id) values ('fx-stranger@example.test', '00000000-0000-4000-8000-0000000000f1')$$,
   '42501', null, 'stranger: cannot add themself to a family''s allowlist');
 select throws_ok($$insert into public.feelings_checkins (family_id, kid_id, feeling, size) values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000ca', 'flat', 1)$$,
   '42501', null, 'stranger: cannot write check-ins');

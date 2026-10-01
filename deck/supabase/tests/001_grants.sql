@@ -113,6 +113,11 @@ select is(
     'routines:INSERT(family_id,kid_id,name,slot,sort_order,starts_at,steps)',
     'routines:SELECT',
     'routines:UPDATE(kid_id,name,slot,sort_order,starts_at,steps)',
+    'rpc:accept_invite(p_family_id uuid, p_display_name text)',
+    'rpc:create_family(p_name text, p_display_name text, p_timezone text)',
+    'rpc:my_invites()',
+    'rpc:set_kid_pin(p_kid_id uuid, p_pin text)',
+    'rpc:whoami()',
     'usage_events:INSERT(action,duration_ms,family_id,kid_id,module_key,target_id)',
     'usage_events:SELECT'
   ]::text[],

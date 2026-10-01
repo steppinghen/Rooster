@@ -71,13 +71,13 @@ language plpgsql security definer
 set search_path = ''
 as $$
 begin
-  perform tests.create_user('parent-a@example.test', false, '00000000-0000-4000-8000-0000000000a1');
-  perform tests.create_user('parent-a2@example.test', false, '00000000-0000-4000-8000-0000000000a2');
-  perform tests.create_user('parent-b@example.test', false, '00000000-0000-4000-8000-0000000000b1');
+  perform tests.create_user('fx-parent-a@example.test', false, '00000000-0000-4000-8000-0000000000a1');
+  perform tests.create_user('fx-parent-a2@example.test', false, '00000000-0000-4000-8000-0000000000a2');
+  perform tests.create_user('fx-parent-b@example.test', false, '00000000-0000-4000-8000-0000000000b1');
   perform tests.create_user(null, true, '00000000-0000-4000-8000-0000000000d1');
   perform tests.create_user(null, true, '00000000-0000-4000-8000-0000000000d9');
   perform tests.create_user(null, true, '00000000-0000-4000-8000-0000000000d2');
-  perform tests.create_user('stranger@example.test', false, '00000000-0000-4000-8000-0000000000e1');
+  perform tests.create_user('fx-stranger@example.test', false, '00000000-0000-4000-8000-0000000000e1');
   perform tests.create_user(null, true, '00000000-0000-4000-8000-0000000000e2');
 
   insert into public.families (id, name) values
@@ -107,9 +107,11 @@ begin
   insert into public.feelings_checkins (family_id, kid_id, feeling, size) values
     ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000ca', 'choppy', 3),
     ('00000000-0000-4000-8000-0000000000f2', '00000000-0000-4000-8000-0000000000cc', 'pumping', 2);
+  -- New kids already get a focus row from the kids_created trigger (slice 2).
   insert into public.kid_focus (kid_id, family_id, mode) values
     ('00000000-0000-4000-8000-0000000000ca', '00000000-0000-4000-8000-0000000000f1', 'everything'),
-    ('00000000-0000-4000-8000-0000000000cc', '00000000-0000-4000-8000-0000000000f2', 'everything');
+    ('00000000-0000-4000-8000-0000000000cc', '00000000-0000-4000-8000-0000000000f2', 'everything')
+  on conflict (family_id, kid_id) do nothing;
   insert into public.family_modules (family_id, module_key) values
     ('00000000-0000-4000-8000-0000000000f1', 'routines'), ('00000000-0000-4000-8000-0000000000f1', 'wave_check'),
     ('00000000-0000-4000-8000-0000000000f2', 'routines'), ('00000000-0000-4000-8000-0000000000f2', 'wave_check');
@@ -117,10 +119,9 @@ begin
     ('00000000-0000-4000-8000-0000000000ca', '00000000-0000-4000-8000-0000000000f1', '{turtle}');
   insert into public.usage_events (family_id, kid_id, module_key, action) values
     ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000ca', 'routines', 'opened');
-  delete from public.parent_allowlist where email = 'parent-a@example.test' and family_id is null;
   insert into public.parent_allowlist (email, family_id, joined_at) values
-    ('parent-a@example.test', '00000000-0000-4000-8000-0000000000f1', now()),
-    ('invited@example.test', '00000000-0000-4000-8000-0000000000f2', null);
+    ('fx-parent-a@example.test', '00000000-0000-4000-8000-0000000000f1', now()),
+    ('fx-invited@example.test', '00000000-0000-4000-8000-0000000000f2', null);
 end;
 $$;
 

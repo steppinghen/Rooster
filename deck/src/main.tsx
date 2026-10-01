@@ -15,6 +15,7 @@ import '@fontsource/lexend/600.css';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/components.css';
+import './styles/forms.css';
 
 import { App } from './App';
 

@@ -1,0 +1,112 @@
+.dk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dk-field__label {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.dk-field__hint {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.dk-card .dk-field__hint,
+.dk-panel .dk-field__hint {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.dk-field__error {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--orange);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  padding: 4px 10px;
+  align-self: flex-start;
+}
+
+.dk-input {
+  appearance: none;
+  width: 100%;
+  min-height: var(--tap-parent);
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--night-text);
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: inset 0 3px 0 rgba(10, 8, 24, 0.12);
+}
+
+.dk-input::placeholder {
+  color: #6b6590;
+}
+
+.dk-input--code {
+  font-family: var(--font-display);
+  font-size: 30px;
+  letter-spacing: 0.35em;
+  text-align: center;
+  padding-inline: 8px;
+}
+
+select.dk-input {
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-position: calc(100% - 22px) 55%, calc(100% - 15px) 55%;
+  background-size: 7px 7px;
+  background-repeat: no-repeat;
+  padding-right: 40px;
+}
+
+.dk-segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dk-segmented__opt {
+  appearance: none;
+  min-height: var(--tap-parent);
+  padding: 8px 16px;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--night-text);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--ink);
+  margin-bottom: 4px;
+}
+
+.dk-segmented__opt[aria-checked='true'] {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.dk-notice {
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 600;
+  background: var(--paper);
+  color: var(--night-text);
+}
+
+.dk-notice--error {
+  background: var(--orange);
+  color: var(--ink);
+}
+
+.dk-notice--ok {
+  background: var(--lime);
+  color: var(--ink);
+}

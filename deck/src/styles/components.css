@@ -446,3 +446,14 @@
 .dk-nav--tabs .dk-nav__spacer {
   display: none;
 }
+
+.dk-avatar--art {
+  cursor: default;
+}
+
+.dk-avatar--art img {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+  pointer-events: none;
+}
