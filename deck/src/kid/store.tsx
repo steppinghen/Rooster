@@ -119,6 +119,8 @@ async function send(item: OutboxItem): Promise<void> {
 type KidStore = {
   snapshot: Snapshot | null;
   online: boolean;
+  /** The last refresh failed and there is no cached snapshot to fall back on. */
+  firstLoadFailed: boolean;
   /** Server-corrected "now" in ms, so a wrong iPad clock can't stretch or skip a focus mode. */
   now: () => number;
   refresh: () => Promise<void>;
@@ -204,6 +206,7 @@ export function KidStoreProvider({ children }: { children: ReactNode }) {
     () => ({
       snapshot,
       online,
+      firstLoadFailed: !online && !snapshot,
       now: () => Date.now() + (snapshot?.serverOffsetMs ?? 0),
       refresh,
       enqueue: (item) => {

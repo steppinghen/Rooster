@@ -9,7 +9,7 @@ export function Unpaired() {
   return (
     <AuthLayout title="Unpaired" mascot="turtle">
       <p>{label} was unpaired by a parent. To use it again, a parent can pair it with a new code.</p>
-      <PressButton variant="ink" block onClick={() => void signOut()}>
+      <PressButton variant="ink" block onClick={() => void signOut().then(() => window.location.assign('/pair'))}>
         Pair again
       </PressButton>
     </AuthLayout>

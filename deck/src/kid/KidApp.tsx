@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { RootTheme } from '../theme/ThemeScope';
+import { PressButton } from '../ui/PressButton';
 import { Headline } from '../ui/type';
 import { getCurrentKid } from './currentKid';
 import { KidHome } from './KidHome';
@@ -7,10 +8,19 @@ import { Picker } from './Picker';
 import { KidStoreProvider, useKidStore } from './store';
 
 function FirstLoad() {
+  const { firstLoadFailed, refresh } = useKidStore();
   return (
     <RootTheme ground="night" volume="focus">
-      <main className="kid" style={{ placeContent: 'center', alignItems: 'center' }} aria-busy="true">
-        <Headline size={44}>Getting ready…</Headline>
+      <main className="kid" style={{ placeContent: 'center', alignItems: 'center' }} aria-busy={!firstLoadFailed}>
+        <Headline size={44}>{firstLoadFailed ? "Can't reach The Deck" : 'Getting ready…'}</Headline>
+        {firstLoadFailed && (
+          <>
+            <p className="kid__note">Check the Wi-Fi. Once it has loaded once, this iPad keeps working offline.</p>
+            <PressButton variant="yellow" onClick={() => void refresh()}>
+              Try again
+            </PressButton>
+          </>
+        )}
       </main>
     </RootTheme>
   );
