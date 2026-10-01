@@ -183,4 +183,19 @@ Deviation: the reviewer agents run once over slices 2 to 4 together. Running the
 - The ink button gets a lilac edge at night (`--ink-btn-edge`) for 3:1 non-text contrast. This was a slice 0 carry-over.
 - e2e `routines.spec.ts`: template, edit, add, reorder and save on the phone; the Night ground setting wins over Auto; the iPad runs the steps; Home and Wave Check are present; no scroll.
 
-Next: slice 8 (Tour Dates). The reviewers for 2–4 are still running.
+## Slice 8: Tour Dates (built)
+
+- Kid `TourDates`:
+  - The soonest kid-visible countdown, big: art, "N sleeps", "until …", N moons (up to 14, then +N) and read-aloud.
+  - The next four countdowns below it.
+  - Kid birthdays (month and day) are included.
+  - Parents-only events never reach the iPad (RLS).
+- Parent `/parent/dates`:
+  - Month grid (Monday first) with today highlighted.
+  - A list for the month with sleeps and visibility.
+  - Add or edit events: what, when, picture, kind, who sees it, every year. Delete with a confirm.
+  - Tapping a day starts a new event on it.
+- Surfaces forward extra attributes. The kid screen is named `TourDates.tsx` (macOS file names are case-insensitive).
+- e2e `tour-dates.spec.ts`.
+
+Next: slice 9 (Wave Check).

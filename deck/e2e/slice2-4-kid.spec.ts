@@ -67,7 +67,7 @@ async function openPicker(browser: Browser, opts: { reduced?: boolean; scheme?: 
   return { ctx, page };
 }
 
-test.describe.serial('slice 2-4 kid: picker and PIN pad (iPad)', () => {
+test.describe('slice 2-4 kid: picker and PIN pad (iPad)', () => {
   test.beforeAll(async ({}, info) => {
     if (info.project.name !== 'ipad') return;
     parent = await makeParent();
@@ -156,6 +156,13 @@ test.describe.serial('slice 2-4 kid: picker and PIN pad (iPad)', () => {
       await shoot(page, `ipad-pin-${ground}`);
       await sideBySide(page, await page.screenshot({ animations: 'disabled' }), ground === 'day' ? 'iPadDawnPatrolDayFocus' : 'iPadGromZoneFocus', `${SHOTS}/compare/ipad-pin-${ground}-vs-${ground === 'day' ? 'iPadDawnPatrolDayFocus' : 'iPadGromZoneFocus'}.png`, `PIN pad (${ground})`);
 
+      // Delete and Clear icons are as big as the digits (a pre-reader finds them by picture).
+      for (const name of ['Delete', 'Clear']) {
+        const icon = (await page.getByRole('button', { name }).locator('svg').boundingBox())!;
+        const digit = await page.getByRole('button', { name: '5', exact: true }).evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
+        expect.soft(Math.min(icon.width, icon.height), `pin ${ground}: ${name} icon is ${Math.round(icon.width)}x${Math.round(icon.height)}px next to ${digit}px digits`).toBeGreaterThanOrEqual(32);
+      }
+
       // Delete and Clear work.
       await page.getByRole('button', { name: 'Delete' }).click();
       await expect(page.getByLabel('1 of 4 typed')).toBeVisible();
@@ -195,10 +202,11 @@ test.describe.serial('slice 2-4 kid: picker and PIN pad (iPad)', () => {
     for (const d of '1234') await page.getByRole('button', { name: d, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/kid/${ids['Kid A']}$`));
 
-    // Lockout after 5 wrong tries: calm words, Back still works, and it ends on its own.
+    // Lockout after 5 wrong tries (shown on the 6th): calm words, Back still works, and it ends on its own.
     await page.goto('/kid');
     await page.getByTestId('pick-kid').filter({ hasText: 'Kid A' }).click();
-    for (let i = 0; i < 5; i++) {
+    // verify_kid_pin records 5 misses; the 6th try is the first to come back "locked".
+    for (let i = 0; i < 6; i++) {
       for (const d of '9999') await page.getByRole('button', { name: d, exact: true }).click();
       await expect(page.getByLabel('0 of 4 typed')).toBeVisible();
     }

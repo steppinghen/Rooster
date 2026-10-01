@@ -4,6 +4,7 @@ import { PressButton } from '../ui/PressButton';
 import { Headline } from '../ui/type';
 import { getCurrentKid } from './currentKid';
 import { KidHome } from './KidHome';
+import { TourDates } from './TourDates';
 import { Picker } from './Picker';
 import { RoutineRun } from './RoutineRun';
 import { Routines } from './Routines';
@@ -38,6 +39,7 @@ function KidScope() {
     <Routes>
       <Route index element={<KidHome kid={kid} />} />
       <Route path="routines" element={<Routines kid={kid} />} />
+      <Route path="dates" element={<TourDates kid={kid} />} />
       <Route path="routine/:routineId" element={<RoutineRun kid={kid} />} />
       <Route path="*" element={<Navigate to={`/kid/${kid.id}`} replace />} />
     </Routes>

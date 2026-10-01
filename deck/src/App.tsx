@@ -6,6 +6,7 @@ import { NoAccess } from './routes/NoAccess';
 import { Pair } from './routes/Pair';
 import { Unpaired } from './routes/Unpaired';
 import { BackOffice } from './routes/parent/BackOffice';
+import { ParentDates } from './routes/parent/Dates';
 import { Join } from './routes/parent/Join';
 import { Mfa } from './routes/parent/Mfa';
 import { ParentShell } from './routes/parent/ParentShell';
@@ -75,6 +76,7 @@ export function App() {
         <Route path="/pair" element={<Only roles={['signed_out', 'unpaired']}><Pair /></Only>} />
         <Route path="/unpaired" element={<Only roles={['revoked']}><Unpaired /></Only>} />
         <Route path="/parent" element={<Only roles={['parent']}><ParentShell><Today /></ParentShell></Only>} />
+        <Route path="/parent/dates" element={<Only roles={['parent']}><ParentShell><ParentDates /></ParentShell></Only>} />
         <Route path="/parent/office" element={<Only roles={['parent']}><ParentShell><BackOffice /></ParentShell></Only>} />
         <Route path="/kid/*" element={<Only roles={['device']}><KidApp /></Only>} />
         <Route path="*" element={<Gate />} />

@@ -19,7 +19,8 @@ export default tseslint.config(
   {
     // Playwright fixtures require an object pattern even when no fixture is used: ({}, info).
     files: ['e2e/**/*.ts'],
-    rules: { 'no-empty-pattern': 'off' },
+    // ...and the `useSession` fixture is not a React hook.
+    rules: { 'no-empty-pattern': 'off', 'react-hooks/rules-of-hooks': 'off' },
   },
   {
     files: ['scripts/**/*.mjs'],
