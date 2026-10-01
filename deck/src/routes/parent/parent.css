@@ -171,3 +171,8 @@
   -webkit-user-select: all;
   user-select: all;
 }
+
+.p-danger {
+  border-color: var(--ink);
+  background: #ffe1d1;
+}

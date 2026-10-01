@@ -205,7 +205,7 @@ export function KidStoreProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('offline', onOffline);
       clearInterval(poll);
     };
-  }, [device, refresh]);
+  }, [device, refresh, flush]);
 
   const value = useMemo<KidStore>(
     () => ({

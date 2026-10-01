@@ -180,7 +180,10 @@ test.describe('slice 2-4 parent: auth screens (iPhone)', () => {
   });
 
   test('returning parent: wrong TOTP, then the right one', async ({ page }) => {
+    test.setTimeout(120_000);
     const p = await makeParent();
+    // GoTrue allows one email code per address per 60 s; the fixture just used it.
+    await page.waitForTimeout(61_000);
     await page.goto('/parent/sign-in');
     const mail = await requestCode(page, p.email);
     await page.getByLabel('Code').fill(mail.code);

@@ -2,6 +2,7 @@ import { useSession } from '../../lib/session';
 import { PressButton } from '../../ui/PressButton';
 import { Panel } from '../../ui/surfaces';
 import { Headline } from '../../ui/type';
+import { DataSection } from './office/DataSection';
 import { DevicesSection } from './office/DevicesSection';
 import { FamilySection } from './office/FamilySection';
 import { KidsSection } from './office/KidsSection';
@@ -20,6 +21,7 @@ export function BackOffice() {
       <DevicesSection familyId={who.familyId} />
       <ParentsSection familyId={who.familyId} myUserId={who.userId} />
       <FamilySection familyId={who.familyId} name={who.familyName} />
+      <DataSection familyName={who.familyName} />
       <Panel className="p-section">
         <h2 className="p-section__title">You</h2>
         <p className="dk-muted">Signed in as {who.email}.</p>

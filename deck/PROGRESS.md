@@ -132,4 +132,40 @@ Auditor items carried forward, still visible as `todo` tests:
 
 Deviation: the reviewer agents run once over slices 2 to 4 together. Running the auditor while those slices' migrations were changing would have meant reviewing a moving target.
 
-Next: reviewers for 2–4, then slice 5 (kid home).
+## Slice 5: Module registry and kid home (built)
+
+- `KidHome` (Grom Zone):
+  - What's next comes first: the routine that started most recently today, its first undone step, art, read-aloud, and "I did it!".
+  - Mascot, "N more to go!" bubble and progress dots.
+  - Registry-driven tiles (`kidVisibleModules`) with live status lines. The pre-reader sees picture tiles, 2 across, and the label is spoken on tap.
+  - A celebration burst when a routine finishes.
+  - The avatar takes you back to the picker in one tap.
+  - The bedtime routine sets the Last Run scene (night).
+- Usage logging: `opened` and `completed` events go through the outbox.
+- The outbox retries every 10 s (the browser's `online` event isn't reliable).
+- `save_routine_progress` keeps step order.
+- Pure logic with tests: `routineNow`, `upcomingCountdowns`, and `sleepsBetween` (safe across DST).
+- e2e `kid-home.spec.ts`:
+  - day and night ground;
+  - no scroll, 80pt targets;
+  - progress survives a reload;
+  - offline taps sync later;
+  - celebration and the completed usage event;
+  - reader layout.
+- The ground cross-fade starts 2 s after launch, so the first screen appears immediately.
+
+## Slice 6: Family export and delete (built)
+
+- Migration `20261001000500_export_delete.sql`:
+  - `export_family()`: every family table plus the catalog. pin_hash and code_hash are left out and listed under "omitted".
+  - `delete_family(confirm)`: typed exact name. Removes every family row, the lockout rows, leftover bootstrap rows, and the auth users of the parents and iPads. (`→ REVIEW.md R4`)
+- Back Office "Your data":
+  - Export builds the zip in the browser (fflate, MIT): `export.json`, events/kids/routines/routine_progress/usage CSVs (formula-safe), and README.
+  - "Save or share…" uses the iOS share sheet, plus a download link.
+  - The danger zone needs the exact name.
+- Tests:
+  - `006_export_delete.sql`: the export includes every table that has `family_id`, has no hashes, and is parent-only. Delete leaves family 2 untouched.
+  - The `exportZip` unit test.
+  - e2e `export-delete.spec.ts`.
+
+Next: slice 7 (routines, the routine screen, the ground picker). The reviewers for 2–4 are still running.
