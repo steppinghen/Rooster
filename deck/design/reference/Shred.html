@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Deck — Chore complete</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Archivo:wght@400;600;700;800&amp;family=Permanent+Marker&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#FFD23F}a:hover{color:#FFE27A}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: repeating-conic-gradient(from 0deg at 50% 34%, #241F4C 0deg 7deg, #15122E 7deg 14deg); color: #F4EBD9; font-family: 'Archivo', system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 70px 24px 34px; overflow: hidden; position: relative">
+
+<div style="width: 340px; height: 300px; background: #0A0818; clip-path: polygon(50% 0%, 59% 22%, 82% 6%, 76% 31%, 100% 30%, 82% 48%, 98% 68%, 73% 66%, 78% 94%, 57% 76%, 46% 100%, 39% 75%, 15% 90%, 22% 64%, 0% 60%, 18% 44%, 3% 22%, 28% 26%, 24% 2%, 42% 20%); display: flex; align-items: center; justify-content: center; transform: translate(6px, 6px) rotate(-6deg); position: absolute; top: 60px"></div>
+<div style="width: 340px; height: 300px; background: #FFD23F; clip-path: polygon(50% 0%, 59% 22%, 82% 6%, 76% 31%, 100% 30%, 82% 48%, 98% 68%, 73% 66%, 78% 94%, 57% 76%, 46% 100%, 39% 75%, 15% 90%, 22% 64%, 0% 60%, 18% 44%, 3% 22%, 28% 26%, 24% 2%, 42% 20%); background-image: radial-gradient(rgba(255,62,138,0.35) 1.6px, transparent 2px); background-size: 7px 7px; display: flex; align-items: center; justify-content: center; transform: rotate(-6deg); position: relative">
+<div style="font-family: 'Archivo Black', sans-serif; font-size: 72px; letter-spacing: -2px; color: #15122E; text-shadow: 4px 0 0 #FF3E8A, -3px 0 0 #29D3FF; transform: rotate(-4deg)">SHRED!</div>
+</div>
+
+<div style="margin-top: 22px; text-align: center; display: flex; flex-direction: column; gap: 6px">
+<div style="font-family: 'Archivo Black', sans-serif; font-size: 28px">Turtle is fed.</div>
+<div style="font-size: 15px; font-weight: 600; color: #BDB5D6">You earned a sticker, Kid B</div>
+</div>
+
+<div style="margin-top: 26px; width: 150px; height: 150px; border-radius: 50%; background: #F4EBD9; padding: 8px; box-sizing: border-box; box-shadow: 6px 6px 0 #0A0818; transform: rotate(8deg)">
+<div style="width: 100%; height: 100%; border-radius: 50%; background: #FF3E8A; border: 4px solid #0A0818; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #15122E">
+<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15a8 6 0 0 1 16 0z"></path><path d="M20 13h2M5 15l-1 3M19 15l1 3M9 15l-.5 3M15 15l.5 3M8 11l2-2 2 2 2-2 2 2"></path></svg>
+<div style="font-family: 'Permanent Marker', cursive; font-size: 14px">Turtle Keeper</div>
+</div>
+</div>
+
+<div style="flex-grow: 1"></div>
+
+<button style="width: 100%; min-height: 66px; background: #FFD23F; color: #15122E; border: 4px solid #0A0818; border-radius: 20px; box-shadow: 0 8px 0 #0A0818; font-family: 'Archivo Black', sans-serif; font-size: 22px; cursor: pointer">Stick it on the wall</button>
+<a href="GromZone.dc.html" style="margin-top: 18px; min-height: 44px; display: flex; align-items: center; font-weight: 700; font-size: 15px">Back to Grom Zone</a>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"kidColor":{"editor":"color","default":"#FF3E8A","options":["#FF3E8A","#29D3FF","#FFD23F","#9BE564"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { kidColor: this.props.kidColor ?? '#FF3E8A' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Deck — Sticker Wall</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Archivo:wght@400;600;700;800&amp;family=Permanent+Marker&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#FFD23F}a:hover{color:#FFE27A}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 820px; height: 1180px; box-sizing: border-box; background-color: #15122E; background-image: radial-gradient(rgba(244,235,217,0.08) 1.2px, transparent 1.7px); background-size: 10px 10px; color: #F4EBD9; font-family: 'Archivo', system-ui, sans-serif; display: flex; flex-direction: column; gap: 26px; padding: 40px 44px 44px; overflow: hidden">
+
+<div style="display: flex; justify-content: space-between; align-items: flex-end">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-family: 'Permanent Marker', cursive; font-size: 22px; color: #FFD23F; transform: rotate(-2deg); align-self: flex-start">Kid B's wall</div>
+<div style="font-family: 'Archivo Black', sans-serif; font-size: 64px; line-height: 0.95; letter-spacing: -1px; text-shadow: 4px 0 0 #FF3E8A, -4px 0 0 #29D3FF">STICKER WALL</div>
+</div>
+<div style="width: 72px; height: 72px; border-radius: 50%; background: #FF3E8A; border: 4px solid #0A0818; box-shadow: 4px 4px 0 #0A0818; display: flex; align-items: center; justify-content: center; font-family: 'Archivo Black', sans-serif; font-size: 30px; color: #15122E">B</div>
+</div>
+
+<div style="flex-grow: 1; background: #E9DCC2; background-image: radial-gradient(rgba(21,18,46,0.12) 1.4px, transparent 1.8px); background-size: 8px 8px; border: 4px solid #0A0818; border-radius: 10px; box-shadow: 9px 9px 0 #0A0818; padding: 36px 30px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 26px 18px; align-content: start; position: relative">
+<sc-for list="{{stickers}}" as="s" hint-placeholder-count="12">
+<div style="display: flex; justify-content: center">
+<div style="width: 140px; height: 140px; border-radius: 50%; background: #FFFFFF; padding: 7px; box-sizing: border-box; box-shadow: 4px 5px 0 rgba(10,8,24,0.55); transform: rotate({{s.rot}}deg)">
+<div style="width: 100%; height: 100%; border-radius: 50%; background: {{s.bg}}; border: 4px solid #0A0818; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #15122E; text-align: center">
+<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"></path></svg>
+<div style="font-family: 'Permanent Marker', cursive; font-size: 13px; line-height: 1.05; padding: 0 10px">{{s.label}}</div>
+</div>
+</div>
+</div>
+</sc-for>
+<div style="position: absolute; top: 14px; right: 22px; width: 96px; height: 96px; background: #FFD23F; clip-path: polygon(50% 0%, 61% 30%, 95% 20%, 72% 48%, 100% 72%, 66% 70%, 58% 100%, 44% 72%, 10% 86%, 30% 56%, 0% 34%, 34% 32%); display: flex; align-items: center; justify-content: center; font-family: 'Archivo Black', sans-serif; font-size: 18px; color: #15122E; transform: rotate(10deg)">NEW!</div>
+</div>
+
+<div style="background: #221E45; border: 3px solid #0A0818; border-radius: 20px; box-shadow: 0 7px 0 #0A0818; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><div style="font-family: 'Archivo Black', sans-serif; font-size: 24px">6 more till [PRIZE]</div><div style="font-family: 'Permanent Marker', cursive; font-size: 18px; color: #FFD23F">12 / 18</div></div>
+<div style="height: 28px; background: #15122E; border: 3px solid #0A0818; border-radius: 999px; overflow: hidden"><div style="width: 66%; height: 100%; background: #FF3E8A; background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,0.25) 0 8px, transparent 8px 16px)"></div></div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"kidColor":{"editor":"color","default":"#FF3E8A","options":["#FF3E8A","#29D3FF","#FFD23F","#9BE564"]},"$preview":{"width":820,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const k = this.props.kidColor ?? '#FF3E8A';
+    const labels = ['Turtle Keeper','Bed Boss','Shoe Pro','Toy Tamer','Brush Champ','Turtle Keeper','Water Hero','Helper','Bed Boss','Session Star','Shoe Pro','Turtle Keeper'];
+    const colors = [k,'#29D3FF','#FFD23F','#9BE564','#A99BFF','#29D3FF',k,'#FFD23F','#9BE564',k,'#29D3FF','#FFD23F'];
+    const rots = [-8,6,-3,9,4,-10,7,-5,10,-6,3,-9];
+    return { kidColor: k, stickers: labels.map((label, i) => ({ label, bg: colors[i], rot: rots[i] })) };
+  }
+}
+</script>
+</body>
+</html>

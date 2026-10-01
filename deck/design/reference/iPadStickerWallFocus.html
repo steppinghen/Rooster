@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Deck — Sticker Wall in focus mode</title>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Archivo:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#F4EBD9}a:hover{color:#FFFFFF}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 820px; height: 1180px; box-sizing: border-box; background: #1C1A33; color: #F4EBD9; font-family: 'Archivo', system-ui, sans-serif; display: flex; flex-direction: column; gap: 30px; padding: 40px 56px 56px; overflow: hidden">
+
+<div style="display: flex; justify-content: space-between; align-items: center">
+<div style="display: flex; align-items: center; gap: 14px">
+<div style="font-family: 'Archivo Black', sans-serif; font-size: 34px; letter-spacing: 0.5px">STICKER WALL</div>
+<div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 2px solid #3A3660; border-radius: 999px; font-size: 13px; font-weight: 700; color: #BDB5D6"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Focus mode</div>
+</div>
+<div style="width: 60px; height: 60px; border-radius: 50%; background: #2A2748; border: 3px solid #FF3E8A; display: flex; align-items: center; justify-content: center; font-family: 'Archivo Black', sans-serif; font-size: 24px">B</div>
+</div>
+
+<div style="background: #F4EBD9; color: #15122E; border: 3px solid #0A0818; border-radius: 24px; box-shadow: 0 6px 0 #0A0818; padding: 24px 28px; display: flex; align-items: center; gap: 22px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px">
+<div style="font-family: 'Archivo Black', sans-serif; font-size: 28px; line-height: 1.05">Session first</div>
+<div style="font-size: 17px; font-weight: 600; color: #4A4568">Then add today's sticker.</div>
+</div>
+<a href="iPadSession.dc.html" style="min-height: 72px; padding: 0 28px; display: flex; align-items: center; background: #15122E; color: #F4EBD9; border-radius: 18px; box-shadow: 0 5px 0 #0A0818; font-family: 'Archivo Black', sans-serif; font-size: 22px; text-decoration: none">Back to Session</a>
+</div>
+
+<div style="flex-grow: 1; background: #24213F; border: 3px solid #2F2B52; border-radius: 22px; padding: 36px 30px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 30px 18px; align-content: start">
+<sc-for list="{{stickers}}" as="s" hint-placeholder-count="12">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px">
+<div style="width: 112px; height: 112px; border-radius: 50%; background: #2F2B52; border: 4px solid {{s.ring}}; box-sizing: border-box; display: flex; align-items: center; justify-content: center; color: #BDB5D6">
+<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"></path></svg>
+</div>
+<div style="font-size: 14px; font-weight: 700; color: #BDB5D6; text-align: center">{{s.label}}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; font-size: 17px; font-weight: 700; color: #BDB5D6"><div>6 more till [PRIZE]</div><div>12 / 18</div></div>
+<div style="height: 14px; background: #2F2B52; border-radius: 999px; overflow: hidden"><div style="width: 66%; height: 100%; background: #FF3E8A"></div></div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"kidColor":{"editor":"color","default":"#FF3E8A","options":["#FF3E8A","#29D3FF","#FFD23F","#9BE564"]},"$preview":{"width":820,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const k = this.props.kidColor ?? '#FF3E8A';
+    const labels = ['Turtle Keeper','Bed Boss','Shoe Pro','Toy Tamer','Brush Champ','Turtle Keeper','Water Hero','Helper','Bed Boss','Session Star','Shoe Pro','Turtle Keeper'];
+    const colors = [k,'#29D3FF','#FFD23F','#9BE564','#A99BFF','#29D3FF',k,'#FFD23F','#9BE564',k,'#29D3FF','#FFD23F'];
+    return { kidColor: k, stickers: labels.map((label, i) => ({ label, ring: colors[i] })) };
+  }
+}
+</script>
+</body>
+</html>
