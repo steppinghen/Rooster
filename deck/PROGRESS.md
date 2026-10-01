@@ -312,7 +312,20 @@ Deviation: the reviewer agents run once over slices 2 to 4 together. Running the
   - time left never shows more than the mode's length.
 - The reviewer specs were updated where the intended behaviour changed: definer functions, refusals instead of no-ops, Q8, and the reset path.
 
-## Slice 12: Review packet (in progress)
+## Slice 12: Review packet (done; stopped at Gate 1)
 
 - SETUP.md: iPad setup, Guided Access and Screen Time.
-- Next: run phase-reviewer, finish REVIEW.md, then stop at **Gate 1**.
+- phase-reviewer finished REVIEW.md:
+  - an acceptance-check map;
+  - review items R1–R11;
+  - deviations D1–D14;
+  - gaps X1–X13;
+  - Q1–Q18;
+  - a device test list (Part A over http, Part B over HTTPS through `tailscale serve`);
+  - the Gate 2 checklist (G0–G11, C1–C8).
+- It found two defects, both fixed by the builder:
+  - **X1:** kid taps broke on non-secure origins because `crypto.randomUUID` was missing. Fixed with `src/lib/id.ts` and logging that can never throw.
+  - **X2:** a stale refresh could win after a reconnect. Fixed with the `refreshSeq` guard.
+- Also fixed: X3 (a Modules switch in Back Office), X4 (a Wave Check prompt after a routine), X6 (an About section), X12 (these docs), and X13 (anti-framing headers).
+- Tests for those fixes: e2e `gate1-fixes.spec.ts` (runs on the Tailscale http origin).
+- **Stop: Gate 1.** Next is the parent's review and device tests; then Gate 2 (G0–G11 by the parent, C1–C8 after approval).

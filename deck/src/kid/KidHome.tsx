@@ -215,6 +215,20 @@ export function KidHome({ kid }: { kid: Kid }) {
               </PressButton>
             )}
           </>
+        ) : rn.kind === 'finished' && tiles.some((t) => t.key === 'wave_check') && !s.checkins.some((c) => c.kid_id === kid.id && Date.parse(c.created_at) >= now - 6 * 3600_000 && familyDate(tz, new Date(c.created_at)) === today) ? (
+          <TaskCard className="home__next-card home__wave-prompt" data-testid="wave-prompt">
+            <span className="dk-title">{rn.routine.slot === 'bedtime' ? 'How was your day?' : "How's your wave?"}</span>
+            <PressButton
+              variant="ink"
+              onClick={() => {
+                speak(rn.routine.slot === 'bedtime' ? 'How was your day?' : "How's your wave?");
+                log('wave_check', 'opened');
+                nav('wave');
+              }}
+            >
+              <Icon name="waves" size={30} /> Wave Check
+            </PressButton>
+          </TaskCard>
         ) : rn.kind === 'finished' && rn.upcoming ? (
           <TaskCard className="home__next-card">
             <span className="dk-title">Next up: {rn.upcoming.name}</span>

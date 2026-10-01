@@ -5,7 +5,9 @@ import { Headline } from '../../ui/type';
 import { DataSection } from './office/DataSection';
 import { DevicesSection } from './office/DevicesSection';
 import { FamilySection } from './office/FamilySection';
+import { AboutSection } from './office/AboutSection';
 import { KidsSection } from './office/KidsSection';
+import { ModulesSection } from './office/ModulesSection';
 import { ParentsSection } from './office/ParentsSection';
 import { RoutinesSection } from './office/RoutinesSection';
 
@@ -23,6 +25,7 @@ export function BackOffice() {
       <DevicesSection familyId={who.familyId} />
       <ParentsSection familyId={who.familyId} myUserId={who.userId} />
       <FamilySection familyId={who.familyId} name={who.familyName} />
+      <ModulesSection familyId={who.familyId} />
       <DataSection familyName={who.familyName} />
       <Panel className="p-section">
         <h2 className="p-section__title">You</h2>
@@ -31,6 +34,7 @@ export function BackOffice() {
           <PressButton onClick={() => void signOut()}>Sign out</PressButton>
         </div>
       </Panel>
+      <AboutSection />
     </>
   );
 }

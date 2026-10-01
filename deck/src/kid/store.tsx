@@ -181,10 +181,15 @@ export function KidStoreProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const refreshSeq = useRef(0);
   const refresh = useCallback(async () => {
     if (!device) return;
+    // Only the most recently started refresh may apply: a slow one (retried after a network
+    // drop) must never put the iPad back into an older mode.
+    const seq = ++refreshSeq.current;
     try {
       const snap = await fetchSnapshot(device.familyId, { id: device.deviceId, label: device.label, ground: device.ground });
+      if (seq !== refreshSeq.current) return;
       // Keep optimistic completions the server hasn't seen yet.
       const pending = outbox.current.filter((i): i is Extract<OutboxItem, { kind: 'completion' }> => i.kind === 'completion').map((i) => i.row);
       for (const p of pending) {
@@ -202,7 +207,7 @@ export function KidStoreProvider({ children }: { children: ReactNode }) {
       setOnline(true);
       void flush();
     } catch {
-      setOnline(false);
+      if (seq === refreshSeq.current) setOnline(false);
     }
   }, [device, flush]);
 

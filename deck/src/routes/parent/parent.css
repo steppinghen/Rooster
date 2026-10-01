@@ -241,3 +241,12 @@
 .p-row__full {
   flex-basis: 100%;
 }
+
+.p-credits {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+}
