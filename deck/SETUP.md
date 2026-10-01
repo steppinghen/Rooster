@@ -63,6 +63,50 @@ Only two variables ever reach the browser; see `.env.example`.
 
 The production build bakes `VITE_SUPABASE_URL` into the Content-Security-Policy, so `connect-src` allows only that one Supabase origin.
 
-## Guided Access and Screen Time
+## Setting up a kid's iPad
 
-_Written in slice 12._
+The app can only control itself. Guided Access keeps a kid inside The Deck, and Screen Time limits everything else. Both are iPad settings, set once by a grown-up. Menu names below are as of iPadOS 18; check them on your iPad.
+
+### 1. Install The Deck and pair it
+
+1. On the iPad, open **Safari** and go to the app's address.
+2. Tap **Share**, then **Add to Home Screen**, then **Add**. From now on, always open The Deck from that icon: the installed app keeps its own sign-in, separate from Safari.
+3. Open it from the icon and tap **Set up this iPad for the kids**.
+4. On your phone, open The Deck and go to **Back Office → Devices**. Name the iPad and tap **Get a code**. Type the 8-digit code on the iPad within 10 minutes.
+5. The iPad shows **Who's riding?**. It stays paired through restarts. To unpair it, use **Back Office → Devices → Unpair…** on your phone; the iPad stops working on its next request.
+
+Optional:
+- Settings → Accessibility → **Spoken Content → Voices**: download a high-quality English voice for read-aloud.
+- Settings → Accessibility → **Motion → Reduce Motion**: turns off the celebration burst and other motion in The Deck too.
+
+### 2. Guided Access (keeps the iPad in The Deck)
+
+1. Settings → Accessibility → **Guided Access** → turn it **on**.
+2. **Passcode Settings → Set Guided Access Passcode.** Pick one the kids don't know, different from the iPad passcode. Face ID or Touch ID can also end a session.
+3. **Display Auto-Lock:** choose how long before the screen sleeps during Guided Access.
+4. Open The Deck from its Home Screen icon. **Triple-click the top button** (or the Home button) and choose **Guided Access**.
+5. Tap **Options**:
+   - leave **Touch** on;
+   - turn **Keyboards** off (kid screens use their own big buttons; do the pairing first);
+   - leave **Time Limit** off unless you want one.
+6. Tap **Start**.
+7. **To end:** triple-click, enter the Guided Access passcode, then tap **End**. You'll need to do this to change iPad settings or re-pair.
+
+### 3. Screen Time (limits everything else)
+
+1. Settings → **Screen Time** → turn it on → **This is My Child's iPad**. If your kids have child Apple Accounts in Family Sharing, you can manage this from your own phone instead.
+2. **Use Screen Time Passcode:** set one the kids don't know.
+3. **App Limits / Always Allowed:** add The Deck (it appears under its Home Screen name) to **Always Allowed**, then set limits for other apps or categories as you like.
+4. **Downtime:** optional. Make sure The Deck is Always Allowed, so Lights out and breathing keep working at bedtime.
+5. **Content & Privacy Restrictions:**
+   - **iTunes & App Store Purchases:** set installing apps to Don't Allow.
+   - **Siri:** limit web search content and explicit language if you don't want open-ended Siri answers on this iPad.
+   - **Web content:** "Limit Adult Websites" is safe. "Allowed Websites Only" can block The Deck from reaching its server. If you use it, add both the app address and the Supabase project address, then **test** pairing and a routine step before relying on it.
+   - **Don't** turn off Safari under Allowed Apps. Home Screen web apps can stop opening.
+6. Lock it down: Account Changes → Don't Allow, and Passcode Changes → Don't Allow.
+
+### 4. Check it works
+
+- **Mode switch:** from your phone, set a kid to **Lights out** with the heads-up. The iPad shows "Two more minutes, then it's lights out time." and switches after two minutes. Reopening the app doesn't escape it.
+- **Feelings are never locked out:** "I need to breathe" works in Lights out, and Wave Check works in every mode.
+- **Kids can't leave The Deck:** try the Home gesture, the app switcher and Control Center during Guided Access.
