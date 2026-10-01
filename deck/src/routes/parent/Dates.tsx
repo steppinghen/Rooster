@@ -5,7 +5,7 @@ import { useSession } from '../../lib/session';
 import { supabase } from '../../lib/supabase';
 import { KID_COLUMNS, type DeckEvent, type EventKind, type Kid } from '../../lib/types';
 import { must, useAsync } from '../../lib/useAsync';
-import { Field, Notice, Segmented, TextField } from '../../ui/forms';
+import { Check, Field, Notice, Segmented, TextField } from '../../ui/forms';
 import { Icon } from '../../ui/Icon';
 import { PressButton } from '../../ui/PressButton';
 import { Panel } from '../../ui/surfaces';
@@ -212,9 +212,7 @@ function EventEditor({ familyId, event, date, onDone }: { familyId: string; even
           { value: 'parents', label: 'Parents only' },
         ]}
       />
-      <label className="p-actions">
-        <input type="checkbox" checked={yearly} onChange={(e) => setYearly(e.target.checked)} /> Every year
-      </label>
+      <Check label="Every year" checked={yearly} onChange={setYearly} />
       {error && <Notice tone="error">{error}</Notice>}
       <div className="p-actions">
         <PressButton variant="ink" type="submit" disabled={!title.trim() || !onDate}>

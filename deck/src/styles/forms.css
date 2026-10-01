@@ -110,3 +110,24 @@ select.dk-input {
   background: var(--lime);
   color: var(--ink);
 }
+
+.dk-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--tap-parent);
+  padding: 4px 8px 4px 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dk-check input {
+  width: 28px;
+  height: 28px;
+  accent-color: var(--ink);
+  flex-shrink: 0;
+}
+
+a.dk-btn {
+  text-decoration: none;
+}

@@ -106,9 +106,9 @@ select is(
     'reset_plans:SELECT',
     'reset_plans:UPDATE(body_signs,tools)',
     'routine_completions:DELETE',
-    'routine_completions:INSERT(completed_at,completed_steps,family_id,kid_id,on_date,routine_id)',
+    'routine_completions:INSERT(completed_steps,family_id,kid_id,on_date,routine_id)',
     'routine_completions:SELECT',
-    'routine_completions:UPDATE(completed_at,completed_steps)',
+    'routine_completions:UPDATE(completed_steps)',
     'routines:DELETE',
     'routines:INSERT(family_id,kid_id,name,slot,sort_order,starts_at,steps)',
     'routines:SELECT',
@@ -117,6 +117,7 @@ select is(
     'rpc:cancel_pairing_code(p_code_id uuid)',
     'rpc:create_family(p_name text, p_display_name text, p_timezone text)',
     'rpc:create_pairing_code(p_label text)',
+    'rpc:current_checkin(p_kid_id uuid)',
     'rpc:delete_family(p_confirm text)',
     'rpc:device_checkin()',
     'rpc:export_family()',
@@ -130,7 +131,8 @@ select is(
     'rpc:verify_kid_pin(p_kid_id uuid, p_pin text)',
     'rpc:whoami()',
     'usage_events:INSERT(action,duration_ms,family_id,kid_id,module_key,target_id)',
-    'usage_events:SELECT'
+    'usage_events:SELECT',
+    'usage_monthly:SELECT'
   ]::text[],
   'authenticated has exactly the expected grants and RPCs; anon has none');
 

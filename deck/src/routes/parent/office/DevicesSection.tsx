@@ -130,6 +130,7 @@ export function DevicesSection({ familyId }: { familyId: string }) {
       ) : (
         <>
           {pairedNow && <Notice tone="ok">{open!.label} is paired.</Notice>}
+          {open && remaining === 0 && !pairedNow && <Notice tone="error">That code expired before it was used. Get a new one.</Notice>}
           <form onSubmit={getCode} className="p-actions" style={{ alignItems: 'flex-end' }}>
             <div style={{ flex: '1 1 220px' }}>
               <TextField label="Pair an iPad" maxLength={40} value={label} onChange={(e) => setLabel(e.target.value)} hint="A name you'll recognize, like Kitchen iPad." />

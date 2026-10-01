@@ -62,7 +62,7 @@ test.describe.serial('parent sign-in, family setup, second parent (slice 2)', ()
 
     await page.getByRole('button', { name: 'Add a kid' }).click();
     await editor.getByLabel('Nickname').fill('Kid B');
-    await editor.getByRole('radio', { name: 'Pictures + audio (pre-reader)' }).click();
+    await editor.getByRole('radio', { name: /Pictures \+ audio/ }).click();
     await editor.getByRole('radio', { name: 'Calm (always quiet)' }).click();
     await editor.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByTestId('kid-row')).toHaveCount(2);

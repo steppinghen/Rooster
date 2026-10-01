@@ -177,7 +177,7 @@ grant select on retarget_tables to authenticated;
 
 select set_eq('select audit.qn(t) from retarget_tables',
   array['public.feelings_checkins', 'public.kid_focus', 'public.reset_plans', 'public.routine_completions',
-        'public.routines', 'public.usage_events'],
+        'public.routines', 'public.usage_events', 'public.usage_monthly'],
   'composite (id, family_id) FKs exist on every kid- or routine-linked table');
 
 select tests.authenticate('00000000-0000-4000-8000-0000000000a1');
@@ -200,7 +200,6 @@ reset role;
 -- Every FK between two family-scoped tables should carry family_id, so no row can reference
 -- another family's row even through a security definer RPC. (Non-blocking today: the only
 -- offender, pairing_codes.used_by_device, is not writable through the API.)
-select todo('non-blocking: pairing_codes.used_by_device is a single-column FK to devices(id)', 1);
 select is_empty($$
   select con.conrelid::regclass::text || ' -> ' || con.confrelid::regclass::text || ' (' || con.conname || ')'
   from pg_constraint con
@@ -240,11 +239,9 @@ reset role;
 -- the error code differs (23505 vs 23503) depending on whether another family's row exists.
 -- Requires knowing another family's kid uuid, so non-blocking.
 select tests.authenticate('00000000-0000-4000-8000-0000000000a1');
-select todo('non-blocking: kid_focus PK (kid_id) is an existence oracle across families', 1);
 select is(audit.probe('public.kid_focus', 'insert', '00000000-0000-4000-8000-0000000000f2',
           '{"family_id":"00000000-0000-4000-8000-0000000000f1"}'), 'blocked:23503',
   'parent A: relabelled kid_focus insert fails on the FK, not on family 2''s existing row');
-select todo('non-blocking: reset_plans PK (kid_id) is an existence oracle across families', 1);
 select is(audit.probe('public.reset_plans', 'insert', '00000000-0000-4000-8000-0000000000f2',
           '{"family_id":"00000000-0000-4000-8000-0000000000f1"}'), 'blocked:23503',
   'parent A: relabelled reset_plans insert fails on the FK, not on family 2''s existing row');

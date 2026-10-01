@@ -318,7 +318,7 @@ test.describe('slice 2-4 parent: Back Office (iPhone)', () => {
 
     await page.getByRole('button', { name: 'Add a kid' }).click();
     await editor.getByLabel('Nickname').fill('Kid B');
-    await editor.getByRole('radio', { name: 'Pictures + audio (pre-reader)' }).click();
+    await editor.getByRole('radio', { name: /Pictures \+ audio/ }).click();
     await editor.getByRole('radio', { name: 'Calm (always quiet)' }).click();
     await editor.getByRole('radio', { name: 'cyan' }).click();
     await editor.getByRole('radio', { name: 'rooster' }).click();

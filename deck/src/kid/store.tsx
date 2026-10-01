@@ -16,7 +16,7 @@ import { familyDate, OUTBOX_KEY, SNAPSHOT_KEY } from './cache';
 export type Completion = { routine_id: string; kid_id: string; on_date: string; completed_steps: string[]; completed_at: string | null };
 
 export type Snapshot = {
-  version: 1;
+  version: 2;
   fetchedAt: string;
   serverOffsetMs: number; // server clock minus device clock
   family: { id: string; name: string; timezone: string };
@@ -27,7 +27,13 @@ export type Snapshot = {
   modules: ResolvedModule[];
   focus: KidFocus[];
   completions: Completion[];
+  resetPlans: ResetPlan[];
+  /** Each kid's own latest check-in from today (kids never see more than this). */
+  checkins: CurrentCheckin[];
 };
+
+export type ResetPlan = { kid_id: string; body_signs: string[]; tools: string[] };
+export type CurrentCheckin = { kid_id: string; feeling: string; size: number; created_at: string };
 
 export type OutboxItem =
   | { kind: 'completion'; key: string; row: Completion & { family_id: string } }
@@ -55,7 +61,7 @@ function write(key: string, value: unknown) {
 
 async function fetchSnapshot(familyId: string, device: Snapshot['device']): Promise<Snapshot> {
   const t0 = Date.now();
-  const [now, family, kids, routines, events, focus, modules, me] = await Promise.all([
+  const [now, family, kids, routines, events, focus, modules, me, plans] = await Promise.all([
     supabase.rpc('server_now'),
     supabase.from('families').select('id, name, timezone').eq('id', familyId).single(),
     supabase.from('kids').select(KID_COLUMNS).eq('family_id', familyId).order('sort_order').order('created_at'),
@@ -64,7 +70,18 @@ async function fetchSnapshot(familyId: string, device: Snapshot['device']): Prom
     supabase.from('kid_focus').select('kid_id, family_id, mode, since, ends_at, return_mode, pending_mode, switch_at, pending_ends_at, pinned, updated_at').eq('family_id', familyId),
     loadModules(familyId),
     supabase.from('devices').select('id, label, ground').eq('id', device.id).maybeSingle(),
+    supabase.from('reset_plans').select('kid_id, body_signs, tools').eq('family_id', familyId),
   ]);
+  const kidRows = must(kids) as Kid[];
+  const checkins = (
+    await Promise.all(
+      kidRows.map(async (k) => {
+        const { data } = await supabase.rpc('current_checkin', { p_kid_id: k.id });
+        const row = (Array.isArray(data) ? data[0] : data) as Omit<CurrentCheckin, 'kid_id'> | undefined;
+        return row ? { kid_id: k.id, ...row } : null;
+      }),
+    )
+  ).filter((c): c is CurrentCheckin => !!c);
   const fam = must(family) as Snapshot['family'];
   const today = familyDate(fam.timezone);
   const yesterday = familyDate(fam.timezone, new Date(Date.now() - 86400_000));
@@ -73,18 +90,20 @@ async function fetchSnapshot(familyId: string, device: Snapshot['device']): Prom
   ) as Completion[];
   const serverNow = new Date(must(now) as string).getTime();
   return {
-    version: 1,
+    version: 2,
     fetchedAt: new Date().toISOString(),
     serverOffsetMs: serverNow - (t0 + (Date.now() - t0) / 2),
     family: fam,
     // The device's own row, fresh: a parent may have changed its ground since pairing.
     device: (must(me) as Snapshot['device'] | null) ?? device,
-    kids: must(kids) as Kid[],
+    kids: kidRows,
     routines: must(routines) as Routine[],
     events: must(events) as DeckEvent[],
     modules,
     focus: must(focus) as KidFocus[],
     completions,
+    resetPlans: must(plans) as ResetPlan[],
+    checkins,
   };
 }
 
@@ -172,6 +191,11 @@ export function KidStoreProvider({ children }: { children: ReactNode }) {
         const at = snap.completions.findIndex((c) => c.routine_id === p.routine_id && c.kid_id === p.kid_id && c.on_date === p.on_date);
         if (at >= 0) snap.completions[at] = p;
         else snap.completions.push(p);
+      }
+      for (const i of outbox.current) {
+        if (i.kind === 'reset_plan') snap.resetPlans = [...snap.resetPlans.filter((p) => p.kid_id !== i.row.kid_id), i.row];
+        if (i.kind === 'checkin' && !snap.checkins.some((c) => c.kid_id === i.row.kid_id && c.created_at > i.key))
+          snap.checkins = [...snap.checkins.filter((c) => c.kid_id !== i.row.kid_id), { kid_id: i.row.kid_id, feeling: i.row.feeling, size: i.row.size, created_at: i.key }];
       }
       setSnapshot(snap);
       write(SNAPSHOT_KEY, snap);

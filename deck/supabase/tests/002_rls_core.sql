@@ -150,7 +150,7 @@ select is_empty('select 1 from public.routines', 'revoked device: sees no routin
 select is_empty('select 1 from public.kid_focus', 'revoked device: sees no focus modes');
 select throws_ok($$insert into public.feelings_checkins (family_id, kid_id, feeling, size) values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000ca', 'flat', 1)$$,
   '42501', null, 'revoked device: cannot write');
-select results_eq('select revoked_at is not null from public.devices', 'values (true)', 'revoked device: can still see that it was revoked');
+select is_empty('select 1 from public.devices', 'revoked device: cannot read even its own devices row (whoami says it was revoked)');
 reset role;
 
 -- Revoking takes effect immediately for a device that was working.

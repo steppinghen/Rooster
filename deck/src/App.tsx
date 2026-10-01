@@ -67,8 +67,8 @@ export function App() {
       <Routes>
         <Route path="/styleguide" element={<Styleguide />} />
         <Route path="/" element={<Gate />} />
-        <Route path="/welcome" element={<Only roles={['signed_out']}><Welcome /></Only>} />
-        <Route path="/parent/sign-in" element={<Only roles={['signed_out']}><SignIn /></Only>} />
+        <Route path="/welcome" element={<Only roles={['signed_out', 'unpaired']}><Welcome /></Only>} />
+        <Route path="/parent/sign-in" element={<Only roles={['signed_out', 'unpaired']}><SignIn /></Only>} />
         <Route path="/parent/mfa" element={<Only roles={['needs_mfa']}><Mfa /></Only>} />
         <Route path="/parent/setup" element={<Only roles={['bootstrap']}><Setup /></Only>} />
         <Route path="/parent/join" element={<Only roles={['invited']}><Join /></Only>} />

@@ -51,9 +51,18 @@ declare
   n_match int := 0;
   did uuid;
 begin
-  if uid is null or not private.is_anonymous_session() then
+  -- The account must still exist (a forgotten iPad's identity is deleted; its old token may
+  -- still be valid for a while).
+  if uid is null or not private.is_anonymous_session()
+     or not exists (select 1 from auth.users u where u.id = uid and u.is_anonymous) then
     return jsonb_build_object('ok', false, 'reason', 'not_a_device_session');
   end if;
+  -- A GET runs read-only: the attempt couldn't be recorded, so don't compare at all.
+  if current_setting('transaction_read_only') = 'on' then
+    return jsonb_build_object('ok', false, 'reason', 'not_a_device_session');
+  end if;
+  -- One redeem at a time per caller, so parallel requests can't slip past the count.
+  perform pg_advisory_xact_lock(hashtextextended('deck-pair:' || uid::text, 0));
   if exists (select 1 from public.devices d where d.device_user_id = uid) then
     return jsonb_build_object('ok', false, 'reason', 'already_paired');
   end if;
@@ -61,6 +70,9 @@ begin
      or (select count(*) from public.pairing_attempts a where a.attempted_at > now() - interval '10 minutes') >= 100 then
     return jsonb_build_object('ok', false, 'reason', 'too_many_attempts');
   end if;
+
+  -- Record the attempt before comparing; it is removed again only on success.
+  insert into public.pairing_attempts (user_id) values (uid);
 
   if coalesce(p_code, '') ~ '^[0-9]{8}$' then
     -- Salted hashes can't carry a unique index, so two families' live codes could in theory
@@ -85,7 +97,6 @@ begin
   end if;
 
   if c_id is null then
-    insert into public.pairing_attempts (user_id) values (uid);
     return jsonb_build_object('ok', false, 'reason', 'invalid_or_expired');
   end if;
 

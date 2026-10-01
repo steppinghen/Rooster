@@ -17,13 +17,18 @@ set search_path = ''
 as $$
 declare
   u jsonb := event -> 'user';
-  mail text := lower(coalesce(u ->> 'email', ''));
+  raw text := coalesce(u ->> 'email', '');
+  -- Plain ASCII is checked before lowering: lower() under ICU folds look-alikes (KELVIN SIGN
+  -- to k), so a non-ASCII address must never reach the comparison.
+  mail text := case when raw ~ '^[!-~]*$' then lower(raw) else '-' end;
 begin
-  -- iPads: anonymous users. They get nothing until they redeem a pairing code.
-  if coalesce((u ->> 'is_anonymous')::boolean, false) or coalesce(u -> 'app_metadata' ->> 'provider', '') = 'anonymous' then
+  -- iPads: anonymous users, with no email or phone. They get nothing until they redeem a
+  -- pairing code.
+  if (coalesce((u ->> 'is_anonymous')::boolean, false) or coalesce(u -> 'app_metadata' ->> 'provider', '') = 'anonymous')
+     and mail = '' and coalesce(u ->> 'phone', '') = '' then
     return '{}'::jsonb;
   end if;
-  if mail <> '' and exists (select 1 from public.parent_allowlist a where a.email = mail) then
+  if mail ~ '^[!-~]+$' and exists (select 1 from public.parent_allowlist a where a.email = mail) then
     return '{}'::jsonb;
   end if;
   return jsonb_build_object('error', jsonb_build_object(
@@ -43,8 +48,9 @@ create function private.confirmed_email() returns extensions.citext
 language sql stable security definer
 set search_path = ''
 as $$
-  select u.email::extensions.citext from auth.users u
-  where u.id = auth.uid() and u.email is not null and u.email_confirmed_at is not null
+  select lower(u.email)::extensions.citext from auth.users u
+  where u.id = auth.uid() and u.email is not null and u.email_confirmed_at is not null and not u.is_anonymous
+    and u.email ~ '^[!-~]+$'
 $$;
 revoke execute on function private.confirmed_email() from public, anon, authenticated;
 
@@ -271,6 +277,19 @@ declare
   n_anon int;
   n_unlisted int;
 begin
+  -- Guard: this deletes every auth user not tied to The Deck, so it only runs in a database
+  -- that is The Deck's own (no tables from other apps in public).
+  if exists (
+    select 1 from pg_catalog.pg_tables t
+    where t.schemaname = 'public' and t.tablename not in (
+      'families', 'parents', 'parent_allowlist', 'devices', 'pairing_codes', 'pairing_attempts', 'kids', 'pin_attempts',
+      'routines', 'routine_completions', 'events', 'feelings_checkins', 'reset_plans', 'module_catalog', 'family_modules',
+      'kid_focus', 'usage_events', 'usage_monthly')
+  ) then
+    raise warning 'cleanup_orphans: public has tables The Deck does not own; refusing to delete users';
+    return jsonb_build_object('skipped', true);
+  end if;
+
   delete from auth.users u
   where u.is_anonymous and u.created_at < now() - interval '24 hours'
     and not exists (select 1 from public.devices d where d.device_user_id = u.id);
@@ -290,6 +309,28 @@ begin
 end;
 $$;
 revoke execute on function private.cleanup_orphans() from public, anon, authenticated;
+
+-- An anonymous (iPad) account can never take an email or phone (updateUser would otherwise
+-- turn it into a real account without the before_user_created hook running). iPads never
+-- need one.
+create function private.anonymous_stays_anonymous() returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if old.is_anonymous and (
+       new.email is distinct from old.email or new.phone is distinct from old.phone
+       or not new.is_anonymous
+       or coalesce(new.email_change, '') <> coalesce(old.email_change, '')
+       or coalesce(new.phone_change, '') <> coalesce(old.phone_change, '')) then
+    raise exception 'an iPad account cannot take an email or phone' using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+revoke execute on function private.anonymous_stays_anonymous() from public, anon, authenticated;
+create trigger deck_anonymous_stays_anonymous before update on auth.users
+  for each row execute function private.anonymous_stays_anonymous();
 
 create extension if not exists pg_cron;
 select cron.schedule('deck-cleanup-orphans', '17 3 * * *', $$select private.cleanup_orphans()$$);

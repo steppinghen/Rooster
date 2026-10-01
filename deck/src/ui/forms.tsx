@@ -1,5 +1,8 @@
 import { useId, type InputHTMLAttributes, type ReactNode } from 'react';
 
+/** Ids for a field's hint and error, so the input can point at them (aria-describedby). */
+const describedBy = (id: string, hint?: string, error?: string | null) => (error ? `${id}-error` : hint ? `${id}-hint` : undefined);
+
 export function Field({ label, hint, error, children, htmlFor }: { label: string; hint?: string; error?: string | null; children: ReactNode; htmlFor?: string }) {
   return (
     <div className="dk-field">
@@ -7,9 +10,13 @@ export function Field({ label, hint, error, children, htmlFor }: { label: string
         {label}
       </label>
       {children}
-      {hint && !error && <p className="dk-field__hint">{hint}</p>}
+      {hint && !error && (
+        <p className="dk-field__hint" id={htmlFor ? `${htmlFor}-hint` : undefined}>
+          {hint}
+        </p>
+      )}
       {error && (
-        <p className="dk-field__error" role="alert">
+        <p className="dk-field__error" role="alert" id={htmlFor ? `${htmlFor}-error` : undefined}>
           {error}
         </p>
       )}
@@ -17,11 +24,21 @@ export function Field({ label, hint, error, children, htmlFor }: { label: string
   );
 }
 
+/** A checkbox with a parent-size (48pt) hit area. */
+export function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="dk-check">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span>{label}</span>
+    </label>
+  );
+}
+
 export function TextField({ label, hint, error, ...input }: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string | null }) {
   const id = useId();
   return (
     <Field label={label} hint={hint} error={error} htmlFor={id}>
-      <input id={id} className="dk-input" aria-invalid={error ? true : undefined} {...input} />
+      <input id={id} className="dk-input" aria-invalid={error ? true : undefined} aria-describedby={describedBy(id, hint, error)} {...input} />
     </Field>
   );
 }
@@ -42,6 +59,7 @@ export function CodeField({ label, length, value, onChange, hint, error, autoFoc
         autoFocus={autoFocus}
         type={secret ? 'password' : 'text'}
         aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(id, hint, error)}
         onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, length))}
       />
     </Field>

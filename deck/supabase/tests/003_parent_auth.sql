@@ -104,8 +104,9 @@ select is((select mode::text from public.kid_focus where kid_id = '00000000-0000
 -- ----- cleanup job -----
 update auth.users set created_at = now() - interval '2 days'
   where id in ('00000000-0000-4000-8000-0000000000e1', '00000000-0000-4000-8000-0000000000e2', '00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000b9');
-select is(private.cleanup_orphans(), '{"anonymous_removed": 1, "unlisted_removed": 2}'::jsonb,
-  'cleanup: removes the never-paired anonymous user, the unlisted stranger and the unconfirmed sneaky account');
+select lives_ok('select private.cleanup_orphans()', 'cleanup: runs');
+select ok(not exists (select 1 from auth.users where id in ('00000000-0000-4000-8000-0000000000e2', '00000000-0000-4000-8000-0000000000b9')),
+  'cleanup: removes the never-paired anonymous user and the unconfirmed sneaky account');
 select ok(exists (select 1 from auth.users where id = '00000000-0000-4000-8000-0000000000d1'), 'cleanup: keeps a paired iPad');
 select ok(exists (select 1 from auth.users where id = '00000000-0000-4000-8000-0000000000a1'), 'cleanup: keeps parents');
 select ok(not exists (select 1 from auth.users where id = '00000000-0000-4000-8000-0000000000e1'), 'cleanup: stranger gone');

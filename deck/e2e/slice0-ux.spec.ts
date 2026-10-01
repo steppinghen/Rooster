@@ -188,7 +188,9 @@ test.describe('slice 0: volume rules', () => {
         const n = await pick(`set-${ground}-normal`, sel);
         const f = await pick(`set-${ground}-focus`, sel);
         expect(f, `${sel} outline/shadow/font differ between normal and focus`).toEqual(n);
-        for (const x of n) expect(x.bc, `${sel} outline is ink`).toBe('rgb(10, 8, 24)');
+        // The ink "I did it!" button gets a lilac edge on the night ground (3:1 non-text
+        // contrast, slice 7); every other outline is ink.
+        for (const x of n) expect(x.bc, `${sel} outline is ink`).toMatch(ground === 'night' && sel === '.dk-btn' ? /^rgb\((10, 8, 24|122, 114, 152)\)$/ : /^rgb\(10, 8, 24\)$/);
       }
       const headFont = async (id: string) => page.getByTestId(id).locator('.dk-headline').evaluate((el) => getComputedStyle(el).fontFamily);
       expect(await headFont(`set-${ground}-focus`)).toBe(await headFont(`set-${ground}-normal`));

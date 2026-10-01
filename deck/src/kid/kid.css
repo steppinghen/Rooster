@@ -180,3 +180,34 @@
     width: 80px;
   }
 }
+
+.pin-key {
+  padding-inline: 0;
+}
+
+.pin-key svg {
+  flex-shrink: 0;
+}
+
+.pin-card__ask {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pin-card__speak {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.pin-who {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pin-who__name {
+  font-family: var(--font-display);
+  font-size: 30px;
+}

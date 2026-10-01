@@ -5,6 +5,9 @@ import { Headline } from '../ui/type';
 import { getCurrentKid } from './currentKid';
 import { KidHome } from './KidHome';
 import { TourDates } from './TourDates';
+import { Breathe } from './wave/Breathe';
+import { ResetPlan } from './wave/ResetPlan';
+import { WaveCheck } from './wave/WaveCheck';
 import { Picker } from './Picker';
 import { RoutineRun } from './RoutineRun';
 import { Routines } from './Routines';
@@ -40,6 +43,9 @@ function KidScope() {
       <Route index element={<KidHome kid={kid} />} />
       <Route path="routines" element={<Routines kid={kid} />} />
       <Route path="dates" element={<TourDates kid={kid} />} />
+      <Route path="wave" element={<WaveCheck kid={kid} />} />
+      <Route path="breathe" element={<Breathe kid={kid} />} />
+      <Route path="reset" element={<ResetPlan kid={kid} />} />
       <Route path="routine/:routineId" element={<RoutineRun kid={kid} />} />
       <Route path="*" element={<Navigate to={`/kid/${kid.id}`} replace />} />
     </Routes>

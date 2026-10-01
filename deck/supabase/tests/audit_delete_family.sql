@@ -163,14 +163,13 @@ select ok(a.others = b.others, format('delete family: rows of other families and
   from after a join before b using (tbl);
 
 -- Lockout rows are keyed by user_id with no family link, so the cascade can't reach them.
-select todo('non-blocking: pairing_attempts has no family/device link; delete_family must clear it explicitly', 1);
 select is((select mine from after where tbl = 'public.pairing_attempts'), 0::bigint,
   'delete family: the family''s iPads'' pairing attempts are gone');
 
--- The family's device and parent auth users are not cascaded (FKs point the other way), so
--- delete_family must delete the device users itself. Until then they must be powerless.
-select isnt_empty($$select 1 from auth.users where id = '00000000-0000-4000-8000-0000000000d1'$$,
-  'note: deleted family''s iPad auth user still exists (slice 6 must delete it)');
+-- Deleting the family's devices rows removes the iPads' anonymous auth users too (the
+-- devices_forgotten trigger); delete_family also removes the parents' accounts.
+select is_empty($$select 1 from auth.users where id = '00000000-0000-4000-8000-0000000000d1'$$,
+  'delete family: the deleted family''s iPad auth user is gone');
 select tests.authenticate('00000000-0000-4000-8000-0000000000d1', 'aal1', true);
 select ok(result in ('none', 'denied'), format('former iPad of deleted family: %s %s -> %s', tbl, op, result))
   from audit.sweep() where tbl <> 'public.module_catalog';

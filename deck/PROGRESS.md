@@ -198,4 +198,40 @@ Deviation: the reviewer agents run once over slices 2 to 4 together. Running the
 - Surfaces forward extra attributes. The kid screen is named `TourDates.tsx` (macOS file names are case-insensitive).
 - e2e `tour-dates.spec.ts`.
 
-Next: slice 9 (Wave Check).
+## Reviews of slices 2–4 (done)
+
+- **rls-auditor:** 2 blocking findings (invitation takeover; lockout bypass through GET), fixed in place. See REVIEW.md R1b. It added `audit_hook_and_onboarding`, `audit_lockouts`, `audit_cleanup_orphans` and `audit_rpcs_and_revocation`. All its `todo`s are fixed and promoted. **1,870 assertions pass.**
+- **kid-ux-tester:** 5 blocking findings, fixed:
+  - Pair and Sign in have Back links, and Welcome and Sign in are open to an unpaired session.
+  - The PIN pad has read-aloud.
+  - The PIN Delete and Clear keys are no longer squeezed.
+  - Parent checkboxes are 48pt (`Check`).
+- Non-blocking fixes from the same pass:
+  - `aria-describedby` links errors and hints to their fields.
+  - An expired pairing code says so on the phone.
+  - The PIN pad uses night for a Lights-out kid.
+  - The PIN pad warns at 2 tries left and shows the nickname.
+  - The "pre-reader" label no longer wraps.
+  - Button-styled links have no underline.
+- Its specs (`slice2-4-*.spec.ts`, `helpers/qa.ts`) were updated for the intended changes: the ink button's night edge and the PIN speaker.
+- Carried to slice 11:
+  - The Today dashboard (the marker overlapping the headline on iPad, and the rail wordmark).
+  - The picker and PIN pad leave the lower screen empty.
+
+## Slice 9: Wave Check (built)
+
+- Migration `20261001000600_wave_check.sql`:
+  - `current_checkin(kid)`: the kid's latest check-in from today, in the family time zone. Devices still can't read the table.
+  - `private.purge_old_checkins()` with the 30-day `deck-purge-checkins` job.
+  - `usage_monthly` table plus `private.rollup_old_usage()` with the 90-day `deck-rollup-usage` job.
+  - `export_family` includes `usage_monthly`.
+- Kid:
+  - `WaveCheck`: pick a feeling (surf word, plain word, 3D face, color), then how big (5 sizes), then thanks with no score. It offers breathing, plus the reset plan for Flat or Choppy.
+  - The moment comes from the current routine; at bedtime it asks "How was your day?" on night.
+  - `Breathe`: balloon breathing with the turtle, 3 breaths at 4 s in and 5 s out. Reduced motion keeps the balloon still.
+  - `ResetPlan`: body signs, then tools (the turtle's shell first), then the plan.
+  - Feeling colors come from volume switches: bold fills at normal, faces only at focus.
+- The snapshot is v2 (adds reset plans and current check-ins).
+- Tests: `007_wave_check.sql`; e2e `wave-check.spec.ts`.
+
+Next: slice 10 (focus modes).

@@ -55,7 +55,7 @@ test('pair an iPad from the phone, then unpair it (slice 3)', async ({ browser }
   await k.getByRole('button', { name: 'Pair again' }).click();
   await expect(k.getByLabel('Pairing code')).toBeVisible();
   // Nothing about the family stays cached on the iPad.
-  expect(await k.evaluate(() => localStorage.getItem('deck.snapshot.v1'))).toBeNull();
+  expect(await k.evaluate(() => localStorage.getItem('deck.snapshot.v2'))).toBeNull();
 
   await phone.close();
   await ipad.close();

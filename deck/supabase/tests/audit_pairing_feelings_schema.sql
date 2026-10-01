@@ -33,12 +33,14 @@ select throws_ok($$insert into public.pairing_codes (family_id, code_hash, label
   values ('00000000-0000-4000-8000-0000000000f1', 'x', 'Long', now() + interval '11 minutes')$$,
   '23514', null, 'a code cannot be created with more than 10 minutes to live');
 -- But the bound is relative to created_at, which is an ordinary writable column.
-select todo('non-blocking: expiry is bounded by created_at, not now(); pin created_at with a trigger', 1);
-select throws_ok($$insert into public.pairing_codes (family_id, code_hash, label, created_at, expires_at)
-  values ('00000000-0000-4000-8000-0000000000f1', 'x', 'Future', now() + interval '1 year', now() + interval '1 year 10 minutes')$$,
-  '23514', null, 'a code cannot be valid for a year by setting created_at in the future');
+-- (Fixed in slice 3 by the pairing_codes_clock trigger; a real bcrypt hash keeps the shape
+-- check from masking the clock check.)
+insert into public.pairing_codes (family_id, code_hash, label, created_at, expires_at)
+  values ('00000000-0000-4000-8000-0000000000f1', extensions.crypt('24682468', extensions.gen_salt('bf', 4)), 'Future',
+          now() + interval '1 year', now() + interval '1 year 10 minutes');
+select ok((select created_at <= now() and expires_at <= now() + interval '10 minutes' from public.pairing_codes where label = 'Future'),
+  'a code cannot be valid for a year by setting created_at in the future (server clamps both)');
 -- "Stored hashed" is a convention, not a constraint.
-select todo('non-blocking: nothing stops a plaintext code landing in code_hash', 1);
 select throws_ok($$insert into public.pairing_codes (family_id, code_hash, label) values ('00000000-0000-4000-8000-0000000000f1', '12345678', 'Plain')$$,
   '23514', null, 'code_hash rejects a plaintext 8-digit code');
 

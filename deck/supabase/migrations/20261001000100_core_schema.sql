@@ -59,9 +59,24 @@ create table public.parent_allowlist (
   added_by uuid references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
   joined_at timestamptz,
-  unique nulls not distinct (family_id, email)
+  unique nulls not distinct (family_id, email),
+  -- Stored lowercase ASCII, so comparisons are exact and no look-alike character can match a
+  -- listed address (citext's operators aren't on the empty search_path the functions use).
+  check (email::text = lower(email::text) and email::text ~ '^[!-~]+$')
 );
 create index parent_allowlist_email on public.parent_allowlist (email);
+
+create function private.allowlist_lower() returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.email := lower(btrim(new.email::text));
+  return new;
+end;
+$$;
+create trigger parent_allowlist_lower before insert or update of email on public.parent_allowlist
+  for each row execute function private.allowlist_lower();
 
 create table public.devices (
   id uuid primary key default gen_random_uuid(),
@@ -261,22 +276,63 @@ create trigger routine_completions_touch before update on public.routine_complet
   for each row execute function private.touch_updated_at();
 
 -- A completion must be for a kid the routine applies to.
+-- A completion must be for a kid the routine applies to, on a sensible day. completed_at is
+-- the server's: set when every step of the routine is done, never by the writer.
 create function private.check_completion_kid() returns trigger
 language plpgsql security definer
 set search_path = ''
 as $$
 declare
   owner uuid;
+  all_ids text[];
+  today date;
 begin
-  select r.kid_id into owner from public.routines r where r.id = new.routine_id;
+  select r.kid_id, array(select e ->> 'id' from jsonb_array_elements(r.steps) e) into owner, all_ids
+    from public.routines r where r.id = new.routine_id;
   if owner is not null and owner <> new.kid_id then
     raise exception 'routine % is not assigned to kid %', new.routine_id, new.kid_id using errcode = '23514';
   end if;
+  select (now() at time zone f.timezone)::date into today from public.families f where f.id = new.family_id;
+  if new.on_date > today + 1 or new.on_date < today - 7 then
+    raise exception 'routine progress must be for the last week' using errcode = '23514';
+  end if;
+  new.completed_at := case
+    when all_ids <@ new.completed_steps then coalesce(case when tg_op = 'UPDATE' then old.completed_at end, now())
+  end;
   return new;
 end;
 $$;
 create trigger routine_completions_kid before insert or update on public.routine_completions
   for each row execute function private.check_completion_kid();
+
+-- Time zones must be real ones (create_family checks too; this covers later edits).
+create function private.check_timezone() returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if not exists (select 1 from pg_catalog.pg_timezone_names z where z.name = new.timezone) then
+    raise exception 'unknown time zone %', new.timezone using errcode = '22023';
+  end if;
+  return new;
+end;
+$$;
+create trigger families_timezone before insert or update of timezone on public.families
+  for each row execute function private.check_timezone();
+
+-- Forgetting a device forgets its identity: that anonymous user can never pair again.
+create function private.device_forgotten() returns trigger
+language plpgsql security definer
+set search_path = ''
+as $$
+begin
+  delete from public.pairing_attempts where user_id = old.device_user_id;
+  delete from auth.users u where u.id = old.device_user_id and u.is_anonymous;
+  return old;
+end;
+$$;
+create trigger devices_forgotten after delete on public.devices
+  for each row execute function private.device_forgotten();
 
 -- ---------------------------------------------------------------------------------------------
 -- Tour Dates
@@ -477,7 +533,7 @@ create policy allowlist_delete on public.parent_allowlist for delete to authenti
 -- so it can show "this iPad was unpaired"). Pairing and revocation go through RPCs.
 create policy devices_select on public.devices for select to authenticated
   using ((select private.is_parent_of(family_id))
-         or (device_user_id = (select auth.uid()) and (select private.is_anonymous_session())));
+         or (device_user_id = (select auth.uid()) and (select private.is_anonymous_session()) and revoked_at is null));
 create policy devices_update on public.devices for update to authenticated
   using ((select private.is_parent_of(family_id))) with check ((select private.is_parent_of(family_id)));
 create policy devices_delete on public.devices for delete to authenticated
@@ -620,8 +676,8 @@ grant update (kid_id, slot, name, starts_at, steps, sort_order) on public.routin
 grant delete on public.routines to authenticated;
 
 grant select on public.routine_completions to authenticated;
-grant insert (family_id, routine_id, kid_id, on_date, completed_steps, completed_at) on public.routine_completions to authenticated;
-grant update (completed_steps, completed_at) on public.routine_completions to authenticated;
+grant insert (family_id, routine_id, kid_id, on_date, completed_steps) on public.routine_completions to authenticated;
+grant update (completed_steps) on public.routine_completions to authenticated;
 grant delete on public.routine_completions to authenticated;
 
 grant select on public.events to authenticated;

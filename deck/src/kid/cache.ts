@@ -1,4 +1,4 @@
-export const SNAPSHOT_KEY = 'deck.snapshot.v1';
+export const SNAPSHOT_KEY = 'deck.snapshot.v2'; // v2 adds resetPlans and checkins
 export const OUTBOX_KEY = 'deck.outbox.v1';
 
 export function clearDeviceCache() {

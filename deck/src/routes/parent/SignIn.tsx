@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { CodeField, Notice, TextField } from '../../ui/forms';
 import { PressButton } from '../../ui/PressButton';
@@ -19,6 +20,7 @@ export function SignIn() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resendIn, setResendIn] = useState(0);
+  const nav = useNavigate();
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -63,6 +65,9 @@ export function SignIn() {
           <PressButton variant="ink" block type="submit" disabled={busy || !email.includes('@')}>
             {busy ? 'Sending…' : 'Email me a code'}
           </PressButton>
+          <button type="button" className="auth__link" onClick={() => nav('/welcome')}>
+            Back
+          </button>
         </form>
       </AuthLayout>
     );

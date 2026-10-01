@@ -196,19 +196,16 @@ reset role;
 select tests.authenticate('00000000-0000-4000-8000-0000000000d1', 'aal2', false);
 select ok(result in ('none', 'denied'), format('device id as non-anonymous session: %s %s -> %s', tbl, op, result))
   from audit.sweep() where not (tbl = 'public.devices' and op = 'select');
-select todo('non-blocking: devices_select matches device_user_id = auth.uid() without checking is_anonymous', 1);
 select is_empty('select 1 from public.devices',
   'device id as non-anonymous session: cannot read its old devices row (family_id, label)');
 reset role;
 
--- 9. Revoked device: zero access, except it may still read its own devices row (to show
---    "this iPad was unpaired"). That one exception is asserted precisely below.
+-- 9. Revoked device: zero access everywhere, including its own devices row (it learns it was
+--    unpaired from whoami(), which reveals no family data). Hardened after the slice 2-4 audit.
 select tests.authenticate('00000000-0000-4000-8000-0000000000d9', 'aal1', true);
 select ok(result in ('none', 'denied'), format('revoked device: %s %s -> %s', tbl, op, result))
-  from audit.sweep() where not (tbl = 'public.devices' and op = 'select');
-select results_eq($$select id, revoked_at is not null from public.devices$$,
-  $$values ('00000000-0000-4000-8000-000000000dd9'::uuid, true)$$,
-  'revoked device: the only row it can read anywhere is its own (revoked) devices row');
+  from audit.sweep();
+select is_empty($$select 1 from public.devices$$, 'revoked device: cannot read even its own devices row');
 reset role;
 
 -- 10. The anon key with no session.

@@ -224,7 +224,6 @@ select throws_ok($$insert into public.reset_plans (kid_id, family_id, tools) val
   'device: cannot upsert another family''s reset plan');
 
 -- Unbounded element sizes on device-writable arrays (storage abuse from a kid tablet).
-select todo('non-blocking: reset_plans / routine_completions array elements have no length limit', 1);
 select throws_ok($$update public.reset_plans set body_signs = array[repeat('x', 100000)]$$, '23514', null,
   'device: cannot store a 100 kB reset-plan element');
 reset role;

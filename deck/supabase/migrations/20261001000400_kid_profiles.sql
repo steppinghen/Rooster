@@ -26,17 +26,23 @@ begin
   if hash is null then
     return jsonb_build_object('ok', true);
   end if;
+  -- A GET runs read-only: the attempt couldn't be recorded, so don't compare at all.
+  if current_setting('transaction_read_only') = 'on' then
+    return jsonb_build_object('ok', false, 'reason', 'not_allowed');
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended('deck-pin:' || p_kid_id::text || ':' || uid::text, 0));
   select count(*), min(a.attempted_at) into fails, oldest from public.pin_attempts a
     where a.kid_id = p_kid_id and a.user_id = uid and a.attempted_at > now() - interval '5 minutes';
   if fails >= 5 then
     return jsonb_build_object('ok', false, 'reason', 'locked',
       'retry_after_s', greatest(1, ceil(extract(epoch from (oldest + interval '5 minutes' - now())))::int));
   end if;
+  -- Record the attempt before comparing; it is removed again only on success.
+  insert into public.pin_attempts (kid_id, user_id) values (p_kid_id, uid);
   if coalesce(p_pin, '') ~ '^[0-9]{4}$' and extensions.crypt(p_pin, hash) = hash then
     delete from public.pin_attempts where kid_id = p_kid_id and user_id = uid;
     return jsonb_build_object('ok', true);
   end if;
-  insert into public.pin_attempts (kid_id, user_id) values (p_kid_id, uid);
   return jsonb_build_object('ok', false, 'reason', 'wrong', 'tries_left', 4 - fails);
 end;
 $$;
@@ -58,7 +64,6 @@ as $$
 declare
   fid uuid;
   all_ids text[];
-  done timestamptz;
 begin
   select r.family_id, array(select e ->> 'id' from jsonb_array_elements(r.steps) e)
     into fid, all_ids
@@ -71,13 +76,11 @@ begin
     select u.s from unnest(coalesce(p_steps, '{}')) with ordinality u(s, n)
     where u.s = any (all_ids)
     group by u.s order by min(u.n));
-  done := case when cardinality(p_steps) = cardinality(all_ids) then now() end;
-  insert into public.routine_completions as rc (family_id, routine_id, kid_id, on_date, completed_steps, completed_at)
-    values (fid, p_routine_id, p_kid_id, p_on_date, p_steps, done)
+  -- completed_at is set by the routine_completions trigger when every step is done.
+  insert into public.routine_completions (family_id, routine_id, kid_id, on_date, completed_steps)
+    values (fid, p_routine_id, p_kid_id, p_on_date, p_steps)
   on conflict (family_id, routine_id, kid_id, on_date) do update
-    set completed_steps = excluded.completed_steps,
-        completed_at = case when excluded.completed_at is null then null
-                            else coalesce(rc.completed_at, excluded.completed_at) end;
+    set completed_steps = excluded.completed_steps;
 end;
 $$;
 

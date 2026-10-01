@@ -123,6 +123,9 @@
   --avatar-text: var(--ink);
   --avatar-border: var(--ink);
   --avatar-shadow: var(--shadow-hard-sm);
+  /* Wave Check tiles: the feeling's color as a bold fill. */
+  --feel-fill: initial;
+  --feel-text: var(--ink);
   --halftone-on: 1;
   --dot-max: 999px;
 }
@@ -146,6 +149,9 @@
   --avatar-text: var(--text);
   --avatar-border: initial;
   --avatar-shadow: none;
+  /* In focus (e.g. Last Run) only the faces carry color. */
+  --feel-fill: var(--surface);
+  --feel-text: var(--text);
   --halftone-on: 0;
   /* Progress dots stay small in focus: the accent is an indicator, not a fill. */
   --dot-max: 32px;

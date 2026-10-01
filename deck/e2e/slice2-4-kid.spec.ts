@@ -174,7 +174,7 @@ test.describe('slice 2-4 kid: picker and PIN pad (iPad)', () => {
 
       // One clear task: the keypad, plus Back. Nothing else to tap.
       const buttons = await page.getByRole('button').count();
-      expect(buttons).toBe(13); // 12 keys + Back
+      expect(buttons).toBe(14); // 12 keys + Back + Read it to me
 
       // Back to the picker in one tap.
       await page.getByRole('button', { name: "Back to Who's riding" }).click();

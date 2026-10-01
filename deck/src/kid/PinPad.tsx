@@ -6,6 +6,7 @@ import type { Ground } from '../theme/volume';
 import { Icon } from '../ui/Icon';
 import { KidAvatar } from '../ui/KidAvatar';
 import { PressButton } from '../ui/PressButton';
+import { effectiveFocus } from './focus';
 import { speak } from './speech';
 import { useKidStore } from './store';
 
@@ -16,7 +17,9 @@ const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'clear']
  * sees the hash. Wrong codes get a gentle retry, never a penalty.
  */
 export function PinPad({ kid, ground, onCancel, onUnlocked }: { kid: Kid; ground: Ground; onCancel: () => void; onUnlocked: () => void }) {
-  const { online } = useKidStore();
+  const { online, snapshot, now } = useKidStore();
+  // A kid in Lights out gets the night ground here too.
+  const lightsOut = effectiveFocus(snapshot?.focus.find((f) => f.kid_id === kid.id), now()).mode === 'lights_out';
   const [pin, setPin] = useState('');
   const [message, setMessage] = useState<string>('Type your secret code');
   const [busy, setBusy] = useState(false);
@@ -30,15 +33,17 @@ export function PinPad({ kid, ground, onCancel, onUnlocked }: { kid: Kid; ground
       setMessage('The Deck is offline. Ask a grown-up.');
       return;
     }
-    const r = data as { ok: boolean; reason?: string; retry_after_s?: number };
+    const r = data as { ok: boolean; reason?: string; retry_after_s?: number; tries_left?: number };
     if (r.ok) return onUnlocked();
     if (r.reason === 'locked') {
       const mins = Math.max(1, Math.ceil((r.retry_after_s ?? 300) / 60));
       setMessage(`Take a little break. Try again in ${mins} minute${mins === 1 ? '' : 's'}.`);
       speak('Take a little break, then try again.');
     } else {
-      setMessage('Not quite. Try again!');
-      speak('Not quite. Try again!');
+      const left = r.tries_left ?? 0;
+      const msg = left > 0 && left <= 2 ? `Not quite. ${left} more ${left === 1 ? 'try' : 'tries'}, then a little break.` : 'Not quite. Try again!';
+      setMessage(msg);
+      speak(msg);
     }
   }
 
@@ -52,18 +57,26 @@ export function PinPad({ kid, ground, onCancel, onUnlocked }: { kid: Kid; ground
   }
 
   return (
-    <RootTheme ground={ground} volume="focus">
+    <RootTheme ground={lightsOut ? 'night' : ground} volume="focus" scene={lightsOut ? 'lastrun' : 'default'}>
       <main className="kid kid--pin" data-audience="kid" data-age="prereader">
         <header className="kid__bar">
           <PressButton aria-label="Back to Who's riding" onClick={onCancel}>
             <Icon name="back" size={30} /> Back
           </PressButton>
-          <KidAvatar nickname={kid.nickname} avatar={kid.avatar} accent={kid.accent} size={80} />
+          <span className="pin-who">
+            <span className="pin-who__name">{kid.nickname}</span>
+            <KidAvatar nickname={kid.nickname} avatar={kid.avatar} accent={kid.accent} size={80} />
+          </span>
         </header>
         <div className="dk-card pin-card">
-          <p className="pin-card__msg" aria-live="polite">
-            {online ? message : 'The Deck is offline. Ask a grown-up to help.'}
-          </p>
+          <div className="pin-card__ask">
+            <p className="pin-card__msg" aria-live="polite">
+              {online ? message : 'The Deck is offline. Ask a grown-up to help.'}
+            </p>
+            <PressButton round aria-label="Read it to me" className="pin-card__speak" onClick={() => speak(online ? message : 'The Deck is offline. Ask a grown-up to help.')}>
+              <Icon name="speaker" size={32} />
+            </PressButton>
+          </div>
           <div className="pin-dots" aria-label={`${pin.length} of 4 typed`}>
             {[0, 1, 2, 3].map((i) => (
               <span key={i} className={i < pin.length ? 'pin-dot pin-dot--on' : 'pin-dot'} style={{ '--accent': `var(--${kid.accent})` } as React.CSSProperties} />

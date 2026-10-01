@@ -2,7 +2,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { artSrc } from '../../../art/art';
 import { supabase } from '../../../lib/supabase';
 import { ACCENTS, accentVar, type Accent, type AgeBand, type Kid, type Volume } from '../../../lib/types';
-import { CodeField, Field, Notice, Segmented, TextField } from '../../../ui/forms';
+import { Check, CodeField, Field, Notice, Segmented, TextField } from '../../../ui/forms';
 import { PressButton } from '../../../ui/PressButton';
 import { AVATAR_CHOICES } from './avatars';
 
@@ -90,7 +90,7 @@ export function KidEditor({ familyId, kid, nextSort, onDone }: { familyId: strin
         value={ageBand}
         onChange={setAgeBand}
         options={[
-          { value: 'prereader', label: 'Pictures + audio (pre-reader)' },
+          { value: 'prereader', label: 'Pictures + audio (pre\u2011reader)' },
           { value: 'reader', label: 'Words + audio (reader)' },
         ]}
       />
@@ -139,9 +139,7 @@ export function KidEditor({ familyId, kid, nextSort, onDone }: { familyId: strin
         />
       )}
       {kid?.has_pin && (
-        <label className="p-actions">
-          <input type="checkbox" checked={removePin} onChange={(e) => setRemovePin(e.target.checked)} /> Remove the PIN
-        </label>
+        <Check label="Remove the PIN" checked={removePin} onChange={setRemovePin} />
       )}
 
       {error && <Notice tone="error">{error}</Notice>}

@@ -119,6 +119,9 @@ begin
     ('00000000-0000-4000-8000-0000000000ca', '00000000-0000-4000-8000-0000000000f1', '{turtle}');
   insert into public.usage_events (family_id, kid_id, module_key, action) values
     ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000ca', 'routines', 'opened');
+  insert into public.usage_monthly (family_id, month, kid_id, module_key, action, events) values
+    ('00000000-0000-4000-8000-0000000000f1', '2026-01-01', '00000000-0000-4000-8000-0000000000ca', 'routines', 'opened', 3),
+    ('00000000-0000-4000-8000-0000000000f2', '2026-01-01', '00000000-0000-4000-8000-0000000000cc', 'routines', 'opened', 1);
   insert into public.parent_allowlist (email, family_id, joined_at) values
     ('fx-parent-a@example.test', '00000000-0000-4000-8000-0000000000f1', now()),
     ('fx-invited@example.test', '00000000-0000-4000-8000-0000000000f2', null);

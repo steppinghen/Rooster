@@ -17,7 +17,7 @@ const REASONS: Record<string, string> = {
  * code for a device role in the family. It never holds a parent's powers.
  */
 export function Pair() {
-  const { refresh } = useSession();
+  const { refresh, signOut } = useSession();
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +56,9 @@ export function Pair() {
         <PressButton variant="ink" block type="submit" disabled={busy || code.length !== 8}>
           {busy ? 'Pairing…' : 'Pair this iPad'}
         </PressButton>
+        <button type="button" className="auth__link" onClick={() => void signOut().then(() => window.location.assign('/welcome'))}>
+          Back
+        </button>
       </form>
     </AuthLayout>
   );
