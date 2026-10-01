@@ -81,8 +81,11 @@ export async function installQa(target: Page | BrowserContext) {
     (window as any).__spoken = [] as string[];
     try {
       const record = (u: { text: string }) => void (window as any).__spoken.push(u.text);
-      if (window.speechSynthesis) {
-        window.speechSynthesis.speak = record as any;
+      if ((window as any).SpeechSynthesis?.prototype) {
+        // Patch the prototype: WebKit can hand out a fresh speechSynthesis object after load.
+        (window as any).SpeechSynthesis.prototype.speak = function (u: { text: string }) {
+          record(u);
+        };
       } else {
         Object.defineProperty(window, 'speechSynthesis', { value: { speak: record, cancel() {}, getVoices: () => [] }, configurable: true });
         if (!(window as any).SpeechSynthesisUtterance) (window as any).SpeechSynthesisUtterance = class { constructor(public text: string) {} };

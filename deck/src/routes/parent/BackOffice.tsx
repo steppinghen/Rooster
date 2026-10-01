@@ -7,6 +7,7 @@ import { DevicesSection } from './office/DevicesSection';
 import { FamilySection } from './office/FamilySection';
 import { KidsSection } from './office/KidsSection';
 import { ParentsSection } from './office/ParentsSection';
+import { RoutinesSection } from './office/RoutinesSection';
 
 export function BackOffice() {
   const { who, signOut } = useSession();
@@ -18,6 +19,7 @@ export function BackOffice() {
         <p className="dk-muted">Parents only.</p>
       </header>
       <KidsSection familyId={who.familyId} />
+      <RoutinesSection familyId={who.familyId} />
       <DevicesSection familyId={who.familyId} />
       <ParentsSection familyId={who.familyId} myUserId={who.userId} />
       <FamilySection familyId={who.familyId} name={who.familyName} />

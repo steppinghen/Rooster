@@ -112,7 +112,7 @@
 .dk-btn--ink {
   --btn-bg: #15122e;
   --btn-fg: var(--paper);
-  border-color: var(--ink);
+  border-color: var(--ink-btn-edge, var(--ink));
 }
 
 .dk-btn--accent {

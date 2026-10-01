@@ -168,4 +168,19 @@ Deviation: the reviewer agents run once over slices 2 to 4 together. Running the
   - The `exportZip` unit test.
   - e2e `export-delete.spec.ts`.
 
-Next: slice 7 (routines, the routine screen, the ground picker). The reviewers for 2–4 are still running.
+## Slice 7: Routines (Dawn Patrol and Last Run) (built)
+
+- Parent:
+  - Back Office Routines section with Dawn Patrol, After School and Last Run templates.
+  - The editor sets name, slot, start time, and everyone or one kid.
+  - Steps: rename, change the picture from the step art, add (stable slug ids), move up, remove, delete with a confirm.
+- Device ground: a picker per paired iPad (Auto / Day / Night / Follow iPad). The snapshot reads the device row fresh, so a change applies on the iPad's next refresh.
+- Kid:
+  - `KidFrame` puts Home and Wave Check (80pt) on every non-home kid screen.
+  - `Routines` list and `RoutineRun` (one step per screen: big art, words, read-aloud, "I did it!", celebration, then home).
+  - The bedtime routine runs in the Last Run scene.
+  - `useStepDone` is shared with home.
+- The ink button gets a lilac edge at night (`--ink-btn-edge`) for 3:1 non-text contrast. This was a slice 0 carry-over.
+- e2e `routines.spec.ts`: template, edit, add, reorder and save on the phone; the Night ground setting wins over Auto; the iPad runs the steps; Home and Wave Check are present; no scroll.
+
+Next: slice 8 (Tour Dates). The reviewers for 2–4 are still running.

@@ -75,6 +75,8 @@
   --nav-bg: var(--ink);
   --nav-text: var(--cream);
   --focus-ring: var(--yellow);
+  /* The ink button would vanish into the night ground; its edge gets 3:1 contrast instead. */
+  --ink-btn-edge: #7a7298;
   --day-on: 0;
   color-scheme: dark;
 }
@@ -95,6 +97,7 @@
   --nav-bg: var(--ink);
   --nav-text: var(--cream);
   --focus-ring: var(--magenta);
+  --ink-btn-edge: var(--ink);
   --day-on: 1;
   color-scheme: light;
 }

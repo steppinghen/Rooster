@@ -5,6 +5,8 @@ import { Headline } from '../ui/type';
 import { getCurrentKid } from './currentKid';
 import { KidHome } from './KidHome';
 import { Picker } from './Picker';
+import { RoutineRun } from './RoutineRun';
+import { Routines } from './Routines';
 import { KidStoreProvider, useKidStore } from './store';
 
 function FirstLoad() {
@@ -35,6 +37,8 @@ function KidScope() {
   return (
     <Routes>
       <Route index element={<KidHome kid={kid} />} />
+      <Route path="routines" element={<Routines kid={kid} />} />
+      <Route path="routine/:routineId" element={<RoutineRun kid={kid} />} />
       <Route path="*" element={<Navigate to={`/kid/${kid.id}`} replace />} />
     </Routes>
   );

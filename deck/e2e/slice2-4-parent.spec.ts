@@ -399,6 +399,24 @@ test.describe('slice 2-4 parent: Back Office (iPhone)', () => {
     await expect(page.getByRole('button', { name: "I'm a grown-up" })).toBeVisible();
   });
 
+  test('every tab in the tab bar opens its own screen (no dead nav items)', async ({ page, context }) => {
+    const p = await makeParent();
+    await useSession(context, p.session);
+    await page.goto('/parent');
+    const tabs = page.getByRole('navigation', { name: 'Main' }).getByRole('button');
+    await expect(tabs.first()).toBeVisible();
+    const labels = await tabs.allTextContents();
+    expect(labels.length).toBeGreaterThan(1);
+    for (const label of labels) {
+      await page.goto('/parent');
+      await page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: label.trim() }).click();
+      await page.waitForTimeout(500);
+      const current = await page.getByRole('navigation', { name: 'Main' }).locator('[aria-current="page"]').textContent();
+      expect.soft(current?.trim(), `tapping "${label.trim()}" lands on ${page.url()} with "${current?.trim()}" highlighted`).toBe(label.trim());
+      if (current?.trim() !== label.trim()) await shoot(page, `iphone-tab-${label.trim().toLowerCase().replace(/\s+/g, '-')}-dead-night`);
+    }
+  });
+
   test('an expired pairing code on the phone says so', async ({ page, context }) => {
     const p = await makeParent();
     await useSession(context, p.session);

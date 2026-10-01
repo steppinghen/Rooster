@@ -151,3 +151,32 @@
   min-height: clamp(88px, 9vh, 104px);
   font-size: 40px;
 }
+
+/* ---------- Frame ---------- */
+
+.frame__bar .dk-headline {
+  flex: 1;
+  text-align: center;
+  min-width: 0;
+}
+
+.frame__btn {
+  min-height: 80px;
+  font-family: var(--font-ui);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.frame__spacer {
+  width: 80px;
+}
+
+@media (max-width: 700px) {
+  .frame__btn-text {
+    display: none;
+  }
+  .frame__btn {
+    padding: 0;
+    width: 80px;
+  }
+}

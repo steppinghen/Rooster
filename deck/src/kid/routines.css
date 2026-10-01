@@ -1,0 +1,65 @@
+.rt-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 20px;
+}
+
+.rt-item {
+  min-height: 200px;
+  font-size: 22px;
+}
+
+.rt-item__name {
+  font-family: var(--font-display);
+  font-size: 30px;
+}
+
+.rt-run__dots {
+  display: flex;
+  justify-content: center;
+}
+
+.rt-run__card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2.4vh, 26px);
+  padding: clamp(18px, 3vh, 36px) 20px;
+  text-align: center;
+}
+
+.rt-run__count {
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.rt-run__art {
+  width: clamp(200px, 32vw, 290px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: var(--cream);
+  border: var(--outline-thick) solid var(--ink);
+  border-radius: 28px;
+}
+
+.rt-run__text {
+  font-size: clamp(40px, 8vw, 72px);
+}
+
+.rt-run__speak {
+  width: 96px;
+  height: 96px;
+}
+
+.rt-run__did {
+  min-height: 108px;
+  font-size: clamp(32px, 5vw, 44px);
+}
+
+.rt-run__dots .dk-dots {
+  width: 100%;
+  justify-content: center;
+}

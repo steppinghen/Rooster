@@ -176,3 +176,62 @@
   border-color: var(--ink);
   background: #ffe1d1;
 }
+
+.p-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.p-step {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.p-step__art {
+  appearance: none;
+  width: 56px;
+  height: 56px;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: var(--paper);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.p-step__art img {
+  width: 40px;
+  height: 40px;
+}
+
+.p-step__tools {
+  display: flex;
+  gap: 6px;
+}
+
+.p-step__tools .dk-btn {
+  min-width: 44px;
+  padding: 0 10px;
+}
+
+.p-step__tools .dk-btn:first-child svg {
+  transform: rotate(90deg);
+}
+
+.p-step__picker {
+  grid-column: 1 / -1;
+}
+
+.p-row--wrap {
+  flex-wrap: wrap;
+}
+
+.p-row__full {
+  flex-basis: 100%;
+}

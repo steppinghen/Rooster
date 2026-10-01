@@ -55,7 +55,7 @@ function write(key: string, value: unknown) {
 
 async function fetchSnapshot(familyId: string, device: Snapshot['device']): Promise<Snapshot> {
   const t0 = Date.now();
-  const [now, family, kids, routines, events, focus, modules] = await Promise.all([
+  const [now, family, kids, routines, events, focus, modules, me] = await Promise.all([
     supabase.rpc('server_now'),
     supabase.from('families').select('id, name, timezone').eq('id', familyId).single(),
     supabase.from('kids').select(KID_COLUMNS).eq('family_id', familyId).order('sort_order').order('created_at'),
@@ -63,6 +63,7 @@ async function fetchSnapshot(familyId: string, device: Snapshot['device']): Prom
     supabase.from('events').select('id, family_id, title, icon, on_date, kind, visible_to_kids, repeats_yearly').eq('family_id', familyId).order('on_date'),
     supabase.from('kid_focus').select('kid_id, family_id, mode, since, ends_at, return_mode, pending_mode, switch_at, pending_ends_at, pinned, updated_at').eq('family_id', familyId),
     loadModules(familyId),
+    supabase.from('devices').select('id, label, ground').eq('id', device.id).maybeSingle(),
   ]);
   const fam = must(family) as Snapshot['family'];
   const today = familyDate(fam.timezone);
@@ -76,7 +77,8 @@ async function fetchSnapshot(familyId: string, device: Snapshot['device']): Prom
     fetchedAt: new Date().toISOString(),
     serverOffsetMs: serverNow - (t0 + (Date.now() - t0) / 2),
     family: fam,
-    device,
+    // The device's own row, fresh: a parent may have changed its ground since pairing.
+    device: (must(me) as Snapshot['device'] | null) ?? device,
     kids: must(kids) as Kid[],
     routines: must(routines) as Routine[],
     events: must(events) as DeckEvent[],

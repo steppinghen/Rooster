@@ -46,12 +46,13 @@ test.describe('styleguide (slice 0)', () => {
       expect(await upNext(normal)).toBe('rgb(255, 62, 138)');
       expect(await upNext(focus)).not.toBe('rgb(255, 62, 138)');
 
-      // What never changes: display font, ink outline, pressable button.
-      for (const s of [normal, focus]) {
-        const btn = s.locator('.dk-btn--ink').first();
-        expect(await btn.evaluate((el) => getComputedStyle(el).fontFamily)).toContain('Archivo Black');
-        expect(await btn.evaluate((el) => getComputedStyle(el).borderTopColor)).toBe('rgb(10, 8, 24)');
+      // What never changes between volumes: display font, outline, pressable button.
+      const edge = async (sc: typeof normal) => sc.locator('.dk-btn--ink').first().evaluate((el) => getComputedStyle(el).borderTopColor);
+      for (const sc of [normal, focus]) {
+        expect(await sc.locator('.dk-btn--ink').first().evaluate((el) => getComputedStyle(el).fontFamily)).toContain('Archivo Black');
+        expect(await sc.locator('.dk-btn--accent').first().evaluate((el) => getComputedStyle(el).borderTopColor)).toBe('rgb(10, 8, 24)');
       }
+      expect(await edge(normal)).toBe(await edge(focus));
     }
   });
 

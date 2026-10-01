@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { must, useAsync } from '../../../lib/useAsync';
-import { Notice, TextField } from '../../../ui/forms';
+import { Notice, Segmented, TextField } from '../../../ui/forms';
 import { PressButton } from '../../../ui/PressButton';
 import { Panel } from '../../../ui/surfaces';
 
@@ -60,6 +60,12 @@ export function DevicesSection({ familyId }: { familyId: string }) {
     void devices.reload();
   }
 
+  async function setGround(id: string, ground: string) {
+    const { error } = await supabase.from('devices').update({ ground }).eq('id', id);
+    if (error) setError(error.message);
+    void devices.reload();
+  }
+
   async function remove(id: string) {
     await supabase.from('devices').delete().eq('id', id);
     void devices.reload();
@@ -69,7 +75,7 @@ export function DevicesSection({ familyId }: { familyId: string }) {
     <Panel className="p-section">
       <h2 className="p-section__title">Devices</h2>
       {active.map((d) => (
-        <div className="p-row" key={d.id} data-testid="device-row">
+        <div className="p-row p-row--wrap" key={d.id} data-testid="device-row">
           <div className="p-row__main">
             <span className="p-row__title">{d.label}</span>
             <span className="p-row__meta">Paired {new Date(d.paired_at).toLocaleDateString()} · seen {ago(d.last_seen_at)}</span>
@@ -88,9 +94,23 @@ export function DevicesSection({ familyId }: { familyId: string }) {
               Unpair…
             </PressButton>
           )}
+          <div className="p-row__full">
+            <Segmented
+              label={`Look on ${d.label}`}
+              value={d.ground as 'auto' | 'day' | 'night' | 'device'}
+              onChange={(g) => void setGround(d.id, g)}
+              options={[
+                { value: 'auto', label: 'Auto' },
+                { value: 'day', label: 'Day' },
+                { value: 'night', label: 'Night' },
+                { value: 'device', label: 'Follow iPad' },
+              ]}
+            />
+          </div>
         </div>
       ))}
       {active.length === 0 && <p className="dk-muted">No iPads paired yet.</p>}
+      {active.length > 0 && <p className="dk-muted">Auto: day from the start of the morning routine until bedtime begins. Bedtime and Lights out are always night.</p>}
 
       {open && remaining > 0 && !pairedNow ? (
         <div className="dk-card p-section" data-testid="pairing-code">

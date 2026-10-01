@@ -26,6 +26,7 @@ import { useLogUsage } from './usage';
 import { useNow } from './useNow';
 import { localMinutes } from '../theme/ground';
 import { useReducedMotion } from './useReducedMotion';
+import { useStepDone } from './useStepDone';
 import './kid.css';
 import './home.css';
 
@@ -43,7 +44,8 @@ function greeting(minutes: number): string {
  * Everything fits on one iPad screen; nothing scrolls.
  */
 export function KidHome({ kid }: { kid: Kid }) {
-  const { snapshot, enqueue, patch } = useKidStore();
+  const { snapshot } = useKidStore();
+  const stepDone = useStepDone(kid.id);
   const nav = useNavigate();
   const log = useLogUsage(kid.id);
   const now = useNow(30_000);
@@ -70,22 +72,7 @@ export function KidHome({ kid }: { kid: Kid }) {
 
   function didIt() {
     if (rn.kind !== 'active') return;
-    const steps = [...rn.done, rn.next.id];
-    const finished = rn.routine.steps.every((st) => steps.includes(st.id));
-    const row = { family_id: s.family.id, routine_id: rn.routine.id, kid_id: kid.id, on_date: today, completed_steps: steps, completed_at: finished ? new Date().toISOString() : null };
-    patch((snap) => ({
-      ...snap,
-      completions: [...snap.completions.filter((c) => !(c.routine_id === row.routine_id && c.kid_id === kid.id && c.on_date === today)), row],
-    }));
-    enqueue({ kind: 'completion', key: `${row.routine_id}:${kid.id}:${today}`, row });
-    if (finished) {
-      log('routines', 'completed', rn.routine.id);
-      speak(`You did it! ${rn.routine.name} is done.`);
-      setCelebrate(rn.routine.name);
-    } else {
-      const upNext = rn.routine.steps.find((st) => !steps.includes(st.id));
-      if (upNext) speak(`Nice! Next: ${upNext.text}.`);
-    }
+    if (stepDone(rn.routine, rn.done, rn.next.id)) setCelebrate(rn.routine.name);
   }
 
   const tiles: TileDef[] = kidVisibleModules(s.modules, focus.mode).flatMap((m): TileDef[] => {
