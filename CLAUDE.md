@@ -23,6 +23,7 @@ Every project folder has its own `CLAUDE.md` (stable guidance) and `STATUS.md` (
 | `lab/` | `rooster-lab` | `a57208ba-f912-4996-a075-5c23ed3336f8` | 8891 | 3994 |
 | `knee-program/` | `rooster-knee` | `25eff7d5-147c-432b-86da-24c8af851fd8` | 8892 | 3995 |
 | `coop/` | `rooster-coop` | `44fc9f31-1923-4b86-a377-a9a3f20ff5e4` | 8893 | 3996 |
+| `deck/` | `rooster-deck` | _not created yet (Phase 1 Gate 2)_ | 8894 | 3997 |
 
 Each project's dev port is pinned in its own `netlify.toml` (`[dev].port` and `[dev].staticServerPort`) so sites can run side by side without EADDRINUSE. `netlify dev` binds the socket to all interfaces — the "http://localhost:PORT" banner is misleading, the site is reachable at `http://<tailscale-ip>:PORT` from any Tailnet device. When adding a new project, pick the next unused pair (e.g. `8894 / 3997`) and add a row here.
 
