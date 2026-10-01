@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { isArtKey } from '../art/art';
 import type { Kid } from '../lib/types';
+import { Icon } from '../ui/Icon';
+import { PressButton } from '../ui/PressButton';
 import { Sticker } from '../ui/Sticker';
 import { familyDate } from './cache';
 import { KidFrame } from './KidFrame';
@@ -21,6 +23,12 @@ export function Routines({ kid }: { kid: Kid }) {
   return (
     <KidTheme kid={kid}>
       <KidFrame kid={kid} title="Routines">
+        <div className="rt-ask">
+          <p className="dk-title rt-ask__text">Which one?</p>
+          <PressButton round aria-label="Read it to me" className="rt-ask__speak" onClick={() => speak(`Pick a routine. ${mine.map((r) => r.name).join(', ')}.`)}>
+            <Icon name="speaker" size={30} />
+          </PressButton>
+        </div>
         <div className="rt-list">
           {mine.map((r) => {
             const done = snapshot!.completions.find((c) => c.routine_id === r.id && c.kid_id === kid.id && c.on_date === today)?.completed_steps ?? [];

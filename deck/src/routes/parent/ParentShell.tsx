@@ -33,7 +33,7 @@ export function ParentShell({ children }: { children: ReactNode }) {
   return (
     <RootTheme ground={ground} volume="normal">
       <div className={wide ? 'parent parent--wide' : 'parent'} data-audience="parent">
-        {wide && items.length > 0 && <NavBar variant="rail" items={items} current={current} onSelect={(k) => nav(ROUTES[k]!)} />}
+        {wide && items.length > 0 && <NavBar variant="rail" items={items} current={current} onSelect={(k) => nav(ROUTES[k]!)} brand="The Deck" />}
         <main className="parent__main">{children}</main>
         {!wide && items.length > 0 && (
           <div className="parent__tabs">

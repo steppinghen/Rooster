@@ -34,7 +34,8 @@ begin
 end;
 $$;
 revoke execute on function private.purge_old_checkins() from public, anon, authenticated;
-select cron.schedule('deck-purge-checkins', '7 3 * * *', $$select private.purge_old_checkins()$$);
+-- Hourly, so nothing outlives 30 days by more than an hour.
+select cron.schedule('deck-purge-checkins', '7 * * * *', $$select private.purge_old_checkins()$$);
 
 -- Usage: rows are kept 90 days, then rolled into monthly aggregates (CLAUDE.md "Usage
 -- snapshots"). Aggregates carry counts and durations only.

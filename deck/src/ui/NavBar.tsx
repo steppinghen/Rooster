@@ -7,9 +7,14 @@ export type NavItem = { key: string; label: string; icon: IconName; spacerBefore
  * Parent navigation. "rail" for iPad landscape (iPadHub.html), "tabs" for the phone (Main.html).
  * Items come from data (the module registry), never a hardcoded list in screens.
  */
-export function NavBar({ items, current, variant, onSelect }: { items: NavItem[]; current: string; variant: 'rail' | 'tabs'; onSelect?: (key: string) => void }) {
+export function NavBar({ items, current, variant, onSelect, brand }: { items: NavItem[]; current: string; variant: 'rail' | 'tabs'; onSelect?: (key: string) => void; brand?: string }) {
   return (
     <nav className={`dk-nav dk-nav--${variant}`} aria-label="Main">
+      {brand && variant === 'rail' && (
+        <span className="dk-nav__brand" aria-hidden="true">
+          {brand}
+        </span>
+      )}
       {items.map((item) => (
         <FragmentWithSpacer key={item.key} spacer={item.spacerBefore}>
           <button

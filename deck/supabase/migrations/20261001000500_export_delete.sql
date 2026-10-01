@@ -67,7 +67,9 @@ begin
   if fid is null or not private.is_parent_of(fid) then
     raise exception 'not allowed' using errcode = '42501';
   end if;
-  select f.name into fname from public.families f where f.id = fid;
+  -- Lock the family first, so nobody can join or pair while it is being deleted.
+  select f.name into fname from public.families f where f.id = fid for update;
+  -- The typed name must match exactly (names are stored trimmed, so every family can be deleted).
   if p_confirm is distinct from fname then
     raise exception 'type the family name exactly to confirm' using errcode = '22023';
   end if;
@@ -85,6 +87,10 @@ begin
   delete from public.families where id = fid;
   -- No leftover bootstrap rows for these parents either.
   delete from public.parent_allowlist where family_id is null and email = any (v_emails);
+  -- GoTrue's audit log holds their emails, ids and IP addresses: gone too.
+  delete from auth.audit_log_entries a
+    where a.payload ->> 'actor_id' = any (v_users::text[])
+       or lower(a.payload ->> 'actor_username') = any (v_emails::text[]);
   delete from auth.users u where u.id = any (v_users);
 end;
 $$;

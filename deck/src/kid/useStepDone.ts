@@ -37,3 +37,21 @@ export function useStepDone(kidId: string) {
     [snapshot, enqueue, patch, now, kidId, log],
   );
 }
+
+/** Put a routine back to an earlier set of done steps (the "Oops, not yet" button). */
+export function useStepUndo(kidId: string) {
+  const { snapshot, enqueue, patch, now } = useKidStore();
+  return useCallback(
+    (routine: Routine, done: string[]) => {
+      if (!snapshot) return;
+      const today = familyDate(snapshot.family.timezone, new Date(now()));
+      const row = { family_id: snapshot.family.id, routine_id: routine.id, kid_id: kidId, on_date: today, completed_steps: done, completed_at: null };
+      patch((snap) => ({
+        ...snap,
+        completions: [...snap.completions.filter((c) => !(c.routine_id === routine.id && c.kid_id === kidId && c.on_date === today)), row],
+      }));
+      enqueue({ kind: 'completion', key: `${routine.id}:${kidId}:${today}`, row });
+    },
+    [snapshot, enqueue, patch, now, kidId],
+  );
+}

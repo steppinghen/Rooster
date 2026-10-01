@@ -302,6 +302,8 @@ begin
   get diagnostics n_unlisted = row_count;
 
   delete from public.pairing_attempts where attempted_at < now() - interval '1 day';
+  -- GoTrue's audit log (emails, ids, IPs) is kept 90 days.
+  delete from auth.audit_log_entries where created_at < now() - interval '90 days';
   delete from public.pin_attempts where attempted_at < now() - interval '1 day';
   delete from public.pairing_codes where expires_at < now() - interval '1 day';
 

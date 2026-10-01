@@ -86,7 +86,7 @@ export function RoutineRun({ kid }: { kid: Kid }) {
         )}
         {celebrate && (
           <ThemeScope ground="night" volume={celebrationVolume(effectiveVolume(kid.default_volume, modeVolume(focus.mode)), reduced)} className="home__celebrate" role="status">
-            <Burst word="SHRED!" size={360} animate={!reduced} />
+            {reduced ? <Sticker art="sparkles" size={160} decorative /> : <Burst word="SHRED!" size={360} />}
             <p className="dk-title home__celebrate-text">{routine.name} done!</p>
           </ThemeScope>
         )}

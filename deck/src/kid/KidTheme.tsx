@@ -17,8 +17,9 @@ export function KidTheme({ kid, scene, volume: forced, children }: { kid: Kid; s
   const now = useNow(15_000);
   const ground = useDeviceGround(snapshot!, now);
   const focus = effectiveFocus(snapshot!.focus.find((f) => f.kid_id === kid.id), now);
-  const volume = forced ?? effectiveVolume(kid.default_volume, modeVolume(focus.mode));
   const effectiveScene: Scene = scene ?? (focus.mode === 'lights_out' ? 'lastrun' : 'default');
+  // Last Run (bedtime) and Lights out are wind-down: always focus styling, always night.
+  const volume = forced ?? (effectiveScene === 'lastrun' ? 'focus' : effectiveVolume(kid.default_volume, modeVolume(focus.mode)));
   return (
     <RootTheme ground={ground} volume={volume} scene={effectiveScene}>
       {children}

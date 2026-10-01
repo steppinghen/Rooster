@@ -364,7 +364,7 @@ test.describe('slice 2-4 iPad setup screens: Pair and Unpaired', () => {
     }
     await page.getByRole('button', { name: 'Pair again' }).click();
     await expect(page.getByLabel('Pairing code')).toBeVisible();
-    expect(await page.evaluate(() => localStorage.getItem('deck.snapshot.v1'))).toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem('deck.snapshot.v2'))).toBeNull();
     expect(await page.evaluate(() => localStorage.getItem('deck.currentKid'))).toBeNull();
     await ctx.close();
   });

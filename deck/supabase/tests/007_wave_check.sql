@@ -1,5 +1,5 @@
 -- Slice 9: the kid's own current check-in, 30-day feelings retention, 90-day usage rollup.
-begin;
+begin isolation level repeatable read;
 create extension if not exists pgtap with schema extensions;
 select * from no_plan();
 
@@ -26,9 +26,11 @@ select is_empty($$select * from public.current_checkin('00000000-0000-4000-8000-
 reset role;
 
 -- ----- 30-day retention -----
+delete from public.feelings_checkins where family_id not in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2');
 select is(private.purge_old_checkins(), 1, 'retention: one check-in older than 30 days removed');
 select is((select count(*)::int from public.feelings_checkins where created_at < now() - interval '30 days'), 0, 'retention: nothing older than 30 days remains');
-select is((select count(*)::int from public.feelings_checkins where created_at > now() - interval '30 days'), 4, 'retention: everything newer stays (both families)');
+select is((select count(*)::int from public.feelings_checkins where created_at > now() - interval '30 days'
+           and family_id in ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000f2')), 4, 'retention: everything newer stays (both families)');
 select ok(exists (select 1 from cron.job where jobname = 'deck-purge-checkins'), 'retention: scheduled daily');
 select ok(not has_function_privilege('authenticated', 'private.purge_old_checkins()', 'execute'), 'retention: not callable through the API');
 

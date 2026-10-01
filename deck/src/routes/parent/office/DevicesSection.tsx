@@ -30,14 +30,15 @@ export function DevicesSection({ familyId }: { familyId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   // Tick the countdown and watch for the iPad to finish pairing.
+  const reload = devices.reload; // stable; the devices object is new every render
   useEffect(() => {
     if (!open) return;
     const t = setInterval(() => {
       setNow(Date.now());
-      void devices.reload();
+      void reload();
     }, 1000);
     return () => clearInterval(t);
-  }, [open, devices]);
+  }, [open, reload]);
 
   const active = (devices.data ?? []).filter((d) => !d.revoked_at);
   const revoked = (devices.data ?? []).filter((d) => d.revoked_at);

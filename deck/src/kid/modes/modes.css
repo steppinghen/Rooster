@@ -1,0 +1,147 @@
+.focus-headsup {
+  position: fixed;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(760px, calc(100% - 32px));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+}
+
+.focus-headsup__who {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.focus-headsup__timer {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--yellow);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+}
+
+.focus-headsup__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.focus-headsup__text .dk-title {
+  font-size: clamp(22px, 3.2vw, 30px);
+}
+
+.focus-headsup__bar {
+  height: 14px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.focus-headsup__bar span {
+  display: block;
+  height: 100%;
+  width: calc(var(--left, 1) * 100%);
+  background: var(--accent);
+  transition: width 1s linear;
+}
+
+.focus-headsup__left {
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.focus-headsup__speak {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.focus-left {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--text-on-card);
+  font-weight: 800;
+}
+
+/* Lights out: very low brightness, a few stars, the turtle tucked in. */
+.lightsout {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #0b0a18;
+  filter: brightness(0.82);
+}
+
+.lightsout__sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    radial-gradient(1.6px 1.6px at 12% 18%, rgba(244, 235, 217, 0.7), transparent),
+    radial-gradient(1.4px 1.4px at 68% 12%, rgba(244, 235, 217, 0.55), transparent),
+    radial-gradient(1.8px 1.8px at 82% 34%, rgba(244, 235, 217, 0.6), transparent),
+    radial-gradient(1.2px 1.2px at 28% 42%, rgba(244, 235, 217, 0.45), transparent),
+    radial-gradient(1.5px 1.5px at 48% 26%, rgba(244, 235, 217, 0.6), transparent),
+    radial-gradient(1.3px 1.3px at 90% 64%, rgba(244, 235, 217, 0.4), transparent),
+    radial-gradient(1.6px 1.6px at 8% 70%, rgba(244, 235, 217, 0.45), transparent);
+}
+
+.lightsout__scene {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+}
+
+.lightsout__text {
+  font-size: clamp(34px, 6vw, 52px);
+  color: #d9d1ea;
+}
+
+.lightsout__breathe {
+  min-height: 96px;
+  font-size: 26px;
+  margin-top: 16px;
+}
+
+.session-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+  padding: 32px 20px;
+}
+
+.session-card__title {
+  font-size: clamp(32px, 5.4vw, 48px);
+}
+
+.session-card__sub {
+  font-size: 22px;
+  font-weight: 700;
+}

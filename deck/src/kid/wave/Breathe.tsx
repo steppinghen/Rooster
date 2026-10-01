@@ -86,9 +86,14 @@ export function Breathe({ kid, lightsOut = false }: { kid: Kid; lightsOut?: bool
             ))}
           </div>
           {phase === 'ready' && (
-            <PressButton variant="ink" block onClick={start}>
-              <Icon name="breathe" size={36} /> Start
-            </PressButton>
+            <div className="wave-thanks__actions">
+              <PressButton variant="ink" block onClick={start}>
+                <Icon name="breathe" size={36} /> Start
+              </PressButton>
+              <PressButton block aria-label="Read it to me" onClick={() => speak('Three slow breaths with the turtle. Tap Start when you are ready.')}>
+                <Icon name="speaker" size={30} /> Read it to me
+              </PressButton>
+            </div>
           )}
           {phase === 'done' && (
             <div className="wave-thanks__actions">
@@ -98,6 +103,11 @@ export function Breathe({ kid, lightsOut = false }: { kid: Kid; lightsOut?: bool
               <PressButton variant="ink" block onClick={() => nav(`/kid/${kid.id}`)}>
                 <Icon name={lightsOut ? 'moon' : 'home'} size={30} /> {lightsOut ? 'Back to bed' : 'Done'}
               </PressButton>
+              {lightsOut && (
+                <PressButton block onClick={() => nav(`/kid/${kid.id}/wave`)}>
+                  <Icon name="waves" size={30} /> Tell how I feel
+                </PressButton>
+              )}
             </div>
           )}
         </TaskCard>

@@ -234,4 +234,50 @@ Deviation: the reviewer agents run once over slices 2 to 4 together. Running the
 - The snapshot is v2 (adds reset plans and current check-ins).
 - Tests: `007_wave_check.sql`; e2e `wave-check.spec.ts`.
 
-Next: slice 10 (focus modes).
+## Reviews of slices 5–9 (done)
+
+- **rls-auditor:** 1 blocking finding (`delete_family` left `auth.audit_log_entries`), fixed. Non-blocking fixes: the family row lock, trimmed names, the hourly purge, the family-scoped routine lookup, and repeatable read in 007. **2,055 assertions pass.**
+- **kid-ux-tester:** 5 blocking findings, all fixed:
+  - Last Run now always uses focus styling (and night).
+  - Reduced motion removes the burst entirely; a still sparkle sticker shows instead.
+  - Every Reset plan question has read-aloud, and the plan has Back, Done, and a hint when Save is off.
+  - The routine editor's step buttons are 48pt, and Move down was added.
+  - The Session dead end was already fixed by slice 10's routes.
+- Also fixed from that report:
+  - "Oops, not yet" undoes an accidental "I did it!" (80pt, floating, for 8 s).
+  - Breathe has read-aloud before Start, and so does the home's waiting state.
+  - The Routines list has a "Which one?" prompt with read-aloud.
+  - The SHRED! word stays inside the burst.
+- Lights out versus "feelings never locked out" is decided by default (REVIEW Q8), and the tester's spec follows it.
+
+## Slice 10: Focus modes (built)
+
+- Migration `20261001000700_focus_modes.sql`:
+  - `set_focus` (invoker, parents-only through RLS, server time, heads-up or now, durations) and `cancel_focus_switch`.
+  - Payload-free private Broadcast topics, plus the RLS policy on `realtime.messages`. See REVIEW.md R6.
+- Kid:
+  - `KidScope` gates screens by module visibility, so hidden screens can't be reached by URL.
+  - `FocusLayer`: the heads-up banner (rooster with a sand timer, "Two more minutes, then it's … time.", a draining bar, read-aloud), a time-left chip, and the end-of-session celebration (normal volume unless reduced motion; once per ending).
+  - `LightsOut`: night, stars, the turtle tucked in, and only "I need to breathe"; Wave Check comes after breathing.
+  - The Session home card, plus the `Session` placeholder screen (learning content is Phase 2).
+  - The store subscribes to `family:<id>` and `device:<uid>`. It refetches on resubscribe and has a 60 s fallback.
+- e2e `focus-modes.spec.ts` (stable over repeated runs after the Today effect fix).
+
+## Slice 11: Parent dashboard (built)
+
+- `Today`:
+  - A header with the marker (current routine and time), the weekday headline, "Hi, …" with the count of things on the board, and kid avatars.
+  - "On the board": today's routines and events, with NOW on the current routine. Countdowns below it.
+  - Per-kid cards (accent block):
+    - routine progress and next step, plus the other routines today;
+    - the latest Wave Check (parent-only) and a 30-day history toggle;
+    - the current mode with time left;
+    - a session summary after a timed mode ends;
+    - a collapsed mode switcher (mode, duration, switch now or heads-up; Switch now or Cancel while pending).
+  - An "Everyone" switcher.
+  - Live through the family topic, with a 30 s and foreground refresh.
+- iPad landscape is two columns (board | cards), like iPadHub, and the rail carries the "THE DECK" wordmark.
+- Fixed a real bug: effects that depended on `useAsync`'s whole object re-ran every render. Today re-subscribed to Realtime every second, which made updates flaky, and the Devices timer was affected too.
+- e2e `today.spec.ts` (iPhone and iPad landscape).
+
+Next: slice 12 (Guided Access / Screen Time section of SETUP.md, phase-reviewer, REVIEW.md, then stop at Gate 1).

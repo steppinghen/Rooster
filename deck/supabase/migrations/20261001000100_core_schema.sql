@@ -34,7 +34,7 @@ create type public.module_audience as enum ('kid', 'parent', 'both');
 
 create table public.families (
   id uuid primary key default gen_random_uuid(),
-  name text not null check (char_length(btrim(name)) between 1 and 60),
+  name text not null check (char_length(btrim(name)) between 1 and 60 and name = btrim(name)),
   timezone text not null default 'UTC' check (char_length(timezone) between 1 and 64),
   created_at timestamptz not null default now()
 );
@@ -288,7 +288,7 @@ declare
   today date;
 begin
   select r.kid_id, array(select e ->> 'id' from jsonb_array_elements(r.steps) e) into owner, all_ids
-    from public.routines r where r.id = new.routine_id;
+    from public.routines r where r.id = new.routine_id and r.family_id = new.family_id;
   if owner is not null and owner <> new.kid_id then
     raise exception 'routine % is not assigned to kid %', new.routine_id, new.kid_id using errcode = '23514';
   end if;

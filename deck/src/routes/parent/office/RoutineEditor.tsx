@@ -93,6 +93,9 @@ export function RoutineEditor({ familyId, kids, routine, draft, onDone }: { fami
               <PressButton small aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)}>
                 <Icon name="back" size={18} />
               </PressButton>
+              <PressButton small aria-label="Move down" className="p-step__down" disabled={i === d.steps.length - 1} onClick={() => move(i, 1)}>
+                <Icon name="back" size={18} />
+              </PressButton>
               <PressButton small aria-label="Remove step" onClick={() => set({ steps: d.steps.filter((_, j) => j !== i) })}>
                 <Icon name="close" size={18} />
               </PressButton>

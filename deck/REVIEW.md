@@ -80,6 +80,33 @@ All three are `security definer` in `private`, not callable through the API, and
 | `deck-rollup-usage` | 03:27 daily | `private.rollup_old_usage()` (same file) | `usage_events` older than 90 days, after adding them into `usage_monthly` (counts and durations only) |
 | `deck-cleanup-orphans` | 03:17 daily | `private.cleanup_orphans()` (`…200_parent_auth.sql`) | Never-paired anonymous users and unlisted email users older than 24 hours; attempt rows and expired codes older than a day. Guarded so it refuses to run in a project with tables The Deck doesn't own. |
 
+### R6. Focus modes: parents-only writes, live push (slice 10): `supabase/migrations/20261001000700_focus_modes.sql`
+
+- **Write policy:** `kid_focus` insert and update are allowed only when `private.is_parent_of(family_id)`, meaning aal2 and a parents row; see the core migration. No role can delete through the API; rows go with their kid.
+- **`set_focus(kids, mode, minutes, now)`** is **SECURITY INVOKER**, so the parents-only RLS is the only thing that lets it write.
+  - It works out each kid's current mode on server time first: a heads-up whose time has come is live, and a timed mode that has run out has returned.
+  - It then switches either now or after a 2-minute heads-up.
+  - If any kid in the list isn't writable, the whole call fails.
+- **`cancel_focus_switch`** calls off a pending heads-up.
+- **Realtime:** nothing uses `postgres_changes`.
+  - Triggers call `realtime.send()` with a payload-free `{table}` on the private topic `family:<id>`, and send `revoked` on `device:<auth uid>`.
+  - The RLS policy `deck_private_topics` on `realtime.messages` is select-only. It admits family members to their family topic, and an anonymous iPad to its own device topic. There's no insert policy, so clients can't broadcast.
+- **Clients:** devices refetch through RLS on every message, on every (re)subscribe, when they come back to the foreground, and every 60 s. The last two are fallbacks for missed messages.
+- **Fail closed:** the effective mode is computed from the timestamps in the row, so a reload can't escape a mode, and an offline iPad keeps the last row it got.
+- **Tests:** `008_focus.sql` (device and aal1 refused, mixed families refused, heads-up and durations, topic access matrix, data-free signals) and e2e `focus-modes.spec.ts` (live heads-up, switch now, reload and URL can't escape, offline keeps the mode, timed Session end and celebration, a device's direct RPC call refused).
+
+### R1c. From the second security review (slices 6 and 9)
+
+**Blocking, fixed:** `delete_family` now also deletes the family's rows from GoTrue's `auth.audit_log_entries` (emails, ids, IPs). The nightly cleanup keeps that log to 90 days.
+
+Also fixed in the same pass:
+- `delete_family` locks the family row first, so nobody can join or pair mid-delete.
+- Family names are stored trimmed, so the exact-name confirmation is always typeable.
+- The Wave Check purge runs hourly.
+- `check_completion_kid` looks up the routine within the row's own family only.
+
+The auditor's new tests: `audit_export`, `audit_delete_edges`, `audit_checkin_retention`, `audit_auth_triggers`.
+
 ### R4. Delete family (slice 6): `delete_family` in `supabase/migrations/20261001000500_export_delete.sql`
 
 - **Who and how:** a parent at aal2 types the exact family name; the comparison is case-sensitive.
@@ -111,6 +138,7 @@ _Filled in slice 12._
 | Q3 | Kid PIN on a shared iPad | Both kids share one device identity, so the database can't tell them apart. The PIN keeps a sibling out of the other's profile in the UI only, which is what CLAUDE.md req. 4 asks for; a determined sibling with dev tools could still read the other kid's routine data. Accepted. |
 | Q6 | A PIN-protected profile can't be opened while the iPad is offline (the PIN is checked on the server) | Default: keep it (fail closed). The open profile stays open offline, and kids without a PIN work offline. |
 | Q7 | A sibling's wrong guesses lock the PIN owner out of their profile on that iPad for 5 minutes | Default: accepted, because the lock is short. The message warns at 2 tries left, and a parent resetting the PIN clears the lock. |
+| Q8 | Lights out: the brief says "only control is I need to breathe" and also "a kid can always reach check-in and breathing" | Default: the bedtime screen shows only "I need to breathe". After the breaths it offers "Back to bed" or "Tell how I feel" (Wave Check). `/wave` and `/breathe` stay reachable in Lights out; everything else returns to the bedtime screen. |
 | Q4 | Delete family also deletes both parents' accounts | Default: yes, a full wipe. To start over, run the bootstrap allowlist insert again (G8). |
 | Q5 | Export: PIN hashes left out | Default: left out. A 4-digit bcrypt hash is effectively the PIN, and the export lives on a phone. After a rebuild, PINs are set again. |
 | Q2 | How to close public sign-ups when "Allow new users to sign up" off also blocks anonymous (iPad) sign-ins | **Decided (parent):** the switch stays on; a `before_user_created` hook enforces the allowlist; a nightly job removes unpaired anonymous users and unlisted users. Fallback (no hook): an unlisted user has zero access to every table (`audit_unlisted_user.sql`) and is removed by the job. |
@@ -147,6 +175,8 @@ The parent does steps G1–G7 by hand. Claude Code does steps C1–C5 only after
   - Anonymous sign-ins: **on**.
   - Rate limits: leave the defaults (30 sign-ins per 5 minutes per IP, 30 anonymous per hour per IP). The email send limit depends on G3.
   - Refresh token rotation on (the default).
+- **G4b. Realtime:** in Project Settings → Realtime, turn **off "Allow public access"** (private channels only). The app only uses private channels, authorized by `deck_private_topics`.
+- **G4c. Auth audit logs:** these record emails and IPs. Leave them in the database (then `delete_family` and the 90-day cleanup cover them), or turn off "Write auth audit logs to the database" if the setting is offered. Either way, no third party is involved.
 - **G5. Free tier: pick one.**
   - **Scheduled keep-alive ping:** free projects pause after about 7 days with no API activity, for example during a family trip.
   - **Supabase Pro:** no pausing, plus daily backups.

@@ -190,3 +190,15 @@
   background: var(--paper);
   color: var(--ink);
 }
+
+.reset-card__ask {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.reset-card__hint {
+  font-weight: 700;
+  font-size: 18px;
+}

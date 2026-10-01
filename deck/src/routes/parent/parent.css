@@ -188,7 +188,7 @@
 
 .p-step {
   display: grid;
-  grid-template-columns: 56px 1fr auto;
+  grid-template-columns: 56px 1fr;
   align-items: center;
   gap: 10px;
 }
@@ -211,13 +211,19 @@
 }
 
 .p-step__tools {
+  grid-column: 2;
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .p-step__tools .dk-btn {
-  min-width: 44px;
-  padding: 0 10px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 12px;
+}
+
+.p-step__tools .p-step__down svg {
+  transform: rotate(-90deg);
 }
 
 .p-step__tools .dk-btn:first-child svg {

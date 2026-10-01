@@ -206,6 +206,36 @@ export function KidStoreProvider({ children }: { children: ReactNode }) {
     }
   }, [device, flush]);
 
+  // Live: the family's private topic says "something changed" (no data in the message); the
+  // device's own topic says "you were unpaired". Either way we refetch through RLS.
+  const { refresh: refreshSession } = useSession();
+  useEffect(() => {
+    if (!device) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const soon = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => void refresh(), 300);
+    };
+    let cancelled = false;
+    const channels: ReturnType<typeof supabase.channel>[] = [];
+    void supabase.realtime.setAuth().then(() => {
+      if (cancelled) return;
+      channels.push(
+        // On every (re)subscribe, refetch too: messages sent while the socket was down are lost.
+        supabase
+          .channel(`family:${device.familyId}`, { config: { private: true } })
+          .on('broadcast', { event: 'changed' }, soon)
+          .subscribe((status) => status === 'SUBSCRIBED' && soon()),
+        supabase.channel(`device:${device.userId}`, { config: { private: true } }).on('broadcast', { event: 'revoked' }, () => void refreshSession()).subscribe(),
+      );
+    });
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      for (const c of channels) void supabase.removeChannel(c);
+    };
+  }, [device, refresh, refreshSession]);
+
   // Load on launch, when the app comes back to the foreground, and when the network returns.
   useEffect(() => {
     if (!device) return;
@@ -219,7 +249,8 @@ export function KidStoreProvider({ children }: { children: ReactNode }) {
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
-    const poll = setInterval(() => void refresh(), 5 * 60_000);
+    // Fallback if a Realtime message is missed (sleep, flaky Wi-Fi): a mode switch lands within a minute.
+    const poll = setInterval(() => void refresh(), 60_000);
     // Don't rely on the browser's 'online' event alone: retry queued writes every 10 seconds.
     const retry = setInterval(() => {
       if (outbox.current.length) void flush().then(() => setOnline(outbox.current.length === 0));

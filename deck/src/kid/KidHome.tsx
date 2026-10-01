@@ -26,7 +26,7 @@ import { useLogUsage } from './usage';
 import { useNow } from './useNow';
 import { localMinutes } from '../theme/ground';
 import { useReducedMotion } from './useReducedMotion';
-import { useStepDone } from './useStepDone';
+import { useStepDone, useStepUndo } from './useStepDone';
 import './kid.css';
 import './home.css';
 
@@ -46,11 +46,13 @@ function greeting(minutes: number): string {
 export function KidHome({ kid }: { kid: Kid }) {
   const { snapshot } = useKidStore();
   const stepDone = useStepDone(kid.id);
+  const stepUndo = useStepUndo(kid.id);
   const nav = useNavigate();
   const log = useLogUsage(kid.id);
   const now = useNow(30_000);
   const reduced = useReducedMotion();
   const [celebrate, setCelebrate] = useState<string | null>(null);
+  const [undo, setUndo] = useState<{ routineId: string; done: string[] } | null>(null);
   const s = snapshot!;
   const tz = s.family.timezone;
   const today = familyDate(tz, new Date(now));
@@ -72,8 +74,22 @@ export function KidHome({ kid }: { kid: Kid }) {
 
   function didIt() {
     if (rn.kind !== 'active') return;
+    setUndo({ routineId: rn.routine.id, done: rn.done });
     if (stepDone(rn.routine, rn.done, rn.next.id)) setCelebrate(rn.routine.name);
   }
+
+  // "Oops, not yet": put the last step back (for a few seconds after a tap).
+  function oops() {
+    if (!undo) return;
+    const routine = s.routines.find((r) => r.id === undo.routineId);
+    if (routine) stepUndo(routine, undo.done);
+    setUndo(null);
+  }
+  useEffect(() => {
+    if (!undo) return;
+    const t = setTimeout(() => setUndo(null), 8000);
+    return () => clearTimeout(t);
+  }, [undo]);
 
   const tiles: TileDef[] = kidVisibleModules(s.modules, focus.mode).flatMap((m): TileDef[] => {
     switch (m.key) {
@@ -127,6 +143,25 @@ export function KidHome({ kid }: { kid: Kid }) {
           </button>
         </header>
 
+        {focus.mode === 'session' ? (
+          <TaskCard className="home__session" data-testid="session-home">
+            <Sticker art="turtle" size={120} decorative />
+            <span className="dk-title home__session-title">Session time</span>
+            <PressButton
+              variant="ink"
+              block
+              className="home__did"
+              onClick={() => {
+                speak("Let's learn!");
+                log('session', 'opened');
+                nav('session');
+              }}
+            >
+              <Icon name="play" size={36} /> Start Session
+            </PressButton>
+          </TaskCard>
+        ) : (
+        <>
         <section className="home__hero" aria-label="Your routine">
           <Sticker art={mascot} size={prereader ? 190 : 170} alt={ART[mascot].label} />
           <div className="home__hero-side">
@@ -140,6 +175,11 @@ export function KidHome({ kid }: { kid: Kid }) {
                       ? `${rn.upcoming.name} at ${formatTime(rn.upcoming.starts_at)}`
                       : `Hi, ${kid.nickname}!`}
               </span>
+              {rn.kind === 'waiting' && (
+                <PressButton round aria-label="Read it to me" className="home__speak" onClick={() => speak(`${rn.upcoming.name} starts at ${formatTime(rn.upcoming.starts_at)}.`)}>
+                  <Icon name="speaker" size={32} />
+                </PressButton>
+              )}
             </TaskCard>
             {(rn.kind === 'active' || rn.kind === 'finished') && (
               <ProgressDots total={rn.routine.steps.length} done={rn.kind === 'active' ? doneCount(rn.routine, rn.done) : rn.routine.steps.length} size={prereader ? 64 : 58} label={`${rn.kind === 'active' ? doneCount(rn.routine, rn.done) : rn.routine.steps.length} of ${rn.routine.steps.length} steps done`} />
@@ -164,6 +204,11 @@ export function KidHome({ kid }: { kid: Kid }) {
             <PressButton variant="ink" block className="home__did" onClick={didIt}>
               <Icon name="check" size={40} strokeWidth={3.4} /> I did it!
             </PressButton>
+            {undo && (
+              <PressButton small className="home__oops" onClick={oops}>
+                <Icon name="back" size={22} /> Oops, not yet
+              </PressButton>
+            )}
           </>
         ) : rn.kind === 'finished' && rn.upcoming ? (
           <TaskCard className="home__next-card">
@@ -171,6 +216,8 @@ export function KidHome({ kid }: { kid: Kid }) {
             <span className="dk-muted">at {formatTime(rn.upcoming.starts_at)}</span>
           </TaskCard>
         ) : null}
+        </>
+        )}
 
         <nav className="home__tiles" aria-label="Things to do" style={{ '--cols': cols } as CSSProperties}>
           {tiles.map((t) => (
@@ -184,7 +231,7 @@ export function KidHome({ kid }: { kid: Kid }) {
 
         {celebrate && (
           <ThemeScope ground="night" volume={celebrationVolume(kid.default_volume === 'focus' || focus.mode !== 'everything' ? 'focus' : 'normal', reduced)} className="home__celebrate" role="status">
-            <Burst word="SHRED!" size={360} animate={!reduced} />
+            {reduced ? <Sticker art="sparkles" size={160} decorative /> : <Burst word="SHRED!" size={360} />}
             <p className="dk-title home__celebrate-text">{celebrate} done!</p>
           </ThemeScope>
         )}

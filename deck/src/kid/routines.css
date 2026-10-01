@@ -63,3 +63,19 @@
   width: 100%;
   justify-content: center;
 }
+
+.rt-ask {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.rt-ask__text {
+  font-size: clamp(30px, 5vw, 42px);
+}
+
+.rt-ask__speak {
+  width: 80px;
+  height: 80px;
+}

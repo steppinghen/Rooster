@@ -2,7 +2,9 @@
 -- delete_family (slice 6) is not built; it will rely on ON DELETE CASCADE from families. This
 -- proves the cascade the RPC depends on: generic over every relation in `public`, comparing a
 -- fingerprint of every row NOT belonging to family 1 before and after.
-begin;
+-- One snapshot for the whole file: the local database is shared with running e2e sessions,
+-- whose concurrent commits must not show up between a before/after comparison.
+begin isolation level repeatable read;
 create extension if not exists pgtap with schema extensions;
 select * from no_plan();
 
