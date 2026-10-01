@@ -1,0 +1,448 @@
+/* Base components. Every rule reads the switch variables from tokens.css, so components are
+   written once and pick up ground and volume automatically. */
+
+/* ---------- Type ---------- */
+
+.dk-headline {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-shadow: var(--headline-shadow);
+  text-transform: uppercase;
+}
+
+.dk-headline--sm {
+  text-shadow: var(--headline-shadow-sm);
+}
+
+.dk-title {
+  font-family: var(--font-display);
+  line-height: 1.05;
+}
+
+/* Marker lettering is decoration only; labels a kid must read use .dk-label. */
+.dk-marker {
+  font-family: var(--marker-font);
+  font-weight: var(--marker-weight);
+  color: var(--marker-color);
+  display: inline-block;
+  transform: rotate(calc(-2deg * var(--tilt-on)));
+}
+
+.dk-label {
+  font-family: var(--font-ui);
+  font-weight: 800;
+}
+
+.dk-muted {
+  color: var(--text-muted);
+}
+
+/* ---------- Surfaces ---------- */
+
+.dk-panel {
+  background: var(--surface);
+  color: var(--text);
+  border: var(--outline) solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hard);
+  transform: rotate(calc(var(--tilt, 0deg) * var(--tilt-on)));
+}
+
+.dk-card {
+  background: var(--card);
+  color: var(--text-on-card);
+  border: var(--outline-thick) solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 0 var(--ink);
+  transform: rotate(calc(var(--tilt, 0deg) * var(--tilt-on)));
+}
+
+.dk-card .dk-muted {
+  color: var(--text-muted-on-card);
+}
+
+/* A big block in the kid's accent (e.g. "Up next"). In focus it becomes the card. */
+.dk-accent-block {
+  background: var(--accent-fill, var(--accent));
+  color: var(--ink);
+  border: var(--outline-thick) solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 0 var(--ink);
+}
+
+/* ---------- Pressable button ---------- */
+
+.dk-btn {
+  --btn-bg: var(--card);
+  --btn-fg: var(--text-on-card);
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  min-height: var(--tap, var(--tap-parent));
+  min-width: var(--tap, var(--tap-parent));
+  padding: 0.5em 1.2em;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: var(--outline) solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-press);
+  font-family: var(--font-display);
+  font-size: 1.15em;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 80ms var(--step-ease), box-shadow 80ms var(--step-ease);
+  margin-bottom: 8px; /* room for the press shadow */
+}
+
+.dk-btn:active,
+.dk-btn[data-pressed='true'] {
+  transform: translateY(6px);
+  box-shadow: 0 2px 0 var(--ink);
+}
+
+.dk-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Primary "I did it!" action: ink with paper text in both grounds. */
+.dk-btn--ink {
+  --btn-bg: #15122e;
+  --btn-fg: var(--paper);
+  border-color: var(--ink);
+}
+
+.dk-btn--accent {
+  --btn-bg: var(--accent-fill, var(--accent));
+  --btn-fg: var(--ink);
+}
+
+.dk-btn--yellow {
+  --btn-bg: var(--yellow);
+  --btn-fg: var(--ink);
+}
+
+.dk-btn--block {
+  display: flex;
+  width: 100%;
+}
+
+.dk-btn--round {
+  border-radius: 50%;
+  padding: 0;
+}
+
+.dk-btn--sm {
+  font-family: var(--font-ui);
+  font-weight: 800;
+  font-size: 1em;
+  box-shadow: 0 5px 0 var(--ink);
+  margin-bottom: 5px;
+}
+
+.dk-btn--sm:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+/* Size by audience: hit areas meet CLAUDE.md minimums. */
+[data-age='prereader'] {
+  --tap: var(--tap-prereader);
+}
+[data-age='reader'] {
+  --tap: var(--tap-reader);
+}
+
+/* ---------- Tile ---------- */
+
+.dk-tile {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: max(var(--tap, var(--tap-parent)), 120px);
+  padding: 18px 14px;
+  background: var(--surface);
+  color: var(--text);
+  border: var(--outline) solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hard);
+  font-family: var(--font-ui);
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  transform: rotate(calc(var(--tilt, 0deg) * var(--tilt-on)));
+  transition: transform 90ms var(--step-ease), box-shadow 90ms var(--step-ease);
+}
+
+/* The touched tile lifts slightly and gets a bright ring. */
+.dk-tile:active,
+.dk-tile[data-pressed='true'] {
+  transform: translateY(-4px) rotate(calc(var(--tilt, 0deg) * var(--tilt-on)));
+  box-shadow:
+    0 0 0 4px var(--focus-ring),
+    6px 10px 0 var(--ink);
+}
+
+.dk-tile__status {
+  font-weight: 600;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+/* ---------- Sticker ---------- */
+
+/* White die-cut border, heavy ink outline, hard offset shadow, small tilt (normal only). */
+.dk-sticker {
+  display: inline-block;
+  line-height: 0;
+  transform: rotate(calc(var(--tilt, 0deg) * var(--tilt-on)));
+  filter: drop-shadow(3px 0 0 var(--white)) drop-shadow(-3px 0 0 var(--white))
+    drop-shadow(0 3px 0 var(--white)) drop-shadow(0 -3px 0 var(--white))
+    drop-shadow(2px 0 0 var(--ink)) drop-shadow(-2px 0 0 var(--ink))
+    drop-shadow(0 2px 0 var(--ink)) drop-shadow(0 -2px 0 var(--ink))
+    drop-shadow(4px 5px 0 var(--ink));
+}
+
+.dk-sticker img {
+  width: var(--sticker-size, 96px);
+  height: var(--sticker-size, 96px);
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* ---------- Avatar chip ---------- */
+
+.dk-avatar {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Never smaller than the kid tap target when inside a kid screen. */
+  width: max(var(--avatar-size, 72px), var(--tap, 0px));
+  height: max(var(--avatar-size, 72px), var(--tap, 0px));
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--avatar-fill, var(--accent));
+  color: var(--avatar-text);
+  border: var(--outline) solid var(--avatar-border, var(--accent));
+  box-shadow: var(--avatar-shadow);
+  font-family: var(--font-display);
+  font-size: calc(var(--avatar-size, 72px) * 0.42);
+  padding: 0;
+  cursor: pointer;
+}
+
+.dk-avatar-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.8em;
+}
+
+/* ---------- Progress dots ---------- */
+
+.dk-dots {
+  container-type: inline-size;
+  display: flex;
+  gap: var(--dot-gap, 12px);
+  align-items: center;
+}
+
+/* Dots shrink to fit narrow screens instead of overflowing the row. */
+.dk-dot {
+  --dot-fit: calc((100cqi - (var(--dot-count, 6) - 1) * var(--dot-gap, 12px) - 8px) / var(--dot-count, 6));
+  width: min(var(--dot-size, 64px), var(--dot-fit), var(--dot-max));
+  height: min(var(--dot-size, 64px), var(--dot-fit), var(--dot-max));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+/* Normal: each step its own sticker color. Focus: the kid's accent, small and quiet.
+   ProgressDots only sets --dot-color at normal volume (it reads the theme context). */
+.dk-dot svg {
+  width: 55%;
+  height: 55%;
+}
+
+.dk-dot--done {
+  background: var(--dot-color, var(--accent));
+  border: var(--outline) solid var(--ink);
+  box-shadow: calc(3px * var(--tilt-on)) calc(4px * var(--tilt-on)) 0 var(--ink);
+  transform: rotate(calc(var(--tilt, 0deg) * var(--tilt-on)));
+}
+
+.dk-dot--current {
+  background: var(--paper);
+  border: var(--outline) solid var(--accent);
+  box-shadow: 0 0 0 3px var(--ink);
+}
+
+.dk-dot--empty {
+  border: 3px dashed var(--slot);
+}
+
+/* ---------- Chip ---------- */
+
+.dk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 2px solid var(--slot);
+  font-weight: 700;
+  font-size: 0.8em;
+  color: var(--text-muted);
+}
+
+.dk-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  background: var(--yellow);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  font-family: var(--marker-font);
+  font-weight: var(--marker-weight);
+  transform: rotate(calc(4deg * var(--tilt-on)));
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+/* ---------- Burst ---------- */
+
+.dk-burst {
+  position: relative;
+  width: var(--burst-size, 320px);
+  aspect-ratio: 1;
+}
+
+.dk-burst svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.dk-burst__word {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: calc(var(--burst-size, 320px) * 0.24);
+  color: var(--ink);
+  text-shadow: 5px 0 0 var(--magenta), -5px 0 0 var(--cyan);
+  transform: rotate(-14deg);
+  letter-spacing: -0.03em;
+}
+
+.dk-burst--animate svg,
+.dk-burst--animate .dk-burst__word {
+  animation: dk-wobble 600ms steps(3, end) 2;
+}
+
+@keyframes dk-wobble {
+  0% {
+    scale: 0.6;
+  }
+  50% {
+    scale: 1.08;
+    rotate: 3deg;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+/* ---------- Day sun (kid screens, normal volume, day ground only) ---------- */
+
+.dk-sun {
+  position: absolute;
+  top: calc(var(--sun-size) * -0.33);
+  right: calc(var(--sun-size) * -0.33);
+  --sun-size: min(420px, 48vw);
+  width: var(--sun-size);
+  height: var(--sun-size);
+  border-radius: 50%;
+  background-color: var(--yellow);
+  background-image: radial-gradient(rgba(255, 62, 138, 0.55) 1.6px, transparent 2.2px);
+  background-size: 12px 12px;
+  border: var(--outline) solid var(--ink);
+  pointer-events: none;
+  opacity: calc(var(--day-on) * var(--halftone-on));
+  z-index: 0;
+}
+
+/* ---------- Navigation: rail (iPad landscape) and tab bar (phone) ---------- */
+
+.dk-nav {
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  display: flex;
+}
+
+.dk-nav__item {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 14px;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: var(--tap-parent);
+  min-height: var(--tap-parent);
+  padding: 8px 10px;
+  font-weight: 800;
+  font-size: 11px;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.dk-nav__item[aria-current='page'] {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.dk-nav--rail {
+  flex-direction: column;
+  width: 104px;
+  padding: 24px 12px;
+  gap: 10px;
+}
+
+.dk-nav--rail .dk-nav__item {
+  min-height: 68px;
+}
+
+.dk-nav--rail .dk-nav__spacer {
+  flex: 1;
+}
+
+.dk-nav--tabs {
+  justify-content: space-around;
+  padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+}
+
+.dk-nav--tabs .dk-nav__item {
+  flex: 1;
+  max-width: 96px;
+}
+
+.dk-nav--tabs .dk-nav__spacer {
+  display: none;
+}

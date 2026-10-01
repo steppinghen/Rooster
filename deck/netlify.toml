@@ -1,0 +1,25 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Dev ports are pinned per rooster project (see the root CLAUDE.md table).
+# netlify dev listens on 8894 on all interfaces; Vite runs behind it on 3997.
+[dev]
+  framework = "#custom"
+  command = "npm run dev:vite"
+  targetPort = 3997
+  port = 8894
+  autoLaunch = false
+
+# SPA fallback so deep links (/styleguide, /pair) load the app.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Referrer-Policy = "no-referrer"
+    X-Content-Type-Options = "nosniff"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"

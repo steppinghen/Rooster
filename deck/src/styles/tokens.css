@@ -1,0 +1,154 @@
+/*
+ * The Deck design tokens.
+ *
+ * Two independent root attributes drive the whole look (CLAUDE.md, "Two volume levels" and
+ * "Day and night grounds"):
+ *   data-ground="day|night"     which surface palette is in use
+ *   data-volume="normal|focus"  how loud the comic-print treatment is
+ *
+ * Always set both attributes on the same element (<html>, or a ThemeScope). Derived tokens
+ * below are resolved on that element, so they need both.
+ *
+ * Volume is expressed as switch variables (--tilt-on, --headline-shadow, --accent-fill, ...)
+ * rather than descendant selectors, so a normal-volume celebration nested inside a focus
+ * screen (or the reverse) gets the right treatment without selector fights.
+ */
+
+:root {
+  /* Constant in both grounds and both volumes */
+  --ink: #0a0818;
+  --cream: #f4ebd9;
+  --paper: #fffbf2;
+  --night-text: #15122e;
+  --white: #ffffff;
+
+  --magenta: #ff3e8a;
+  --cyan: #29d3ff;
+  --yellow: #ffd23f;
+  --lime: #9be564;
+  --lilac: #a99bff;
+  --orange: #ff8a3d;
+
+  /* Per-kid accent; kid-scoped containers override it. Text on accents is always ink. */
+  --accent: var(--magenta);
+
+  --font-display: 'Archivo Black', 'Arial Black', system-ui, sans-serif;
+  --font-ui: 'Archivo', system-ui, -apple-system, sans-serif;
+  --font-marker-face: 'Permanent Marker', 'Marker Felt', cursive;
+  --font-reading: 'Lexend', 'Archivo', system-ui, sans-serif;
+
+  --outline: 4px;
+  --outline-thick: 5px;
+  --radius-sm: 12px;
+  --radius: 22px;
+  --radius-lg: 30px;
+  --shadow-hard: 6px 6px 0 var(--ink);
+  --shadow-hard-sm: 4px 4px 0 var(--ink);
+  --shadow-press: 0 8px 0 var(--ink);
+
+  /* Tap targets (CLAUDE.md "Kid UX rules"): 80pt pre-reader, 64pt reader. CSS px = pt on iPad. */
+  --tap-prereader: 80px;
+  --tap-reader: 64px;
+  --tap-parent: 48px;
+
+  --ground-fade: 1s;
+  --step-ease: steps(3, end);
+}
+
+/* ---------- Grounds ---------- */
+
+/* Last Run forces the night palette in CSS too, not only through ThemeScope. */
+[data-ground='night'],
+[data-scene='lastrun'] {
+  --ground-normal: #15122e;
+  --ground-focus: #1c1a33;
+  --ground-lastrun: #141228;
+  --surface: #221e45;
+  --card: var(--cream);
+  --text: var(--cream);
+  --text-muted: #bdb5d6;
+  --text-on-card: var(--night-text);
+  --text-muted-on-card: #4e4870;
+  --marker: var(--yellow);
+  --slot: #7a7298;
+  --halftone-dot: rgba(244, 235, 217, 0.08);
+  --nav-bg: var(--ink);
+  --nav-text: var(--cream);
+  --focus-ring: var(--yellow);
+  --day-on: 0;
+  color-scheme: dark;
+}
+
+[data-ground='day']:not([data-scene='lastrun']) {
+  --ground-normal: #f2e6cc;
+  --ground-focus: #ede4d1;
+  --ground-lastrun: #f2e6cc; /* never used: Last Run forces night */
+  --surface: var(--paper);
+  --card: var(--paper);
+  --text: #15122e;
+  --text-muted: #4e4870;
+  --text-on-card: #15122e;
+  --text-muted-on-card: #4e4870;
+  --marker: #b3124f;
+  --slot: #7a7298;
+  --halftone-dot: rgba(10, 8, 24, 0.09);
+  --nav-bg: var(--ink);
+  --nav-text: var(--cream);
+  --focus-ring: var(--magenta);
+  --day-on: 1;
+  color-scheme: light;
+}
+
+/* ---------- Volumes ---------- */
+
+[data-volume='normal'] {
+  --ground: var(--ground-normal);
+  --ground-image: radial-gradient(var(--halftone-dot) 1.2px, transparent 1.7px);
+  --ground-image-size: 10px 10px;
+  --tilt-on: 1;
+  --headline-shadow: 4px 0 0 var(--magenta), -4px 0 0 var(--cyan);
+  --headline-shadow-sm: 2px 0 0 var(--magenta), -2px 0 0 var(--cyan);
+  --marker-font: var(--font-marker-face);
+  --marker-weight: 400;
+  --marker-color: var(--marker);
+  --marker-transform: none;
+  /* Guaranteed-invalid, so var(--accent-fill, var(--accent)) falls back to the kid accent
+     resolved on the component itself. */
+  --accent-fill: initial;
+  --accent-fill-border: initial;
+  --avatar-fill: initial;
+  --avatar-text: var(--ink);
+  --avatar-border: var(--ink);
+  --avatar-shadow: var(--shadow-hard-sm);
+  --halftone-on: 1;
+  --dot-max: 999px;
+}
+
+[data-volume='focus'] {
+  --ground: var(--ground-focus);
+  --ground-image: none;
+  --ground-image-size: auto;
+  --tilt-on: 0;
+  --headline-shadow: none;
+  --headline-shadow-sm: none;
+  --marker-font: var(--font-ui);
+  --marker-weight: 700;
+  --marker-color: var(--text-muted);
+  --marker-transform: none;
+  /* Accent shows only as a small indicator in focus; big accent fills become the card. */
+  --accent-fill: var(--card);
+  --accent-fill-border: var(--ink);
+  /* Avatar becomes a plain chip with an accent ring. */
+  --avatar-fill: var(--surface);
+  --avatar-text: var(--text);
+  --avatar-border: initial;
+  --avatar-shadow: none;
+  --halftone-on: 0;
+  /* Progress dots stay small in focus: the accent is an indicator, not a fill. */
+  --dot-max: 32px;
+}
+
+/* Last Run and Lights out are always night, flat and darker (applied with data-scene). */
+[data-scene='lastrun'] {
+  --ground: var(--ground-lastrun);
+}

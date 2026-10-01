@@ -1,0 +1,15 @@
+node_modules
+dist
+dev-dist
+.env
+.env.*
+!.env.example
+*.local
+test-results
+playwright-report
+blob-report
+review/screenshots
+design/reference/png
+supabase/.temp
+supabase/.branches
+.DS_Store

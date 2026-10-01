@@ -1,0 +1,47 @@
+{
+  "name": "the-deck",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "dev:vite": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "lint": "eslint .",
+    "test:db": "supabase test db",
+    "test:e2e": "playwright test",
+    "render:reference": "node scripts/render-reference.mjs",
+    "test:unit": "vitest run",
+    "env:local": "node scripts/env-local.mjs",
+    "icons": "node scripts/make-icons.mjs"
+  },
+  "dependencies": {
+    "@fontsource/archivo": "^5.3.0",
+    "@fontsource/archivo-black": "^5.3.0",
+    "@fontsource/lexend": "^5.3.0",
+    "@fontsource/permanent-marker": "^5.3.0",
+    "@supabase/supabase-js": "^2.109.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^7.18.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "eslint": "^10.11.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.13.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vite": "^8.3.2",
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^4.1.11"
+  }
+}

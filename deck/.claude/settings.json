@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+
+      "Bash(supabase init:*)",
+      "Bash(supabase start:*)",
+      "Bash(supabase stop:*)",
+      "Bash(supabase status:*)",
+      "Bash(supabase db reset:*)",
+      "Bash(supabase db lint:*)",
+      "Bash(supabase db diff:*)",
+      "Bash(supabase test db:*)",
+      "Bash(supabase migration new:*)",
+      "Bash(supabase gen types:*)",
+
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(git switch:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+
+      "Bash(netlify dev:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker info:*)",
+      "Bash(tailscale ip:*)"
+    ],
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(git add -A:*)",
+      "Bash(git add --all:*)",
+      "Bash(git add .:*)",
+      "Bash(git checkout --:*)",
+      "Bash(git restore:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean:*)",
+      "Bash(git stash:*)",
+
+      "Bash(supabase link:*)",
+      "Bash(supabase db push:*)",
+      "Bash(supabase * --linked*)",
+      "Bash(supabase * --db-url*)",
+      "Bash(supabase * --project-ref*)",
+      "Bash(npx supabase link:*)",
+      "Bash(npx supabase db push:*)",
+      "Bash(npx supabase * --linked*)",
+
+      "Bash(netlify deploy:*)",
+      "Bash(netlify link:*)",
+      "Bash(npx netlify deploy:*)",
+      "Bash(npx netlify-cli deploy:*)",
+      "Bash(ntl deploy:*)",
+      "Bash(npm exec netlify deploy:*)"
+    ]
+  }
+}
