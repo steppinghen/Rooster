@@ -343,3 +343,14 @@ Deviation: the reviewer agents run once over slices 2 to 4 together. Running the
   2. Read REVIEW.md section 6 and continue from the next untested step.
   3. Fix device bugs the same way: a fix, plus an e2e that reproduces it, plus a REVIEW.md note.
 - **Nothing pushed, linked or deployed.** Gate 2 waits on the parent's G0–G11.
+
+## Gate 1 answers (2026-10-02)
+
+The parent answered Gate 1; REVIEW.md "Gate 1 answers" has the table.
+- Q3, Q4, Q8, Q10, Q13 accepted. D4 and D7 confirmed. X5 and X10 are Phase 2.
+- Q9 superseded by Phase 1.5 (calendar kid defaults and the kid layer). Q18/X9 and X11 moved into Phase 1.5.
+- Q12, Q14 and Q17 contradicted X3, X13 and X4 (built at Gate 1); reconciled in REVIEW.md.
+- Netlify team: `rooster-nc` (the only team on the steppinghen.nc account, display name "Rooster"). The site isn't created.
+- The TOTP fix (`ec004db`) stays; the parent retests it with the Phase 1.5 device tests.
+- **No Phase 1 Gate 2.** Phase 1 and 1.5 go live together after the Phase 1.5 Gate 2. The parent runs `supabase link`, `supabase db push` and the Netlify deploy.
+- Phase 1 is closed on `deck/phase-1`. Work continues on `deck/phase-1.5` per `PHASE15_PLAN.md`.

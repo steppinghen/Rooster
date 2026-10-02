@@ -2,6 +2,20 @@
 
 For the parent's single review at Gate 1. Branch `deck/phase-1` at `a14fb80`. The builder filled this in slice by slice; `phase-reviewer` finished it on 2026-10-01 after rerunning every suite.
 
+## Gate 1 answers (parent, 2026-10-02)
+
+| Item | Answer |
+|---|---|
+| Q3, Q4, Q8, Q10, Q13 | **Defaults accepted.** |
+| Q9 / D10 | **Superseded by Phase 1.5.** Kid visibility comes from each calendar's kid default and the event's kid layer (Phase 1.5 slice 10). Phase 1 stays as built. |
+| Q18 / X9, X11 | **Moved into Phase 1.5:** the auto-spoken heads-up for pre-readers (slice 4) and the Device page's Sound setting (slice 14). No change in Phase 1. |
+| D4, D7 | **Confirmed.** D7's stills are replaced by the Phase 1.5 scene system (slice 4). D4 is not repeated: Phase 1.5 reviews every slice. |
+| X5, X10 | **Phase 2.** |
+| Q12, Q14, Q17 | Reconciled: they contradicted X3, X13 and X4, which were built at Gate 1. Marked superseded below. |
+| TOTP fix `ec004db` (R1d) | Stays in place. The parent retests it with the Phase 1.5 device tests (slice 16). |
+| Netlify team | **`rooster-nc`.** It is the only team on the steppinghen.nc@gmail.com account (display name "Rooster"), and `rooster-portfolio` lives in it. The root `CLAUDE.md`'s "the steppinghen team (`rooster-nc`)" means the same team. The site is not created yet. |
+| Gate 2 | **No separate Phase 1 Gate 2.** Phase 1 and Phase 1.5 go live together after the Phase 1.5 Gate 2. The parent runs `supabase link`, `supabase db push` and the Netlify deploy; Claude Code gives the exact commands and verifies (see G9, C2, C4). |
+
 ## 1. Summary
 
 **Built:** the whole Phase 1 list from `CLAUDE.md`, as slices 0–12 of `PHASE1_PLAN.md`:
@@ -280,7 +294,7 @@ Not marked in the plan; the brief says to pause on new write paths.
 
 - **CSP:** a strict CSP meta tag is added at build (`vite.config.ts:9–33`): own origin plus the one Supabase origin.
   - Dev (`netlify dev`, Vite) has no CSP and no service worker, so neither is exercised by Playwright or by the device URL on 8894.
-  - `netlify.toml` sends Referrer-Policy, nosniff and Permissions-Policy, but **no `X-Frame-Options` or `frame-ancestors`**. A meta CSP can't set `frame-ancestors`, so the parent screens (including Delete family) can be framed (Q14).
+  - `netlify.toml` sends Referrer-Policy, nosniff and Permissions-Policy, and (since Gate 1, X13) `X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'`. A meta CSP can't set `frame-ancestors`, so these headers are what stop the parent screens (including Delete family) being framed.
 - **Secrets:** only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` reach the browser (`src/lib/supabase.ts`).
 
 ## 3. Deviations
@@ -335,16 +349,16 @@ Defects first, then Phase 1 items that are missing or only partly done.
 | Q6 | A PIN-protected profile can't be opened while the iPad is offline (the PIN is checked on the server) | Default: keep it (fail closed). The open profile stays open offline, and kids without a PIN work offline. |
 | Q7 | A sibling's wrong guesses lock the PIN owner out of their profile on that iPad for 5 minutes | Default: accepted, because the lock is short. The message warns at 2 tries left, and a parent resetting the PIN clears the lock. |
 | Q8 | Lights out: the brief says "only control is I need to breathe" and also "a kid can always reach check-in and breathing" | Default: the bedtime screen shows only "I need to breathe". After the breaths it offers "Back to bed" or "Tell how I feel" (Wave Check). `/wave`, `/breathe` and the reset plan stay reachable in Lights out; everything else returns to the bedtime screen. |
-| Q9 | Default visibility for a new event | Default: **kids see it**. The alternative is parents-only by default, so a kid never sees an event by accident (D10). |
+| Q9 | Default visibility for a new event | Default: **kids see it**. The alternative is parents-only by default, so a kid never sees an event by accident (D10). **Gate 1: superseded by Phase 1.5** (calendar kid defaults and the kid layer). |
 | Q10 | MFA recovery if a parent loses their authenticator | Default: none in the app. The other parent can't reset it. Recovery: delete the factor in the hosted dashboard (Authentication → Users → the user → MFA). Optionally allow enrolling a second TOTP factor (`max_enrolled_factors = 10` already). |
 | Q11 | Mascot names (X5) | Default: deferred to Phase 2, stored per family, with the kids' "name our friends" moment on first launch. |
-| Q12 | A Back Office module on/off screen (X3) | Default: deferred. Phase 1 has only four kid modules, all on. |
+| Q12 | A Back Office module on/off screen (X3) | **Superseded: built at Gate 1** (X3, Back Office → Modules). The "deferred" default no longer applies. |
 | Q13 | JWT expiry (project-wide) | Default: 3600 s. Shorter (for example 900 s) narrows the revoked-while-connected window (R6) at the cost of more refreshes. |
-| Q14 | Anti-framing headers (X13) | Default: **add** them in `netlify.toml` before the first deploy (a code change; needs your OK). |
+| Q14 | Anti-framing headers (X13) | **Superseded: added at Gate 1** (X13, `netlify.toml`). Checked on production at C5. |
 | Q15 | Device testing over HTTP | Default: fix X1 first, then run Part A of the device list over `http://100.68.253.7:8894`. Part B (installed PWA offline, share sheet, CSP) needs HTTPS through `tailscale serve` (section 6). |
 | Q16 | Mirror the iPad setup guide (Guided Access, Screen Time) in Back Office → Devices | Default: SETUP.md only (D13). |
-| Q17 | A Wave Check prompt at the end of routines (X4) | Default: not built. Suggested: an optional last card "How's your wave?", on by default for Last Run. |
-| Q18 | Auto-speak the heads-up (X9) | Default: tap to hear. Suggested: auto-speak for pre-readers. |
+| Q17 | A Wave Check prompt at the end of routines (X4) | **Superseded: built at Gate 1** (X4, the "How's your wave?" card on the kid home). Phase 1.5 replaces it with check-in moments and the Wave Check routine step. |
+| Q18 | Auto-speak the heads-up (X9) | Default: tap to hear. Suggested: auto-speak for pre-readers. **Gate 1: moved into Phase 1.5** (slice 4). |
 
 ## 6. Device test list
 
@@ -479,6 +493,8 @@ Covers what dev mode can't: the service worker, the CSP and the share sheet.
 
 The parent does G1–G11 by hand. Claude Code does C1–C8 only after approval. X1, X2 and X13 are already fixed.
 
+**Updated at Gate 1:** this checklist now runs once, for Phase 1 and Phase 1.5 together, after the Phase 1.5 Gate 2. The parent runs the link, push and deploy commands in C2 and C4; Claude Code prints each command and verifies the result.
+
 **Parent: create the project**
 
 - **G0. Create the hosted project.**
@@ -522,7 +538,7 @@ The parent does G1–G11 by hand. Claude Code does C1–C8 only after approval. 
   insert into public.parent_allowlist (email, family_id) values ('<your email>', null);
   ```
   Then sign in on the phone with that email. The row is consumed when the family is created. No real email ever goes into code or migrations.
-- **G9. Permissions for Claude Code.** `.claude/settings.json` denies `supabase link`, `db push`, `--linked`, and `netlify deploy`/`link`. Either you run C2 and C4 yourself, or you change that list for the session. Claude Code won't change it.
+- **G9. Permissions for Claude Code.** `.claude/settings.json` denies `supabase link`, `db push`, `--linked`, and `netlify deploy`/`link`. **Decided at Gate 1: you run C2 and C4 yourself;** the deny list stays as it is. Claude Code won't change it.
 - **G10. Pre-deploy fixes:** X1, X2 and X13 are done (Gate 1). Confirm the remaining open gaps in section 4 can wait.
 - **G11. After C5:** pair the real iPad, enter the real family data in the live app only, and start Guided Access and Screen Time (SETUP.md).
 
@@ -541,7 +557,7 @@ The parent does G1–G11 by hand. Claude Code does C1–C8 only after approval. 
   - One `delete_family` dry run on a throwaway family proves the `auth` deletes work hosted (R4).
   - The pgTAP suite **can't** run against hosted: it depends on seed-only helpers, and `--linked` is denied.
 - **C4. Deploy.**
-  - Confirm the Netlify team is `rooster-nc`.
+  - Confirm the Netlify team is `rooster-nc` (settled at Gate 1: it is the steppinghen.nc account's only team, display name "Rooster"; `rooster-portfolio` is in it).
   - Create `rooster-deck` and link `deck/` only.
   - Deploy from `deck/` (never the repo root).
   - Record the site ID in the root table.
