@@ -824,6 +824,7 @@ Needs changes to the Coop TV app (outside `rooster/deck`, not built):
 | # | Question | Default |
 |---|---|---|
 | A65 | **(schema) The kid-side look RPC's rate limit (slice 13) needs a table** for attempts, like `pin_attempts`. The data model doesn't list one, so per the plan this is a stop. | **Ask at the smoke check, before slice 13.** Default: `look_attempts (family_id, device_user_id, kid_id, attempted_at)` with RLS on and no grants, purged nightly, covered by Delete family; at most 10 look saves per kid per device per hour |
+| A67 | **Art the canvas doesn't draw** (slice 3). The export derives what's missing; see `design/export-preview.html` (dashed orange). (1) Mascot md/sm, some sticker md, the wave pictures' md/sm and the two report badges are the large drawing with the halftone removed. (2) **Holiday trims:** the canvas draws portrait-day and landscape-night for most holidays, and day only for Halloween and Christmas. The missing ground reuses the other one, so "night strings are lilac" isn't applied. (3) The floating turtle has four different large drawings; the largest (230 px) is used. | Default: ship the derived files. Draw the missing trims (portrait night, landscape day; Halloween and Christmas night) on the canvas when you can, and the export picks them up |
 | A66 | Home location on iPads (P1 trade-off) | Default: keep it in `families.settings` as approved; iPads can read the rounded location. Say if you want it moved to a parents-only place (a schema change) |
 
 ## 1.5-3. Deviations (Phase 1.5)

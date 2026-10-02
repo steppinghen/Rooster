@@ -1,0 +1,2023 @@
+{
+  "mascots/rooster/board.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "board",
+    "class": "lg"
+  },
+  "mascots/rooster/board.md.svg": {
+    "group": "mascots/rooster",
+    "key": "board",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/rooster/hello.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "hello",
+    "class": "lg"
+  },
+  "mascots/rooster/hello.md.svg": {
+    "group": "mascots/rooster",
+    "key": "hello",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/rooster/hello.sm.svg": {
+    "group": "mascots/rooster",
+    "key": "hello",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "mascots/rooster/celebrate.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "celebrate",
+    "class": "lg"
+  },
+  "mascots/rooster/celebrate.md.svg": {
+    "group": "mascots/rooster",
+    "key": "celebrate",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/rooster/calm.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "calm",
+    "class": "lg"
+  },
+  "mascots/rooster/calm.md.svg": {
+    "group": "mascots/rooster",
+    "key": "calm",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/rooster/calm.sm.svg": {
+    "group": "mascots/rooster",
+    "key": "calm",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "mascots/rooster/headsup.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "headsup",
+    "class": "lg"
+  },
+  "mascots/rooster/headsup.md.svg": {
+    "group": "mascots/rooster",
+    "key": "headsup",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/rooster/breathing.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "breathing",
+    "class": "lg"
+  },
+  "mascots/rooster/breathing.md.svg": {
+    "group": "mascots/rooster",
+    "key": "breathing",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/rooster/bedtime.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "bedtime",
+    "class": "lg"
+  },
+  "mascots/rooster/bedtime.md.svg": {
+    "group": "mascots/rooster",
+    "key": "bedtime",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/rooster/winter.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "winter",
+    "class": "lg"
+  },
+  "mascots/rooster/winter.md.svg": {
+    "group": "mascots/rooster",
+    "key": "winter",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/rooster/winter-board.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "winter-board",
+    "class": "lg"
+  },
+  "mascots/rooster/winter-board.md.svg": {
+    "group": "mascots/rooster",
+    "key": "winter-board",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/board.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "board",
+    "class": "lg"
+  },
+  "mascots/turtle/board.md.svg": {
+    "group": "mascots/turtle",
+    "key": "board",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/hello.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "hello",
+    "class": "lg"
+  },
+  "mascots/turtle/hello.md.svg": {
+    "group": "mascots/turtle",
+    "key": "hello",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/hello.sm.svg": {
+    "group": "mascots/turtle",
+    "key": "hello",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "mascots/turtle/celebrate.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "celebrate",
+    "class": "lg"
+  },
+  "mascots/turtle/celebrate.md.svg": {
+    "group": "mascots/turtle",
+    "key": "celebrate",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/calm.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "calm",
+    "class": "lg"
+  },
+  "mascots/turtle/calm.md.svg": {
+    "group": "mascots/turtle",
+    "key": "calm",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/calm.sm.svg": {
+    "group": "mascots/turtle",
+    "key": "calm",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "mascots/turtle/headsup.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "headsup",
+    "class": "lg"
+  },
+  "mascots/turtle/headsup.md.svg": {
+    "group": "mascots/turtle",
+    "key": "headsup",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/breathing.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "breathing",
+    "class": "lg"
+  },
+  "mascots/turtle/breathing.md.svg": {
+    "group": "mascots/turtle",
+    "key": "breathing",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/bedtime.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "bedtime",
+    "class": "lg"
+  },
+  "mascots/turtle/bedtime.md.svg": {
+    "group": "mascots/turtle",
+    "key": "bedtime",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/winter.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "winter",
+    "class": "lg"
+  },
+  "mascots/turtle/winter.md.svg": {
+    "group": "mascots/turtle",
+    "key": "winter",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/winter-board.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "winter-board",
+    "class": "lg"
+  },
+  "mascots/turtle/winter-board.md.svg": {
+    "group": "mascots/turtle",
+    "key": "winter-board",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/board.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "board",
+    "class": "lg"
+  },
+  "mascots/dog-mara/board.md.svg": {
+    "group": "mascots/dog-mara",
+    "key": "board",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/hello.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "hello",
+    "class": "lg"
+  },
+  "mascots/dog-mara/hello.md.svg": {
+    "group": "mascots/dog-mara",
+    "key": "hello",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/hello.sm.svg": {
+    "group": "mascots/dog-mara",
+    "key": "hello",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "mascots/dog-mara/celebrate.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "celebrate",
+    "class": "lg"
+  },
+  "mascots/dog-mara/celebrate.md.svg": {
+    "group": "mascots/dog-mara",
+    "key": "celebrate",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/calm.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "calm",
+    "class": "lg"
+  },
+  "mascots/dog-mara/calm.md.svg": {
+    "group": "mascots/dog-mara",
+    "key": "calm",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/calm.sm.svg": {
+    "group": "mascots/dog-mara",
+    "key": "calm",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "mascots/dog-mara/headsup.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "headsup",
+    "class": "lg"
+  },
+  "mascots/dog-mara/headsup.md.svg": {
+    "group": "mascots/dog-mara",
+    "key": "headsup",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/breathing.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "breathing",
+    "class": "lg"
+  },
+  "mascots/dog-mara/breathing.md.svg": {
+    "group": "mascots/dog-mara",
+    "key": "breathing",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/bedtime.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "bedtime",
+    "class": "lg"
+  },
+  "mascots/dog-mara/bedtime.md.svg": {
+    "group": "mascots/dog-mara",
+    "key": "bedtime",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/winter.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "winter",
+    "class": "lg"
+  },
+  "mascots/dog-mara/winter.md.svg": {
+    "group": "mascots/dog-mara",
+    "key": "winter",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/winter-board.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "winter-board",
+    "class": "lg"
+  },
+  "mascots/dog-mara/winter-board.md.svg": {
+    "group": "mascots/dog-mara",
+    "key": "winter-board",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-costa/board.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "board",
+    "class": "lg"
+  },
+  "mascots/dog-costa/board.md.svg": {
+    "group": "mascots/dog-costa",
+    "key": "board",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-costa/hello.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "hello",
+    "class": "lg"
+  },
+  "mascots/dog-costa/hello.md.svg": {
+    "group": "mascots/dog-costa",
+    "key": "hello",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-costa/hello.sm.svg": {
+    "group": "mascots/dog-costa",
+    "key": "hello",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "mascots/dog-costa/celebrate.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "celebrate",
+    "class": "lg"
+  },
+  "mascots/dog-costa/celebrate.md.svg": {
+    "group": "mascots/dog-costa",
+    "key": "celebrate",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-costa/calm.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "calm",
+    "class": "lg"
+  },
+  "mascots/dog-costa/calm.md.svg": {
+    "group": "mascots/dog-costa",
+    "key": "calm",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-costa/calm.sm.svg": {
+    "group": "mascots/dog-costa",
+    "key": "calm",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "mascots/dog-costa/headsup.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "headsup",
+    "class": "lg"
+  },
+  "mascots/dog-costa/headsup.md.svg": {
+    "group": "mascots/dog-costa",
+    "key": "headsup",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-costa/breathing.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "breathing",
+    "class": "lg"
+  },
+  "mascots/dog-costa/breathing.md.svg": {
+    "group": "mascots/dog-costa",
+    "key": "breathing",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-costa/bedtime.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "bedtime",
+    "class": "lg"
+  },
+  "mascots/dog-costa/bedtime.md.svg": {
+    "group": "mascots/dog-costa",
+    "key": "bedtime",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-costa/winter.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "winter",
+    "class": "lg"
+  },
+  "mascots/dog-costa/winter.md.svg": {
+    "group": "mascots/dog-costa",
+    "key": "winter",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-costa/winter-board.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "winter-board",
+    "class": "lg"
+  },
+  "mascots/dog-costa/winter-board.md.svg": {
+    "group": "mascots/dog-costa",
+    "key": "winter-board",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/slap.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "slap",
+    "class": "lg"
+  },
+  "mascots/dog-costa/slap.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "slap",
+    "class": "lg"
+  },
+  "mascots/turtle/float.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "float",
+    "class": "lg"
+  },
+  "mascots/turtle/float.md.svg": {
+    "group": "mascots/turtle",
+    "key": "float",
+    "class": "md"
+  },
+  "mascots/turtle/tucked.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "tucked",
+    "class": "lg"
+  },
+  "mascots/turtle/tucked.md.svg": {
+    "group": "mascots/turtle",
+    "key": "tucked",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "weather/surf/sunny.lg.svg": {
+    "group": "weather/surf",
+    "key": "sunny",
+    "class": "lg"
+  },
+  "weather/surf/sunny.md.svg": {
+    "group": "weather/surf",
+    "key": "sunny",
+    "class": "md"
+  },
+  "weather/surf/sunny.sm.svg": {
+    "group": "weather/surf",
+    "key": "sunny",
+    "class": "sm"
+  },
+  "weather/snow/sunny.lg.svg": {
+    "group": "weather/snow",
+    "key": "sunny",
+    "class": "lg"
+  },
+  "weather/snow/sunny.md.svg": {
+    "group": "weather/snow",
+    "key": "sunny",
+    "class": "md"
+  },
+  "weather/snow/sunny.sm.svg": {
+    "group": "weather/snow",
+    "key": "sunny",
+    "class": "sm"
+  },
+  "weather/surf/cloudy.lg.svg": {
+    "group": "weather/surf",
+    "key": "cloudy",
+    "class": "lg"
+  },
+  "weather/surf/cloudy.md.svg": {
+    "group": "weather/surf",
+    "key": "cloudy",
+    "class": "md"
+  },
+  "weather/surf/cloudy.sm.svg": {
+    "group": "weather/surf",
+    "key": "cloudy",
+    "class": "sm"
+  },
+  "weather/snow/cloudy.lg.svg": {
+    "group": "weather/snow",
+    "key": "cloudy",
+    "class": "lg"
+  },
+  "weather/snow/cloudy.md.svg": {
+    "group": "weather/snow",
+    "key": "cloudy",
+    "class": "md"
+  },
+  "weather/snow/cloudy.sm.svg": {
+    "group": "weather/snow",
+    "key": "cloudy",
+    "class": "sm"
+  },
+  "weather/surf/rain.lg.svg": {
+    "group": "weather/surf",
+    "key": "rain",
+    "class": "lg"
+  },
+  "weather/surf/rain.md.svg": {
+    "group": "weather/surf",
+    "key": "rain",
+    "class": "md"
+  },
+  "weather/surf/rain.sm.svg": {
+    "group": "weather/surf",
+    "key": "rain",
+    "class": "sm"
+  },
+  "weather/snow/rain.lg.svg": {
+    "group": "weather/snow",
+    "key": "rain",
+    "class": "lg"
+  },
+  "weather/snow/rain.md.svg": {
+    "group": "weather/snow",
+    "key": "rain",
+    "class": "md"
+  },
+  "weather/snow/rain.sm.svg": {
+    "group": "weather/snow",
+    "key": "rain",
+    "class": "sm"
+  },
+  "weather/surf/storm.lg.svg": {
+    "group": "weather/surf",
+    "key": "storm",
+    "class": "lg"
+  },
+  "weather/surf/storm.md.svg": {
+    "group": "weather/surf",
+    "key": "storm",
+    "class": "md"
+  },
+  "weather/surf/storm.sm.svg": {
+    "group": "weather/surf",
+    "key": "storm",
+    "class": "sm"
+  },
+  "weather/snow/storm.lg.svg": {
+    "group": "weather/snow",
+    "key": "storm",
+    "class": "lg"
+  },
+  "weather/snow/storm.md.svg": {
+    "group": "weather/snow",
+    "key": "storm",
+    "class": "md"
+  },
+  "weather/snow/storm.sm.svg": {
+    "group": "weather/snow",
+    "key": "storm",
+    "class": "sm"
+  },
+  "weather/surf/snow.lg.svg": {
+    "group": "weather/surf",
+    "key": "snow",
+    "class": "lg"
+  },
+  "weather/surf/snow.md.svg": {
+    "group": "weather/surf",
+    "key": "snow",
+    "class": "md"
+  },
+  "weather/surf/snow.sm.svg": {
+    "group": "weather/surf",
+    "key": "snow",
+    "class": "sm"
+  },
+  "weather/snow/snow.lg.svg": {
+    "group": "weather/snow",
+    "key": "snow",
+    "class": "lg"
+  },
+  "weather/snow/snow.md.svg": {
+    "group": "weather/snow",
+    "key": "snow",
+    "class": "md"
+  },
+  "weather/snow/snow.sm.svg": {
+    "group": "weather/snow",
+    "key": "snow",
+    "class": "sm"
+  },
+  "weather/surf/windy.lg.svg": {
+    "group": "weather/surf",
+    "key": "windy",
+    "class": "lg"
+  },
+  "weather/surf/windy.md.svg": {
+    "group": "weather/surf",
+    "key": "windy",
+    "class": "md"
+  },
+  "weather/surf/windy.sm.svg": {
+    "group": "weather/surf",
+    "key": "windy",
+    "class": "sm"
+  },
+  "weather/snow/windy.lg.svg": {
+    "group": "weather/snow",
+    "key": "windy",
+    "class": "lg"
+  },
+  "weather/snow/windy.md.svg": {
+    "group": "weather/snow",
+    "key": "windy",
+    "class": "md"
+  },
+  "weather/snow/windy.sm.svg": {
+    "group": "weather/snow",
+    "key": "windy",
+    "class": "sm"
+  },
+  "weather/surf/hot.lg.svg": {
+    "group": "weather/surf",
+    "key": "hot",
+    "class": "lg"
+  },
+  "weather/surf/hot.md.svg": {
+    "group": "weather/surf",
+    "key": "hot",
+    "class": "md"
+  },
+  "weather/surf/hot.sm.svg": {
+    "group": "weather/surf",
+    "key": "hot",
+    "class": "sm"
+  },
+  "weather/snow/hot.lg.svg": {
+    "group": "weather/snow",
+    "key": "hot",
+    "class": "lg"
+  },
+  "weather/snow/hot.md.svg": {
+    "group": "weather/snow",
+    "key": "hot",
+    "class": "md"
+  },
+  "weather/snow/hot.sm.svg": {
+    "group": "weather/snow",
+    "key": "hot",
+    "class": "sm"
+  },
+  "weather/surf/cold.lg.svg": {
+    "group": "weather/surf",
+    "key": "cold",
+    "class": "lg"
+  },
+  "weather/surf/cold.md.svg": {
+    "group": "weather/surf",
+    "key": "cold",
+    "class": "md"
+  },
+  "weather/surf/cold.sm.svg": {
+    "group": "weather/surf",
+    "key": "cold",
+    "class": "sm"
+  },
+  "weather/snow/cold.lg.svg": {
+    "group": "weather/snow",
+    "key": "cold",
+    "class": "lg"
+  },
+  "weather/snow/cold.md.svg": {
+    "group": "weather/snow",
+    "key": "cold",
+    "class": "md"
+  },
+  "weather/snow/cold.sm.svg": {
+    "group": "weather/snow",
+    "key": "cold",
+    "class": "sm"
+  },
+  "weather/badges/surf-report.md.svg": {
+    "group": "weather/badges",
+    "key": "surf-report",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "weather/badges/snow-report.md.svg": {
+    "group": "weather/badges",
+    "key": "snow-report",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "dressing/jacket.lg.svg": {
+    "group": "dressing",
+    "key": "jacket",
+    "class": "lg"
+  },
+  "dressing/jacket.md.svg": {
+    "group": "dressing",
+    "key": "jacket",
+    "class": "md"
+  },
+  "dressing/shorts.lg.svg": {
+    "group": "dressing",
+    "key": "shorts",
+    "class": "lg"
+  },
+  "dressing/shorts.md.svg": {
+    "group": "dressing",
+    "key": "shorts",
+    "class": "md"
+  },
+  "dressing/rain-boots.lg.svg": {
+    "group": "dressing",
+    "key": "rain-boots",
+    "class": "lg"
+  },
+  "dressing/rain-boots.md.svg": {
+    "group": "dressing",
+    "key": "rain-boots",
+    "class": "md"
+  },
+  "dressing/coat.lg.svg": {
+    "group": "dressing",
+    "key": "coat",
+    "class": "lg"
+  },
+  "dressing/coat.md.svg": {
+    "group": "dressing",
+    "key": "coat",
+    "class": "md"
+  },
+  "dressing/warm-hat.lg.svg": {
+    "group": "dressing",
+    "key": "warm-hat",
+    "class": "lg"
+  },
+  "dressing/warm-hat.md.svg": {
+    "group": "dressing",
+    "key": "warm-hat",
+    "class": "md"
+  },
+  "dressing/gloves.lg.svg": {
+    "group": "dressing",
+    "key": "gloves",
+    "class": "lg"
+  },
+  "dressing/gloves.md.svg": {
+    "group": "dressing",
+    "key": "gloves",
+    "class": "md"
+  },
+  "dressing/snow-boots.lg.svg": {
+    "group": "dressing",
+    "key": "snow-boots",
+    "class": "lg"
+  },
+  "dressing/snow-boots.md.svg": {
+    "group": "dressing",
+    "key": "snow-boots",
+    "class": "md"
+  },
+  "dressing/snow-pants.lg.svg": {
+    "group": "dressing",
+    "key": "snow-pants",
+    "class": "lg"
+  },
+  "dressing/snow-pants.md.svg": {
+    "group": "dressing",
+    "key": "snow-pants",
+    "class": "md"
+  },
+  "dressing/scarf.lg.svg": {
+    "group": "dressing",
+    "key": "scarf",
+    "class": "lg"
+  },
+  "dressing/scarf.md.svg": {
+    "group": "dressing",
+    "key": "scarf",
+    "class": "md"
+  },
+  "wavecheck/pumping.lg.svg": {
+    "group": "wavecheck",
+    "key": "pumping",
+    "class": "lg"
+  },
+  "wavecheck/pumping.md.svg": {
+    "group": "wavecheck",
+    "key": "pumping",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "wavecheck/pumping.sm.svg": {
+    "group": "wavecheck",
+    "key": "pumping",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "wavecheck/rolling.lg.svg": {
+    "group": "wavecheck",
+    "key": "rolling",
+    "class": "lg"
+  },
+  "wavecheck/rolling.md.svg": {
+    "group": "wavecheck",
+    "key": "rolling",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "wavecheck/rolling.sm.svg": {
+    "group": "wavecheck",
+    "key": "rolling",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "wavecheck/flat.lg.svg": {
+    "group": "wavecheck",
+    "key": "flat",
+    "class": "lg"
+  },
+  "wavecheck/flat.md.svg": {
+    "group": "wavecheck",
+    "key": "flat",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "wavecheck/flat.sm.svg": {
+    "group": "wavecheck",
+    "key": "flat",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "wavecheck/choppy.lg.svg": {
+    "group": "wavecheck",
+    "key": "choppy",
+    "class": "lg"
+  },
+  "wavecheck/choppy.md.svg": {
+    "group": "wavecheck",
+    "key": "choppy",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "wavecheck/choppy.sm.svg": {
+    "group": "wavecheck",
+    "key": "choppy",
+    "class": "sm",
+    "derived": "sm from lg"
+  },
+  "stickers/skate/bolt-deck.lg.svg": {
+    "group": "stickers/skate",
+    "key": "bolt-deck",
+    "class": "lg"
+  },
+  "stickers/skate/bolt-deck.md.svg": {
+    "group": "stickers/skate",
+    "key": "bolt-deck",
+    "class": "md"
+  },
+  "stickers/skate/bolt-deck.sm.svg": {
+    "group": "stickers/skate",
+    "key": "bolt-deck",
+    "class": "sm"
+  },
+  "stickers/skate/wheel.lg.svg": {
+    "group": "stickers/skate",
+    "key": "wheel",
+    "class": "lg"
+  },
+  "stickers/skate/wheel.md.svg": {
+    "group": "stickers/skate",
+    "key": "wheel",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/skate/wheel.sm.svg": {
+    "group": "stickers/skate",
+    "key": "wheel",
+    "class": "sm"
+  },
+  "stickers/skate/high-top.lg.svg": {
+    "group": "stickers/skate",
+    "key": "high-top",
+    "class": "lg"
+  },
+  "stickers/skate/high-top.md.svg": {
+    "group": "stickers/skate",
+    "key": "high-top",
+    "class": "md"
+  },
+  "stickers/skate/high-top.sm.svg": {
+    "group": "stickers/skate",
+    "key": "high-top",
+    "class": "sm"
+  },
+  "stickers/skate/half-pipe.lg.svg": {
+    "group": "stickers/skate",
+    "key": "half-pipe",
+    "class": "lg"
+  },
+  "stickers/skate/half-pipe.md.svg": {
+    "group": "stickers/skate",
+    "key": "half-pipe",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/skate/half-pipe.sm.svg": {
+    "group": "stickers/skate",
+    "key": "half-pipe",
+    "class": "sm"
+  },
+  "stickers/skate/helmet.lg.svg": {
+    "group": "stickers/skate",
+    "key": "helmet",
+    "class": "lg"
+  },
+  "stickers/skate/helmet.md.svg": {
+    "group": "stickers/skate",
+    "key": "helmet",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/skate/helmet.sm.svg": {
+    "group": "stickers/skate",
+    "key": "helmet",
+    "class": "sm"
+  },
+  "stickers/surf/surfboard.lg.svg": {
+    "group": "stickers/surf",
+    "key": "surfboard",
+    "class": "lg"
+  },
+  "stickers/surf/surfboard.md.svg": {
+    "group": "stickers/surf",
+    "key": "surfboard",
+    "class": "md"
+  },
+  "stickers/surf/surfboard.sm.svg": {
+    "group": "stickers/surf",
+    "key": "surfboard",
+    "class": "sm"
+  },
+  "stickers/surf/barrel.lg.svg": {
+    "group": "stickers/surf",
+    "key": "barrel",
+    "class": "lg"
+  },
+  "stickers/surf/barrel.md.svg": {
+    "group": "stickers/surf",
+    "key": "barrel",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/surf/barrel.sm.svg": {
+    "group": "stickers/surf",
+    "key": "barrel",
+    "class": "sm"
+  },
+  "stickers/surf/shell.lg.svg": {
+    "group": "stickers/surf",
+    "key": "shell",
+    "class": "lg"
+  },
+  "stickers/surf/shell.md.svg": {
+    "group": "stickers/surf",
+    "key": "shell",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/surf/shell.sm.svg": {
+    "group": "stickers/surf",
+    "key": "shell",
+    "class": "sm"
+  },
+  "stickers/surf/palm-island.lg.svg": {
+    "group": "stickers/surf",
+    "key": "palm-island",
+    "class": "lg"
+  },
+  "stickers/surf/palm-island.md.svg": {
+    "group": "stickers/surf",
+    "key": "palm-island",
+    "class": "md"
+  },
+  "stickers/surf/palm-island.sm.svg": {
+    "group": "stickers/surf",
+    "key": "palm-island",
+    "class": "sm"
+  },
+  "stickers/surf/flip-flop.lg.svg": {
+    "group": "stickers/surf",
+    "key": "flip-flop",
+    "class": "lg"
+  },
+  "stickers/surf/flip-flop.md.svg": {
+    "group": "stickers/surf",
+    "key": "flip-flop",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/surf/flip-flop.sm.svg": {
+    "group": "stickers/surf",
+    "key": "flip-flop",
+    "class": "sm"
+  },
+  "stickers/surf/rooster-rider.lg.svg": {
+    "group": "stickers/surf",
+    "key": "rooster-rider",
+    "class": "lg"
+  },
+  "stickers/surf/rooster-rider.md.svg": {
+    "group": "stickers/surf",
+    "key": "rooster-rider",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/surf/rooster-rider.sm.svg": {
+    "group": "stickers/surf",
+    "key": "rooster-rider",
+    "class": "sm"
+  },
+  "stickers/snow/snowboard.lg.svg": {
+    "group": "stickers/snow",
+    "key": "snowboard",
+    "class": "lg"
+  },
+  "stickers/snow/snowboard.md.svg": {
+    "group": "stickers/snow",
+    "key": "snowboard",
+    "class": "md"
+  },
+  "stickers/snow/snowboard.sm.svg": {
+    "group": "stickers/snow",
+    "key": "snowboard",
+    "class": "sm"
+  },
+  "stickers/snow/peak.lg.svg": {
+    "group": "stickers/snow",
+    "key": "peak",
+    "class": "lg"
+  },
+  "stickers/snow/peak.md.svg": {
+    "group": "stickers/snow",
+    "key": "peak",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/snow/peak.sm.svg": {
+    "group": "stickers/snow",
+    "key": "peak",
+    "class": "sm"
+  },
+  "stickers/snow/goggles.lg.svg": {
+    "group": "stickers/snow",
+    "key": "goggles",
+    "class": "lg"
+  },
+  "stickers/snow/goggles.md.svg": {
+    "group": "stickers/snow",
+    "key": "goggles",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/snow/goggles.sm.svg": {
+    "group": "stickers/snow",
+    "key": "goggles",
+    "class": "sm"
+  },
+  "stickers/snow/snowflake.lg.svg": {
+    "group": "stickers/snow",
+    "key": "snowflake",
+    "class": "lg"
+  },
+  "stickers/snow/snowflake.md.svg": {
+    "group": "stickers/snow",
+    "key": "snowflake",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/snow/snowflake.sm.svg": {
+    "group": "stickers/snow",
+    "key": "snowflake",
+    "class": "sm"
+  },
+  "stickers/snow/cocoa.lg.svg": {
+    "group": "stickers/snow",
+    "key": "cocoa",
+    "class": "lg"
+  },
+  "stickers/snow/cocoa.md.svg": {
+    "group": "stickers/snow",
+    "key": "cocoa",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/snow/cocoa.sm.svg": {
+    "group": "stickers/snow",
+    "key": "cocoa",
+    "class": "sm"
+  },
+  "stickers/snow/turtle-rider.lg.svg": {
+    "group": "stickers/snow",
+    "key": "turtle-rider",
+    "class": "lg"
+  },
+  "stickers/snow/turtle-rider.md.svg": {
+    "group": "stickers/snow",
+    "key": "turtle-rider",
+    "class": "md"
+  },
+  "stickers/snow/turtle-rider.sm.svg": {
+    "group": "stickers/snow",
+    "key": "turtle-rider",
+    "class": "sm"
+  },
+  "stickers/skate/dog-rider-mara.lg.svg": {
+    "group": "stickers/skate",
+    "key": "dog-rider-mara",
+    "class": "lg"
+  },
+  "stickers/skate/dog-rider-mara.md.svg": {
+    "group": "stickers/skate",
+    "key": "dog-rider-mara",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/skate/dog-rider-mara.sm.svg": {
+    "group": "stickers/skate",
+    "key": "dog-rider-mara",
+    "class": "sm"
+  },
+  "stickers/skate/dog-rider-costa.lg.svg": {
+    "group": "stickers/skate",
+    "key": "dog-rider-costa",
+    "class": "lg"
+  },
+  "stickers/skate/dog-rider-costa.md.svg": {
+    "group": "stickers/skate",
+    "key": "dog-rider-costa",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/skate/dog-rider-costa.sm.svg": {
+    "group": "stickers/skate",
+    "key": "dog-rider-costa",
+    "class": "sm"
+  },
+  "stickers/holiday/santa.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "santa",
+    "class": "lg"
+  },
+  "stickers/holiday/santa.md.svg": {
+    "group": "stickers/holiday",
+    "key": "santa",
+    "class": "md"
+  },
+  "stickers/holiday/santa.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "santa",
+    "class": "sm"
+  },
+  "stickers/holiday/reindeer.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "reindeer",
+    "class": "lg"
+  },
+  "stickers/holiday/reindeer.md.svg": {
+    "group": "stickers/holiday",
+    "key": "reindeer",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/holiday/reindeer.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "reindeer",
+    "class": "sm"
+  },
+  "stickers/holiday/snowman.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "snowman",
+    "class": "lg"
+  },
+  "stickers/holiday/snowman.md.svg": {
+    "group": "stickers/holiday",
+    "key": "snowman",
+    "class": "md"
+  },
+  "stickers/holiday/snowman.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "snowman",
+    "class": "sm"
+  },
+  "stickers/holiday/present.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "present",
+    "class": "lg"
+  },
+  "stickers/holiday/present.md.svg": {
+    "group": "stickers/holiday",
+    "key": "present",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/holiday/present.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "present",
+    "class": "sm"
+  },
+  "stickers/holiday/bunny.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "bunny",
+    "class": "lg"
+  },
+  "stickers/holiday/bunny.md.svg": {
+    "group": "stickers/holiday",
+    "key": "bunny",
+    "class": "md"
+  },
+  "stickers/holiday/bunny.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "bunny",
+    "class": "sm"
+  },
+  "stickers/holiday/egg.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "egg",
+    "class": "lg"
+  },
+  "stickers/holiday/egg.md.svg": {
+    "group": "stickers/holiday",
+    "key": "egg",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/holiday/egg.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "egg",
+    "class": "sm"
+  },
+  "stickers/holiday/leprechaun.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "leprechaun",
+    "class": "lg"
+  },
+  "stickers/holiday/leprechaun.md.svg": {
+    "group": "stickers/holiday",
+    "key": "leprechaun",
+    "class": "md"
+  },
+  "stickers/holiday/leprechaun.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "leprechaun",
+    "class": "sm"
+  },
+  "stickers/holiday/shamrock.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "shamrock",
+    "class": "lg"
+  },
+  "stickers/holiday/shamrock.md.svg": {
+    "group": "stickers/holiday",
+    "key": "shamrock",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/holiday/shamrock.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "shamrock",
+    "class": "sm"
+  },
+  "stickers/holiday/flag.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "flag",
+    "class": "lg"
+  },
+  "stickers/holiday/flag.md.svg": {
+    "group": "stickers/holiday",
+    "key": "flag",
+    "class": "md"
+  },
+  "stickers/holiday/flag.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "flag",
+    "class": "sm"
+  },
+  "stickers/holiday/fireworks.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "fireworks",
+    "class": "lg"
+  },
+  "stickers/holiday/fireworks.md.svg": {
+    "group": "stickers/holiday",
+    "key": "fireworks",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/holiday/fireworks.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "fireworks",
+    "class": "sm"
+  },
+  "stickers/holiday/pumpkin.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "pumpkin",
+    "class": "lg"
+  },
+  "stickers/holiday/pumpkin.md.svg": {
+    "group": "stickers/holiday",
+    "key": "pumpkin",
+    "class": "md"
+  },
+  "stickers/holiday/pumpkin.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "pumpkin",
+    "class": "sm"
+  },
+  "stickers/holiday/ghost.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "ghost",
+    "class": "lg"
+  },
+  "stickers/holiday/ghost.md.svg": {
+    "group": "stickers/holiday",
+    "key": "ghost",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/holiday/ghost.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "ghost",
+    "class": "sm"
+  },
+  "stickers/holiday/turkey.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "turkey",
+    "class": "lg"
+  },
+  "stickers/holiday/turkey.md.svg": {
+    "group": "stickers/holiday",
+    "key": "turkey",
+    "class": "md"
+  },
+  "stickers/holiday/turkey.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "turkey",
+    "class": "sm"
+  },
+  "stickers/holiday/heart.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "heart",
+    "class": "lg"
+  },
+  "stickers/holiday/heart.md.svg": {
+    "group": "stickers/holiday",
+    "key": "heart",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/holiday/heart.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "heart",
+    "class": "sm"
+  },
+  "stickers/holiday/cake.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "cake",
+    "class": "lg"
+  },
+  "stickers/holiday/cake.md.svg": {
+    "group": "stickers/holiday",
+    "key": "cake",
+    "class": "md"
+  },
+  "stickers/holiday/cake.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "cake",
+    "class": "sm"
+  },
+  "stickers/holiday/party-hat.lg.svg": {
+    "group": "stickers/holiday",
+    "key": "party-hat",
+    "class": "lg"
+  },
+  "stickers/holiday/party-hat.md.svg": {
+    "group": "stickers/holiday",
+    "key": "party-hat",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "stickers/holiday/party-hat.sm.svg": {
+    "group": "stickers/holiday",
+    "key": "party-hat",
+    "class": "sm"
+  },
+  "stickers/faith/manger.lg.svg": {
+    "group": "stickers/faith",
+    "key": "manger",
+    "class": "lg"
+  },
+  "stickers/faith/manger.md.svg": {
+    "group": "stickers/faith",
+    "key": "manger",
+    "class": "md"
+  },
+  "stickers/faith/manger.sm.svg": {
+    "group": "stickers/faith",
+    "key": "manger",
+    "class": "sm"
+  },
+  "stickers/faith/north-star.lg.svg": {
+    "group": "stickers/faith",
+    "key": "north-star",
+    "class": "lg"
+  },
+  "stickers/faith/north-star.md.svg": {
+    "group": "stickers/faith",
+    "key": "north-star",
+    "class": "md"
+  },
+  "stickers/faith/north-star.sm.svg": {
+    "group": "stickers/faith",
+    "key": "north-star",
+    "class": "sm"
+  },
+  "stickers/faith/cross.lg.svg": {
+    "group": "stickers/faith",
+    "key": "cross",
+    "class": "lg"
+  },
+  "stickers/faith/cross.md.svg": {
+    "group": "stickers/faith",
+    "key": "cross",
+    "class": "md"
+  },
+  "stickers/faith/cross.sm.svg": {
+    "group": "stickers/faith",
+    "key": "cross",
+    "class": "sm"
+  },
+  "stickers/faith/empty-tomb.lg.svg": {
+    "group": "stickers/faith",
+    "key": "empty-tomb",
+    "class": "lg"
+  },
+  "stickers/faith/empty-tomb.md.svg": {
+    "group": "stickers/faith",
+    "key": "empty-tomb",
+    "class": "md"
+  },
+  "stickers/faith/empty-tomb.sm.svg": {
+    "group": "stickers/faith",
+    "key": "empty-tomb",
+    "class": "sm"
+  },
+  "stickers/faith/church.lg.svg": {
+    "group": "stickers/faith",
+    "key": "church",
+    "class": "lg"
+  },
+  "stickers/faith/church.md.svg": {
+    "group": "stickers/faith",
+    "key": "church",
+    "class": "md"
+  },
+  "stickers/faith/church.sm.svg": {
+    "group": "stickers/faith",
+    "key": "church",
+    "class": "sm"
+  },
+  "stickers/school/school.lg.svg": {
+    "group": "stickers/school",
+    "key": "school",
+    "class": "lg"
+  },
+  "stickers/school/school.md.svg": {
+    "group": "stickers/school",
+    "key": "school",
+    "class": "md"
+  },
+  "stickers/school/school.sm.svg": {
+    "group": "stickers/school",
+    "key": "school",
+    "class": "sm"
+  },
+  "stickers/school/school-bus.lg.svg": {
+    "group": "stickers/school",
+    "key": "school-bus",
+    "class": "lg"
+  },
+  "stickers/school/school-bus.md.svg": {
+    "group": "stickers/school",
+    "key": "school-bus",
+    "class": "md"
+  },
+  "stickers/school/school-bus.sm.svg": {
+    "group": "stickers/school",
+    "key": "school-bus",
+    "class": "sm"
+  },
+  "stickers/school/pencil.lg.svg": {
+    "group": "stickers/school",
+    "key": "pencil",
+    "class": "lg"
+  },
+  "stickers/school/pencil.md.svg": {
+    "group": "stickers/school",
+    "key": "pencil",
+    "class": "md"
+  },
+  "stickers/school/pencil.sm.svg": {
+    "group": "stickers/school",
+    "key": "pencil",
+    "class": "sm"
+  },
+  "stickers/school/apple.lg.svg": {
+    "group": "stickers/school",
+    "key": "apple",
+    "class": "lg"
+  },
+  "stickers/school/apple.md.svg": {
+    "group": "stickers/school",
+    "key": "apple",
+    "class": "md"
+  },
+  "stickers/school/apple.sm.svg": {
+    "group": "stickers/school",
+    "key": "apple",
+    "class": "sm"
+  },
+  "stickers/school/ribbon.lg.svg": {
+    "group": "stickers/school",
+    "key": "ribbon",
+    "class": "lg"
+  },
+  "stickers/school/ribbon.md.svg": {
+    "group": "stickers/school",
+    "key": "ribbon",
+    "class": "md"
+  },
+  "stickers/school/ribbon.sm.svg": {
+    "group": "stickers/school",
+    "key": "ribbon",
+    "class": "sm"
+  },
+  "stickers/travel/tent.lg.svg": {
+    "group": "stickers/travel",
+    "key": "tent",
+    "class": "lg"
+  },
+  "stickers/travel/tent.md.svg": {
+    "group": "stickers/travel",
+    "key": "tent",
+    "class": "md"
+  },
+  "stickers/travel/tent.sm.svg": {
+    "group": "stickers/travel",
+    "key": "tent",
+    "class": "sm"
+  },
+  "stickers/travel/cruise-ship.lg.svg": {
+    "group": "stickers/travel",
+    "key": "cruise-ship",
+    "class": "lg"
+  },
+  "stickers/travel/cruise-ship.md.svg": {
+    "group": "stickers/travel",
+    "key": "cruise-ship",
+    "class": "md"
+  },
+  "stickers/travel/cruise-ship.sm.svg": {
+    "group": "stickers/travel",
+    "key": "cruise-ship",
+    "class": "sm"
+  },
+  "stickers/travel/road-trip-car.lg.svg": {
+    "group": "stickers/travel",
+    "key": "road-trip-car",
+    "class": "lg"
+  },
+  "stickers/travel/road-trip-car.md.svg": {
+    "group": "stickers/travel",
+    "key": "road-trip-car",
+    "class": "md"
+  },
+  "stickers/travel/road-trip-car.sm.svg": {
+    "group": "stickers/travel",
+    "key": "road-trip-car",
+    "class": "sm"
+  },
+  "stickers/travel/plane.lg.svg": {
+    "group": "stickers/travel",
+    "key": "plane",
+    "class": "lg"
+  },
+  "stickers/travel/plane.md.svg": {
+    "group": "stickers/travel",
+    "key": "plane",
+    "class": "md"
+  },
+  "stickers/travel/plane.sm.svg": {
+    "group": "stickers/travel",
+    "key": "plane",
+    "class": "sm"
+  },
+  "stickers/travel/beach.lg.svg": {
+    "group": "stickers/travel",
+    "key": "beach",
+    "class": "lg"
+  },
+  "stickers/travel/beach.md.svg": {
+    "group": "stickers/travel",
+    "key": "beach",
+    "class": "md"
+  },
+  "stickers/travel/beach.sm.svg": {
+    "group": "stickers/travel",
+    "key": "beach",
+    "class": "sm"
+  },
+  "stickers/travel/theme-park.lg.svg": {
+    "group": "stickers/travel",
+    "key": "theme-park",
+    "class": "lg"
+  },
+  "stickers/travel/theme-park.md.svg": {
+    "group": "stickers/travel",
+    "key": "theme-park",
+    "class": "md"
+  },
+  "stickers/travel/theme-park.sm.svg": {
+    "group": "stickers/travel",
+    "key": "theme-park",
+    "class": "sm"
+  },
+  "stickers/travel/grandmas-house.lg.svg": {
+    "group": "stickers/travel",
+    "key": "grandmas-house",
+    "class": "lg"
+  },
+  "stickers/travel/grandmas-house.md.svg": {
+    "group": "stickers/travel",
+    "key": "grandmas-house",
+    "class": "md"
+  },
+  "stickers/travel/grandmas-house.sm.svg": {
+    "group": "stickers/travel",
+    "key": "grandmas-house",
+    "class": "sm"
+  },
+  "seasons/sun.spring-summer.lg.svg": {
+    "group": "seasons",
+    "key": "sun.spring-summer",
+    "class": "lg"
+  },
+  "seasons/sun.fall.lg.svg": {
+    "group": "seasons",
+    "key": "sun.fall",
+    "class": "lg"
+  },
+  "seasons/sun.winter.lg.svg": {
+    "group": "seasons",
+    "key": "sun.winter",
+    "class": "lg"
+  },
+  "holidays/halloween/circle.day.lg.svg": {
+    "group": "holidays/halloween",
+    "key": "circle.day",
+    "class": "lg"
+  },
+  "holidays/halloween/circle.night.lg.svg": {
+    "group": "holidays/halloween",
+    "key": "circle.night",
+    "class": "lg"
+  },
+  "holidays/thanksgiving/circle.day.lg.svg": {
+    "group": "holidays/thanksgiving",
+    "key": "circle.day",
+    "class": "lg"
+  },
+  "holidays/thanksgiving/circle.night.lg.svg": {
+    "group": "holidays/thanksgiving",
+    "key": "circle.night",
+    "class": "lg"
+  },
+  "holidays/christmas/circle.day.lg.svg": {
+    "group": "holidays/christmas",
+    "key": "circle.day",
+    "class": "lg"
+  },
+  "holidays/christmas/circle.night.lg.svg": {
+    "group": "holidays/christmas",
+    "key": "circle.night",
+    "class": "lg"
+  },
+  "holidays/newyear/circle.day.lg.svg": {
+    "group": "holidays/newyear",
+    "key": "circle.day",
+    "class": "lg"
+  },
+  "holidays/newyear/circle.night.lg.svg": {
+    "group": "holidays/newyear",
+    "key": "circle.night",
+    "class": "lg"
+  },
+  "holidays/valentine/circle.day.lg.svg": {
+    "group": "holidays/valentine",
+    "key": "circle.day",
+    "class": "lg"
+  },
+  "holidays/valentine/circle.night.lg.svg": {
+    "group": "holidays/valentine",
+    "key": "circle.night",
+    "class": "lg"
+  },
+  "holidays/stpat/circle.day.lg.svg": {
+    "group": "holidays/stpat",
+    "key": "circle.day",
+    "class": "lg"
+  },
+  "holidays/stpat/circle.night.lg.svg": {
+    "group": "holidays/stpat",
+    "key": "circle.night",
+    "class": "lg"
+  },
+  "holidays/easter/circle.day.lg.svg": {
+    "group": "holidays/easter",
+    "key": "circle.day",
+    "class": "lg"
+  },
+  "holidays/easter/circle.night.lg.svg": {
+    "group": "holidays/easter",
+    "key": "circle.night",
+    "class": "lg"
+  },
+  "holidays/fourth/circle.day.lg.svg": {
+    "group": "holidays/fourth",
+    "key": "circle.day",
+    "class": "lg"
+  },
+  "holidays/fourth/circle.night.lg.svg": {
+    "group": "holidays/fourth",
+    "key": "circle.night",
+    "class": "lg"
+  },
+  "holidays/birthday/circle.day.lg.svg": {
+    "group": "holidays/birthday",
+    "key": "circle.day",
+    "class": "lg"
+  },
+  "holidays/birthday/circle.night.lg.svg": {
+    "group": "holidays/birthday",
+    "key": "circle.night",
+    "class": "lg"
+  },
+  "holidays/winter/circle.day.lg.svg": {
+    "group": "holidays/winter",
+    "key": "circle.day",
+    "class": "lg"
+  },
+  "holidays/winter/circle.night.lg.svg": {
+    "group": "holidays/winter",
+    "key": "circle.night",
+    "class": "lg"
+  },
+  "holidays/halloween/trim.portrait.day.svg": {
+    "group": "holidays/halloween",
+    "key": "trim.portrait.day",
+    "class": "lg"
+  },
+  "holidays/halloween/trim.portrait.night.svg": {
+    "group": "holidays/halloween",
+    "key": "trim.portrait.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/halloween/trim.landscape.day.svg": {
+    "group": "holidays/halloween",
+    "key": "trim.landscape.day",
+    "class": "lg"
+  },
+  "holidays/halloween/trim.landscape.night.svg": {
+    "group": "holidays/halloween",
+    "key": "trim.landscape.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/thanksgiving/trim.portrait.day.svg": {
+    "group": "holidays/thanksgiving",
+    "key": "trim.portrait.day",
+    "class": "lg"
+  },
+  "holidays/thanksgiving/trim.portrait.night.svg": {
+    "group": "holidays/thanksgiving",
+    "key": "trim.portrait.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/thanksgiving/trim.landscape.day.svg": {
+    "group": "holidays/thanksgiving",
+    "key": "trim.landscape.day",
+    "class": "lg",
+    "derived": "not drawn: uses the night trim"
+  },
+  "holidays/thanksgiving/trim.landscape.night.svg": {
+    "group": "holidays/thanksgiving",
+    "key": "trim.landscape.night",
+    "class": "lg"
+  },
+  "holidays/christmas/trim.portrait.day.svg": {
+    "group": "holidays/christmas",
+    "key": "trim.portrait.day",
+    "class": "lg"
+  },
+  "holidays/christmas/trim.portrait.night.svg": {
+    "group": "holidays/christmas",
+    "key": "trim.portrait.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/christmas/trim.landscape.day.svg": {
+    "group": "holidays/christmas",
+    "key": "trim.landscape.day",
+    "class": "lg"
+  },
+  "holidays/christmas/trim.landscape.night.svg": {
+    "group": "holidays/christmas",
+    "key": "trim.landscape.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/newyear/trim.portrait.day.svg": {
+    "group": "holidays/newyear",
+    "key": "trim.portrait.day",
+    "class": "lg"
+  },
+  "holidays/newyear/trim.portrait.night.svg": {
+    "group": "holidays/newyear",
+    "key": "trim.portrait.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/newyear/trim.landscape.day.svg": {
+    "group": "holidays/newyear",
+    "key": "trim.landscape.day",
+    "class": "lg",
+    "derived": "not drawn: uses the night trim"
+  },
+  "holidays/newyear/trim.landscape.night.svg": {
+    "group": "holidays/newyear",
+    "key": "trim.landscape.night",
+    "class": "lg"
+  },
+  "holidays/valentine/trim.portrait.day.svg": {
+    "group": "holidays/valentine",
+    "key": "trim.portrait.day",
+    "class": "lg"
+  },
+  "holidays/valentine/trim.portrait.night.svg": {
+    "group": "holidays/valentine",
+    "key": "trim.portrait.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/valentine/trim.landscape.day.svg": {
+    "group": "holidays/valentine",
+    "key": "trim.landscape.day",
+    "class": "lg",
+    "derived": "not drawn: uses the night trim"
+  },
+  "holidays/valentine/trim.landscape.night.svg": {
+    "group": "holidays/valentine",
+    "key": "trim.landscape.night",
+    "class": "lg"
+  },
+  "holidays/stpat/trim.portrait.day.svg": {
+    "group": "holidays/stpat",
+    "key": "trim.portrait.day",
+    "class": "lg"
+  },
+  "holidays/stpat/trim.portrait.night.svg": {
+    "group": "holidays/stpat",
+    "key": "trim.portrait.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/stpat/trim.landscape.day.svg": {
+    "group": "holidays/stpat",
+    "key": "trim.landscape.day",
+    "class": "lg",
+    "derived": "not drawn: uses the night trim"
+  },
+  "holidays/stpat/trim.landscape.night.svg": {
+    "group": "holidays/stpat",
+    "key": "trim.landscape.night",
+    "class": "lg"
+  },
+  "holidays/easter/trim.portrait.day.svg": {
+    "group": "holidays/easter",
+    "key": "trim.portrait.day",
+    "class": "lg"
+  },
+  "holidays/easter/trim.portrait.night.svg": {
+    "group": "holidays/easter",
+    "key": "trim.portrait.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/easter/trim.landscape.day.svg": {
+    "group": "holidays/easter",
+    "key": "trim.landscape.day",
+    "class": "lg",
+    "derived": "not drawn: uses the night trim"
+  },
+  "holidays/easter/trim.landscape.night.svg": {
+    "group": "holidays/easter",
+    "key": "trim.landscape.night",
+    "class": "lg"
+  },
+  "holidays/fourth/trim.portrait.day.svg": {
+    "group": "holidays/fourth",
+    "key": "trim.portrait.day",
+    "class": "lg"
+  },
+  "holidays/fourth/trim.portrait.night.svg": {
+    "group": "holidays/fourth",
+    "key": "trim.portrait.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/fourth/trim.landscape.day.svg": {
+    "group": "holidays/fourth",
+    "key": "trim.landscape.day",
+    "class": "lg",
+    "derived": "not drawn: uses the night trim"
+  },
+  "holidays/fourth/trim.landscape.night.svg": {
+    "group": "holidays/fourth",
+    "key": "trim.landscape.night",
+    "class": "lg"
+  },
+  "holidays/birthday/trim.portrait.day.svg": {
+    "group": "holidays/birthday",
+    "key": "trim.portrait.day",
+    "class": "lg"
+  },
+  "holidays/birthday/trim.portrait.night.svg": {
+    "group": "holidays/birthday",
+    "key": "trim.portrait.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/birthday/trim.landscape.day.svg": {
+    "group": "holidays/birthday",
+    "key": "trim.landscape.day",
+    "class": "lg",
+    "derived": "not drawn: uses the night trim"
+  },
+  "holidays/birthday/trim.landscape.night.svg": {
+    "group": "holidays/birthday",
+    "key": "trim.landscape.night",
+    "class": "lg"
+  },
+  "holidays/winter/trim.portrait.day.svg": {
+    "group": "holidays/winter",
+    "key": "trim.portrait.day",
+    "class": "lg"
+  },
+  "holidays/winter/trim.portrait.night.svg": {
+    "group": "holidays/winter",
+    "key": "trim.portrait.night",
+    "class": "lg",
+    "derived": "not drawn: uses the day trim"
+  },
+  "holidays/winter/trim.landscape.day.svg": {
+    "group": "holidays/winter",
+    "key": "trim.landscape.day",
+    "class": "lg",
+    "derived": "not drawn: uses the night trim"
+  },
+  "holidays/winter/trim.landscape.night.svg": {
+    "group": "holidays/winter",
+    "key": "trim.landscape.night",
+    "class": "lg"
+  }
+}

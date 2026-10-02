@@ -438,3 +438,19 @@ Session handoff for `PHASE15_PLAN.md`. On a new session or after compaction, rea
   - A shared check that the dock's bottom stays on screen: slice 5, with the first real screen.
   - The slim dock's active item on routines is **Home**. The RoutineDay frame shows none; the brief says exactly one. Recorded as deviation V4.
 - e2e on `deck-build`: 215 passed, 0 failed before the fixes; the slice 2, styleguide and kid-home specs (152) pass after them.
+
+## Slice 3: Art pipeline (done)
+
+- `scripts/export-art.mjs` (`npm run art:export`, `art:check`):
+  - **385 files** from 146 assets plus the holiday trims, written to `src/assets/art/<group>/<key>.<class>.svg` (SVGO, ids prefixed per file, `xmlns` added, dimensions dropped).
+  - **The source map (A47):** each asset comes from one source frame, by aria-label (or by a clip id for the unlabelled holiday art). The class comes from the drawn size: ≥100 lg, 48–99 md, <48 sm.
+  - Classes the canvas doesn't draw (most mascot md/sm, some sticker md, wave pictures md/sm, badges) are derived by removing the halftone.
+  - Trims the canvas draws for one ground only are reused for the other, all flagged. Stickers drop their built-in cut (DieCut supplies it).
+  - **Checks:** every mapped label found; duplicate copies compared; both dogs complete; both riders present (A48 cleared); no halftone in md/sm; no template holes left.
+  - It writes the contact sheet `design/export-preview.html`, and the `ASSETS.md` section between its markers.
+- `scripts/build-sprite.py` (`npm run art:sprite`, Pillow in `.venv`): the 39 Fluent files → `public/art/fluent/sprite.webp` + `src/styles/sprite.css` (`.fx-<key>`) + `src/art/sprite.json`.
+- `src/art/original.ts`: `artUrl` / `artFor` / `wholeArt`. A file picked by class falls back to the nearest class drawn, and focus never uses lg.
+- `src/art/mascots.ts`: `seasonDog` (Mara Jan–Mar and Jul–Sep, Costa Apr–Jun and Oct–Dec, or the pin), `isWinter` (family dates, "02-29" = end of Feb), `seasonalPose` (board → winter-board, hello → winter), `mascotFolder`, `dogName`.
+- `src/lib/familySettings.ts`: the settings shape and defaults (dog names Mara and Costa, winter 12-01–02-29, tips 35/45/65/75/85, °F).
+- Tests: unit 50 (resolver; the export's check passes; Mara and Costa have the same files; no halftone in md/sm). Lint clean, build clean. Nothing imports the art index yet, so the SVGs enter the bundle in slice 5.
+- No reviewer agent covers this slice (no UI, no schema). The contact sheet is for the parent at the smoke check (A67).
