@@ -8,7 +8,7 @@ Phase 1 is built, reviewed locally and its Gate 1 is answered (`deck/phase-1`). 
 
 ## Blockers / open questions
 
-- Phase 1.5 slice 0 brief audit: waiting on the parent's answers.
+- Phase 1.5 slice 0 brief audit (REVIEW.md A1–A63): waiting on the parent's answers before slice 1.
 - Gate 2 (both phases): the parent's manual steps G0–G11, then the parent runs link, push and deploy.
 
 ## Setup checklist
@@ -18,7 +18,8 @@ Phase 1 is built, reviewed locally and its Gate 1 is answered (`deck/phase-1`). 
 - [x] Scaffold, local Supabase stack, styleguide (slice 0)
 - [x] Slices 1–11, plus reviews (rls-auditor and kid-ux-tester per slice group; phase-reviewer at the end)
 - [x] Phase 1 Gate 1: answers recorded in REVIEW.md (TOTP fix `ec004db` retested with the 1.5 device tests)
-- [ ] Phase 1.5 (slices 0–16), then its Gate 1
+- [x] Phase 1.5 slice 0: branch, brief committed, agents, per-agent stacks, Tailscale origin, audit
+- [ ] Phase 1.5 slices 1–16, then its Gate 1
 - [ ] Gate 2 (both phases): hosted Supabase settings, Netlify site `rooster-deck` in team `rooster-nc`, then link, push and deploy (run by the parent)
 
 ## Backlog

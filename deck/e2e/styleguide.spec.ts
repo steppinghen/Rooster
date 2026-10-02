@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { OWN_HOSTS } from './helpers/agent';
 
 const SHOTS = 'review/screenshots/slice-0';
 
@@ -7,7 +8,7 @@ test.describe('styleguide (slice 0)', () => {
     const foreign: string[] = [];
     page.on('request', (r) => {
       const u = new URL(r.url());
-      if (!['127.0.0.1', 'localhost'].includes(u.hostname) && !u.protocol.startsWith('data')) foreign.push(r.url());
+      if (!OWN_HOSTS.includes(u.hostname) && !u.protocol.startsWith('data')) foreign.push(r.url());
     });
     await page.goto('/styleguide');
     await page.evaluate(() => document.fonts.ready);

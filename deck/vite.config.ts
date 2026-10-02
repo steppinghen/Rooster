@@ -66,6 +66,8 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
+    // Each agent's app server keeps its own dependency cache (scripts/agent-stack.mjs).
+    cacheDir: process.env.DECK_VITE_CACHE ?? 'node_modules/.vite',
     server: {
       host: '0.0.0.0',
       port: 3997,

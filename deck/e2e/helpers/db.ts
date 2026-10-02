@@ -1,8 +1,9 @@
 import { execFileSync } from 'node:child_process';
+import { DB_CONTAINER } from './agent';
 
-/** Run SQL as postgres on the LOCAL stack only (test setup). Returns rows as tab-separated lines. */
+/** Run SQL as postgres on this agent's LOCAL stack only (test setup). Returns rows as tab-separated lines. */
 export function sql(query: string): string[] {
-  const out = execFileSync('docker', ['exec', '-i', 'supabase_db_deck', 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-tA', '-F', '\t'], {
+  const out = execFileSync('docker', ['exec', '-i', DB_CONTAINER, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-tA', '-F', '\t'], {
     input: query,
     encoding: 'utf8',
   });

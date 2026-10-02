@@ -354,3 +354,36 @@ The parent answered Gate 1; REVIEW.md "Gate 1 answers" has the table.
 - The TOTP fix (`ec004db`) stays; the parent retests it with the Phase 1.5 device tests.
 - **No Phase 1 Gate 2.** Phase 1 and 1.5 go live together after the Phase 1.5 Gate 2. The parent runs `supabase link`, `supabase db push` and the Netlify deploy.
 - Phase 1 is closed on `deck/phase-1`. Work continues on `deck/phase-1.5` per `PHASE15_PLAN.md`.
+
+---
+
+# Phase 1.5 Progress
+
+Session handoff for `PHASE15_PLAN.md`. On a new session or after compaction, read `CLAUDE.md`, the `docs/` files the slice touches, `PHASE15_PLAN.md`, `LESSONS.md`, then this file, and continue from the next unfinished slice. Branch `deck/phase-1.5`.
+
+## Standing rules (carried from Phase 1, plus the plan's lessons)
+
+- Stage only specific paths inside `deck/`. Never `git add -A` or `git add .`, never `../_shared/auth-overlay.*`.
+- Every test and agent runs on its own stack and on the Tailscale origin over plain http (SETUP.md "Agent stacks"). The dev stack (`deck`, :8894) is the parent's.
+- Reviewer agents run at the end of every slice they cover; no batching.
+- Rows in tests come only from `supabase/seed.sql` helpers (pgTAP) and `e2e/helpers/fixtures.ts` (e2e).
+- No PostgREST upserts on tables with column grants.
+- Every multi-step flow survives a reload mid-flow.
+- Delete family covers every new table, job, stored secret and Realtime channel.
+
+## Slice 0: Setup (done; waiting on the audit answers)
+
+- Branch `deck/phase-1.5` from `deck/phase-1` (`aedc6d9`, the Gate 1 answers).
+- Committed as handed over: `CLAUDE.md`, `docs/`, `design/canvas/` (76 `.dc.html` frames), `PHASE15_PLAN.md`, `.claude/agents/parent-ux-tester.md` (`8b4d48d`).
+- `design/reference/README.md` is marked superseded by `design/canvas/`.
+- Agents: rls-auditor, kid-ux-tester and phase-reviewer have their 1.5 additions. parent-ux-tester's "Where to run" now names its own stack and origin.
+- Per-agent stacks: `scripts/agent-stack.mjs`, `.agents/` (gitignored), `npm run agent`. GoTrue and PostgREST serve one database each, so a cloned database (`createdb -T`) works for pgTAP but not for Playwright. Each agent therefore gets its own small stack built from the same migrations and seed.
+- Tailscale origin: `e2e/helpers/agent.ts` drives `playwright.config.ts`, `db.ts`, `mail.ts` and `fixtures.ts`. The config refuses a loopback origin. The origin checks in `styleguide` and `slice0-ux` allow our own hosts instead of `127.0.0.1`.
+- Baseline on the new setup: pgTAP on `deck-rls` PASS (2,283), unit 32, lint clean.
+- e2e baseline on `deck-build` at `http://100.68.253.7:4010`: 205 passed, 1 failed (`focus-modes.spec.ts:9`, the first real test of the run), 169 skipped by project.
+- Parent review of the agent diffs: approved. Agent stacks recorded as decided (REVIEW.md A1); parent-ux-tester gets `Write` and `Edit` (A2).
+- Realtime warm-up: `e2e/global-setup.ts` drives one private broadcast end to end before any test.
+- The `focus-modes` failure recurred with the warm-up, so it wasn't Realtime. **Real bug (Phase 1):** a failed `whoami` at launch dropped any session to "Not set up". The first test reloads a paired iPad while the app server is still cold. Fixed in `src/lib/session.tsx`: a paired iPad opens from its snapshot, and anything else keeps loading; both retry with backoff. e2e `session-offline.spec.ts`. REVIEW.md A62.
+- `.claude/settings.json` re-checked (step 2): it still denies `git push`, `supabase link`, `supabase db push` and every `netlify deploy` spelling, plus `netlify link`, `--linked`, `--db-url` and `--project-ref`. No user-level or root settings file allows them.
+- Clean full run on `deck-build` after the fix: e2e 208 passed, 0 failed (173 skipped by project); pgTAP 2,283 on `deck-build`, unit 32, lint clean.
+- Brief audit (step 3): REVIEW.md "1.5-0", items A1–A63. Three reader agents compared the frames with the brief; the builder checked the art labels for the export. **Stopped for the parent's answers before slice 1.**

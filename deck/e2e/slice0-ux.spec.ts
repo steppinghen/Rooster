@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { OWN_HOSTS } from './helpers/agent';
 
 /*
  * Slice 0 UX and design-rule checks (independent QA).
@@ -551,12 +552,12 @@ test.describe('slice 0: layout and overflow', () => {
 });
 
 test.describe('slice 0: self-hosted only', () => {
-  test('no request leaves 127.0.0.1 on any route or theme, and no stylesheet points off-origin', async ({ page }) => {
+  test('no request leaves our own hosts on any route or theme, and no stylesheet points off-origin', async ({ page }) => {
     const foreign: string[] = [];
     page.on('request', (r) => {
       const u = new URL(r.url());
       if (u.protocol === 'data:' || u.protocol === 'blob:') return;
-      if (u.hostname !== '127.0.0.1') foreign.push(r.url());
+      if (!OWN_HOSTS.includes(u.hostname)) foreign.push(r.url());
     });
     await open(page, '/');
     await open(page, '/styleguide');

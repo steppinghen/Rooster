@@ -1,6 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { clearDeviceCache } from '../kid/cache';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { clearDeviceCache, SNAPSHOT_KEY } from '../kid/cache';
 import { clearPending } from './mfaPending';
 import { supabase } from './supabase';
 
@@ -41,6 +41,37 @@ type SessionState = {
 };
 
 const SessionContext = createContext<SessionState | null>(null);
+
+/**
+ * A paired iPad that can't reach the server at launch (offline, or a network blip during an
+ * iOS reload) opens from its offline snapshot instead of a "Not set up" dead end. This only
+ * routes this device to the kid screens it already has cached; every read and write still goes
+ * through RLS, and the next successful whoami replaces it (revoked, unpaired, and so on).
+ */
+function cachedDevice(s: Session): Who | null {
+  if (!s.user.is_anonymous) return null;
+  try {
+    const snap = JSON.parse(localStorage.getItem(SNAPSHOT_KEY) ?? 'null') as {
+      family?: { id: string; name: string; timezone: string };
+      device?: { id: string; label: string; ground: string };
+    } | null;
+    if (!snap?.family || !snap.device) return null;
+    return {
+      role: 'device',
+      userId: s.user.id,
+      familyId: snap.family.id,
+      familyName: snap.family.name,
+      deviceId: snap.device.id,
+      label: snap.device.label,
+      ground: snap.device.ground as Ground,
+      timezone: snap.family.timezone,
+    };
+  } catch {
+    return null;
+  }
+}
+
+const RETRY_MS = [1000, 2000, 4000, 8000, 15000, 30000];
 
 async function resolveWho(session: Session | null): Promise<Who> {
   if (!session) return { role: 'signed_out' };
@@ -97,16 +128,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [who, setWho] = useState<Who>({ role: 'loading' });
 
+  const retry = useRef<{ timer?: ReturnType<typeof setTimeout>; attempt: number }>({ attempt: 0 });
+  const [retryTick, setRetryTick] = useState(0);
+
   const refreshWith = useCallback(async (s: Session | null) => {
+    clearTimeout(retry.current.timer);
     try {
       setWho(await resolveWho(s));
+      retry.current.attempt = 0;
     } catch (e) {
-      // Offline or the API is unreachable: keep what we last knew (fail closed for devices,
-      // whose screens run from the offline cache) rather than dropping to signed out.
+      // Offline or the API is unreachable: keep what we last knew. A network error is never
+      // "not set up": at launch a paired iPad opens from its offline snapshot, anything else
+      // keeps loading. Either way, try again with backoff until the server answers.
       console.warn('whoami failed', e);
-      setWho((prev) => (prev.role === 'loading' ? (s ? { role: 'none', email: s.user.email ?? null } : { role: 'signed_out' }) : prev));
+      if (s) setWho((prev) => (prev.role === 'loading' ? (cachedDevice(s) ?? prev) : prev));
+      const wait = RETRY_MS[Math.min(retry.current.attempt++, RETRY_MS.length - 1)];
+      retry.current.timer = setTimeout(() => setRetryTick((t) => t + 1), wait);
     }
   }, []);
+
+  useEffect(() => {
+    if (retryTick) void supabase.auth.getSession().then(({ data }) => refreshWith(data.session));
+  }, [retryTick, refreshWith]);
 
   useEffect(() => {
     let active = true;
@@ -120,8 +163,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // Token refreshes don't change who you are; everything else might.
       if (event !== 'TOKEN_REFRESHED') void refreshWith(s);
     });
+    const pending = retry.current;
     return () => {
       active = false;
+      clearTimeout(pending.timer);
       sub.subscription.unsubscribe();
     };
   }, [refreshWith]);

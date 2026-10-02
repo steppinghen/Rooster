@@ -1,5 +1,5 @@
 // Reads email sign-in codes from the local Supabase mail viewer (Mailpit). Local only.
-const MAILPIT = 'http://127.0.0.1:54324/api/v1';
+import { MAILPIT } from './agent';
 
 type Summary = { ID: string; Created: string; To: { Address: string }[] };
 

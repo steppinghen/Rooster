@@ -13,3 +13,4 @@ design/reference/png
 supabase/.temp
 supabase/.branches
 .DS_Store
+.agents

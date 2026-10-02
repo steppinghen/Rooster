@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { addKids, addRoutine, makeParent, pairDevice, pinClock, SUPABASE_URL, useSession } from './helpers/fixtures';
+import { ORIGIN } from './helpers/agent';
+import { addKids, addRoutine, makeParent, pairDevice, pinClock, useSession } from './helpers/fixtures';
 
 // Fixes from the phase review (REVIEW.md X1, X3, X4).
 test.beforeEach(({}, info) => test.skip(info.project.name !== 'ipad', 'iPad profile'));
@@ -9,7 +10,7 @@ test('kid taps work on a plain-http origin (Tailscale), where crypto.randomUUID 
   const ids = await addKids(parent, [{ nickname: 'Kid A', age_band: 'prereader' }]);
   const device = await pairDevice(parent);
   // The Mac's Tailscale address: not a secure context, like the iPad over http.
-  const insecure = `http://${new URL(SUPABASE_URL).hostname}:3997`;
+  const insecure = ORIGIN;
   const ctx = await browser.newContext({ viewport: { width: 820, height: 1180 }, isMobile: true, hasTouch: true, baseURL: insecure });
   await useSession(ctx, device.session, { 'deck.currentKid': ids['Kid A']! });
   const page = await ctx.newPage();

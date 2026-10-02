@@ -568,3 +568,123 @@ The parent does G1–G11 by hand. Claude Code does C1–C8 only after approval. 
 - **C6.** Turn on the hook (G1 step 3) if the parent hasn't yet, then repeat G1 step 4.
 - **C7.** Download a first family export (G5).
 - **C8.** Update `STATUS.md` and `PROGRESS.md` (X12).
+
+---
+
+# Phase 1.5 review packet
+
+Added on top of Phase 1's. Branch `deck/phase-1.5`.
+
+## 1.5-0. Slice 0 brief audit (answer before slice 1)
+
+`CLAUDE.md` and `docs/` read against `PHASE15_PLAN.md` and the 76 frames in `design/canvas/`. Each item has the default I'll take if you don't change it. **Items marked (schema) need a data-model change the brief doesn't list**, which the plan says is a stop; I need a yes or no on each before slice 1.
+
+### Decided
+
+| # | Item | Decision |
+|---|---|---|
+| A1 | Per-agent databases | **Decided (parent, 2026-10-02):** each agent gets its own small Supabase stack built from the same migrations and seed (`scripts/agent-stack.mjs`, SETUP.md "Agent stacks"), instead of a `createdb -T` clone. GoTrue and PostgREST serve one database each, so a clone works for pgTAP but not for Playwright. |
+| A2 | parent-ux-tester tools | **Decided (parent):** `Write` and `Edit` added, so it can write REVIEW.md findings and its tests. |
+
+### Contradictions inside the brief
+
+| # | Where | Contradiction | Default |
+|---|---|---|---|
+| A3 | parent-screens "Kid settings" vs "Reachability rule" | Dock picks are "Session, Coop TV, Tune Shop, Sticker Wall and Tour Dates", but also "Sticker Wall and Tour Dates are no longer dock items" | Picks are **Session, Coop TV, Tune Shop**, shown with their reach labels; only **Coop TV** can be picked in 1.5 (Session "Comes in Phase 2", Tune Shop "Phase 3"), as BackOfficeKid draws it |
+| A4 | Coop TV | It's the only real pick, but it's a separate rooster app (`coop/`), not a module in The Deck. Nothing says what the dock item opens. | **Ask.** Default: a `coop_tv` module whose dock item opens the Coop TV site in the same window, from a URL a parent enters in Back Office. Kids leave The Deck for it (Guided Access permitting), and nothing calls out from the server |
+| A5 | Accent colors | design-system names magenta, cyan, yellow, lime, lilac, orange; kid-screens and My look say Pink, Blue, Yellow, Green, Purple, Orange; data-model says "accent hexes" | Keep Phase 1's `accent` enum keys (magenta…orange). Show the friendly names (Pink…Orange) to kids and parents |
+| A6 | Sticker cap | "At most 4 sticker routines a day" (an editor cap) vs acceptance item 4, "a fifth sticker routine in a day earns no sticker" | The editor shows the count against 4 per kid but doesn't block. The **database caps awards at 4 per kid per family-local day**, and a fifth finished sticker routine plays only the celebration. Last Run's quiet reveal counts toward the 4 |
+| A7 | Birthday window | "Accents show from 14 days before" vs "the birthday kid gets the trim and Party Bunting deck in their birthday week" | Birthday trim and circle in the same 14-day window as holidays; Party Bunting deck in the Mon–Sun birthday week; birthday kid only |
+| A8 | Winter end | The setting has an end date, but the art spec says winter poses run "to the end of February" | One setting drives everything (poses, Snow Report, winter trim). The end is stored as month and day, with "end of February" meaning Feb 28 or 29 |
+| A9 | Trip weather | Surf Report says the trip card is Phase 2; the roadmap says Phase 3 | Not built in 1.5 either way. The trip card and Tour Dates trip weather are left out |
+| A10 | Who pickers | "Everyone + avatars" everywhere vs Parent Today's "All kids + avatars" | "All kids" on Parent Today's filter (it filters, it doesn't assign); "Everyone" in pickers that assign |
+| A11 | Auth (req. 1) | `CLAUDE.md` still says Apple/Google or passkey | D1 stands (email code + TOTP). No change |
+| A12 | Session in 1.5 | Session is Phase 2, but the Session focus mode and its placeholder screen exist from Phase 1, and the B2 frames dock it | In Session mode, The Point docks Home · Session · Wave Check and Session opens Phase 1's placeholder. In Everything mode, Session isn't in the dock unless it's pickable (it isn't in 1.5). No "1 mission" tag: nothing assigns work until Phase 2 |
+
+### Frames vs brief (brief wins on behavior; these need a call or are worth knowing)
+
+| # | Frame | Conflict | Default |
+|---|---|---|---|
+| A13 | KitchenMenu (locked) | Shows an Undecided night's options ("Leftovers or out to eat"), which the brief says kids never see | **Brief wins.** Locked hub shows "Something easy" only; options appear after the parent unlock. Devices can't read `dinner_plan.options` at all (column grant); the unlocked display gets them through the parent path |
+| A14 | KitchenHub, KitchenCalendar (locked) | Grandma's (hidden-from-kids) titles show ("Choir rehearsal"), and the work Busy block is missing; work chip off by default | **Brief wins.** Locked: hidden events are a dashed "Private" block; work shows per the display's mode for that calendar, default **Busy**. Redaction happens in the database (a definer RPC returns titles only where the display's mode is Title and the event isn't hidden), never in the UI |
+| A15 | CalendarEvent | Grandma's event: "Kitchen display: Title, shows full titles there" | Display mode Title applies to events kids can see; a hidden event stays Private on the display until unlock. Same rule as A14 |
+| A16 | EventEditor | A native create flow ("New event", Add, whose birthday, which holiday), but the brief says no "+" and nothing needs a native create flow | **Ask.** Default: don't build the create flow. Use the frame only for its **kid layer** sheet (kid title, sticker, which kids, Countdown on Tour Dates, kind, preview). Also A22 |
+| A17 | EventEditor | "Kids see a countdown, not your title" vs "kids see the raw title unless the kid layer gives a kid title" | Brief wins: raw title unless a kid title is set |
+| A18 | CalendarEvent | Kid layer has no Kind field; preview says "15 sleeps" under "starts 14 days out" | Add Kind to the sheet (trip, birthday, holiday, school, other). The countdown tile appears 14 days out; the preview shows today's count |
+| A19 | SnackShack | Nothing planned: "kids just won't see a dinner line" | Brief wins: kids see "Dinner later" with a dashed plate |
+| A20 | RoutineEditor | No way to add a Wave Check step; Type read-only; one sticker count for a two-kid routine; "See it as Kid A / Kid B" hard-coded | Add a "Wave Check" step type; Type editable; the sticker count is shown **per kid** ("Kid A 3 of 4 · Kid B 4 of 4, full"); the preview lists every kid on the routine |
+| A21 | KitchenParent | Missing the device's Unpair (Phone), Parent unlock, Lock-again, job and Read-aloud rows; not "the same content as the phone" | Unlocked hub panes reuse the phone's components, so the content matches; phone-only rows appear tagged Phone with the QR |
+| A22 | Phone-only list in frames | DeviceKitchen and KitchenCalendar notes leave out parent accounts | Use the brief's full list: kid and parent PINs, pairing and unpairing, parent accounts, export, delete family |
+| A23 | B2, Routine, WaveCheck, Celebrate frames | Routine frames have no active dock item; header avatar links to My look from task and info screens | Brief wins: exactly one active item (Home on routines, Wave Check on Wave Check and breathing); My look opens from The Point's avatar only |
+| A24 | Focus-volume frames | RoutineNight, WaveCheckNight, BreatheNight and CelebrateNight use halftone and large or `lg` art in focus | Brief wins: no halftone, `md` art, small calm poses in focus |
+| A25 | Pre-reader B2 | Right now is text-only; holiday greetings drop the name; the My look avatar is 78 px | Picture-first Right now with the line spoken on tap (text kept small); the name stays in the greeting; the avatar is at least 80 pt |
+| A26 | Wave Check | Frame has 3 size levels (none for Rolling) and no "Not now"; `feelings_checkins.size` is 0–4 | Keep Phase 1's 5 sizes (0–4) unless you prefer the frame's 3. "Not now" shows only when Wave Check is a routine step |
+| A27 | Breathe | A `pace` choice (3/4/5 counts) | Fixed at 4 in, 4 out (brief); no setting |
+| A28 | MyWeek, OldDecks | Past empty slots drawn dashed (reads as missed); a reroll stays in the Surf world; decks and worlds repeat inside 12 weeks | Brief wins: past days show only what was earned (no empty slots before today); the rotation rules as written |
+| A29 | Collection | Pre-readers lose the Boards filter; no paging (tiles cut off) | Same sets for both bands (icon-only for pre-readers); the grid pages with big Back and Next buttons, never scrolling (no kid screen scrolls) |
+| A30 | Surf Report, GetDressed | No Snow condition or Snow Report state in these frames; no credit on GetDressed; "No jacket needed" shows no pictures; feel words and day-part times undefined | The Snow art and words come from R5; the credit shows on every weather screen; "No jacket needed" shows no clothing picture (there's no art for it, and "one to three" applies when there's something to wear). Feel words: Hot ≥ 85, Warm ≥ 75, Mild ≥ 65, Cool ≥ 45, Cold below, from the same five steppers. Day parts: morning 7–9, after school 15–17, evening 18–20 local |
+| A31 | KitchenHub weather | Tip from the high or the low? | The tip uses the day's **low during waking hours** (7:00–20:00), so "68°/52°" says "Bring a jacket" |
+| A32 | StickerMix | Sizes 82–96 px | Brief wins: 86–96 px |
+| A33 | Holiday frames | The holiday sticker isn't shown on the deck, the "?" slot or the countdown in the Halloween and Christmas B2 frames | Brief wins: it shows in all three |
+| A34 | Avatar pool | My look offers `cat_face` and `unicorn` (animal faces) | **Ask.** Default: allowed; the rule is about feeling faces |
+| A35 | Frames vs each other | Dates, step counts, deck names and routine times differ between frames (prototype data) | Ignored; layout only |
+
+### Data the model doesn't cover (schema)
+
+| # | Needed by | Missing | Default |
+|---|---|---|---|
+| A36 | Surf Report, the weather job | **Home location** and temperature unit. The server must round it to about 1 km before calling Open-Meteo | (schema) Keys in the existing `families.settings` json: `home_lat`, `home_lon` (stored already rounded to 2 decimals) and `units` (`f`); a "Home for the weather" row on Back Office → Surf Report tips. No new column |
+| A37 | Parent Today | **Wave Check notes** with an author ("Add a note", "· Parent B") | (schema) `feelings_notes` (kid check-in id, parent, text, created_at), parent-only, same 30-day purge, in export and Delete family |
+| A38 | Kitchen hub unlock | Setting the **6-digit parent PIN**; no frame draws it | A "Kitchen PIN" row under Parents and data → Parents (phone only); no schema change (`parents.unlock_pin_hash` is in the model) |
+| A39 | `parent_id` everywhere | `parents` has no `id` (key is `family_id, user_id`) | Use `parents.user_id` as `parent_id` in `calendars`, `parent_calendar_prefs`, `display_unlocks`, notes |
+| A40 | `kid_ids` on routines, devices, events, and step `who` | Arrays can't carry foreign keys, so "one family can never point at another's kid" and delete cascades would rest on triggers | (schema) Join tables `routine_kids`, `device_kids` and `event_kids` with composite `(kid_id, family_id)` foreign keys; step `who` stays in the steps json, validated by trigger. Phase 1's `routines.kid_id` migrates into `routine_kids` |
+| A41 | Routine columns | The model renames Phase 1's `slot`/`starts_at` to `type`/`start_time` | Keep `slot` and `starts_at`; add the new columns (`days`, `finish_by`, `finish_label`, `earns_sticker`, step `kind`/`who`) |
+| A42 | Sticker and deck catalogs | Names, sets (Sea, Dinos, Space, Boards, Holidays, School), source, season, rarity; 36 deck names, world and look; the NEW tag needs "seen" | Catalogs are **code data** (`src/stickers/catalog.ts`, `src/decks/designs.ts`), not tables; `sticker_awards` keys into them. NEW means awarded since the kid last opened My stickers, remembered on the device (no schema change) |
+| A43 | Events from Phase 1 | Phase 1 events were typed in the app; 1.5 events come only from feeds | (schema-ish) Phase 1 rows move to a built-in "Added in The Deck" calendar so nothing is lost; the Phase 1 editor goes away (no "+"). Countdowns then need a synced event plus a kid layer |
+| A44 | Finish-by stages | "Pick up the pace" at 9 min, "LAST CALL" at 4 min | Fixed in code, not settings |
+| A45 | Food words | Pre-reader one-word dinner labels ("Burgers") | Derived from the meal's icon key in code (hamburger → "Burgers"); falls back to the meal name's first word |
+| A46 | Bills | "Bills · Later" on DeviceKitchen | Not built; no field |
+
+### Can't be built as written
+
+| # | Item | Why | Default |
+|---|---|---|---|
+| A47 | Art export by `aria-label`, "found exactly once" | Labels repeat across and within frames (for example "Rooster mascot — Celebrate" ×11), and trims, corner circles and seasonal suns have **no aria-label** (only clip-path ids like `cp_halloween`); holiday deck labels sit on wrapper elements | The script reads a **source map**: each asset comes from one named source frame (R2–R6, HolidayTrimsFull, HolidayKit) and one selector (aria-label, or an element id for trims, circles and suns). Copies elsewhere must match after normalization, or the export lists them as a warning. The "exactly once" check applies within the source frame |
+| A48 | Dog rider sticker | Spec ships it for both Mara and Costa; the canvas has one "Sticker — Dog rider" | Export the one drawn; the Costa rider is listed as **missing art** on the contact sheet until it's drawn. The pool offers the drawn one only |
+| A49 | Weather keys | The Surf set has Hot; the Snow set pairs "Warm, Spring snow"; the art spec says "hot or warm"; an extra "PJs" dressing hint exists | Key `hot` in both (Snow Report's hot = "Warm · Spring snow"); PJs exported but unused |
+| A50 | Deck templates | The 36 decks are inline SVG with template holes, and the kid tint is a JS string, not `var(--kid)` | Port each design by hand into a parametric template (pattern + 2 colorways + light/dark + `var(--kid)`), checked against a render of the frame on the contact sheet. This is the "reproduced from the Deck designs board" route; it's the slowest part of slice 8 |
+| A51 | "Very low brightness" at Lights out | A web app can't set the iPad's brightness | A dark overlay to 35% (the animation's dim); SETUP.md suggests Night Shift and a low brightness in Screen Time Downtime |
+| A52 | Heads-up auto-speak "after the first tap" | iOS reloads the app on app switch, and speech needs a fresh tap after every load | Auto-speak once a tap has unlocked speech in this page load; otherwise show the banner and speak on the next tap |
+| A53 | Pre-reader portrait | "Stack the two landscape columns" may not fit without scrolling | Stack, then scale the deck and cards down to fit; if it still doesn't fit at 820 × 1180, the deck shrinks first. Recorded as a deviation |
+| A54 | Single-kid iPads | "One kid opens straight into their profile" with a PIN set | It still asks the PIN (the PIN is the kid's, not the device's) |
+| A55 | `scripts/build-sprite` with PIL | Pillow isn't installed | A local Python venv in `.venv` (gitignored) for the script; nothing ships. SVGO (MIT) as a dev dependency for `export-art` |
+| A56 | Display unlock | "A display device gains parent reads and writes while an unexpired row exists" means **every parent policy** accepts an unlocked display, except phone-only ones. Displays are anonymous (aal1) sessions | (→ REVIEW.md, slice 15) One helper `private.is_parent_or_unlocked_display_of(family)` replaces `is_parent_of` in non-phone-only policies; phone-only RPCs keep `is_parent_of` (aal2, not anonymous). Expiry slides with activity through a `touch_display_unlock` RPC (at most once a minute), hard cap 30 minutes. Lockout: 5 wrong PINs per display in 15 minutes → 15-minute lock; 20 per family per hour → 1-hour lock. The unlock's parent faces come from a `display_parents()` RPC returning initial and color only |
+| A57 | Calendar feed URLs, server-only | The model lists `calendars.feed_url` | (→ REVIEW.md, slice 10) Stored in `private.calendar_feeds` (no grants), set through a definer RPC that accepts only `https`/`webcal` links on iCloud (`*.icloud.com`) and Google (`calendar.google.com`), which also blocks server-side request forgery. The export lists feed URLs under "omitted"; Delete family removes them |
+| A58 | Feed and weather fetches | Brief: "Supabase Edge Function or Netlify function" | Supabase Edge Functions (calendar sync with an ICS and RRULE library bundled in, weather), scheduled by pg_cron through pg_net with a secret in Vault. Edge runtime turned on for `deck-build` only. pg_net keeps responses for 6 hours, so the functions return only a status, and Delete family purges any rows |
+
+### Hosted settings the 1.5 features need (Gate 2)
+
+- **Extensions:** `pg_net` enabled (pg_cron is already in use).
+- **Vault:** one secret the cron jobs use to call the Edge Functions.
+- **Edge Functions:** `calendar-sync` and `weather` deployed, plus their secrets. `supabase functions deploy` and `supabase secrets set` aren't in the deny list, but they change the hosted project, so **you run them**, like link and push.
+- **Schedules:** calendar sync every 15 minutes, weather hourly (pg_cron, UTC).
+- **Realtime:** stays private-only (G4b). The display-unlock and lock signals use the same private topics.
+- **Free-tier pausing (G5):** a paused project also stops weather and calendar sync; kid screens hide weather after 12 hours.
+- **Open-Meteo:** no key; confirm the current terms and the attribution before go-live. Non-commercial use only.
+- **Netlify:** no new env vars; the CSP is unchanged, because only the server calls out.
+- **Auth:** nothing new. The display unlock is a database row, not a new kind of session.
+
+### Real names and brands
+
+| # | Where | What | Default |
+|---|---|---|---|
+| A59 | Brief and frames | "Steve's work", "Jess", initials S and J, "Mom", "Grandma", and the dogs Mara and Costa | Code, seed and tests use placeholders only: Parent A / Parent B, initials A and B, "Parent A's work", "Grandma's" (generic). The dogs' names exist only as art keys (`dog-mara`, `dog-costa`, from the brief). Spoken and shown dog names wait for the mascot names (X5, Phase 2), so kid copy says "the dog" until then. **Ask** if you want Mara and Costa shown and spoken in 1.5 (default stored in `families.settings`, editable) |
+| A60 | Brief and frames | "Bubba burgers", "Steak-umms", "Costco", "Reminders" | Not used in code or seed; seed meals are generic ("Burgers", "Cheesesteaks"). The Lists placeholder doesn't promise a Reminders sync |
+| A61 | Frames | Google Fonts links | Canvas only; the app keeps self-hosted fonts |
+
+### Found during slice 0
+
+| # | Item | Status |
+|---|---|---|
+| A62 | **Bug (Phase 1): a failed `whoami` at launch showed "Not set up".** A paired iPad that couldn't reach the server at launch (offline, or a network blip during an iOS reload) landed on the No access screen. This is the cold-launch-offline case (X7). | **Fixed** in `src/lib/session.tsx`: a paired iPad opens from its offline snapshot (routing only; RLS still applies), anything else keeps loading, and both retry with backoff until the server answers. e2e `session-offline.spec.ts`. It was the real cause of the `focus-modes.spec.ts` first-test failure |
+| A63 | `design/canvas/canvas.json` | It came with the frames (the plan says `.dc.html` only). It's the board index (page and title per frame) and has no personal data | Keep it: it maps each frame to its canvas page |

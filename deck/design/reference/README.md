@@ -1,3 +1,5 @@
+> **Phase 1 references, superseded by design/canvas/ for Phase 1.5. Do not build from these.**
+
 # Design reference: Comic Shop direction
 
 Mockups exported from the design canvas "The Deck — Comic Shop Screens." They are the **visual target** for The Deck. The rules behind them are in `CLAUDE.md` ("Visual direction," "Two volume levels," the token table, and "Wave Check scale"). Where a mockup and `CLAUDE.md` disagree, `CLAUDE.md` wins.

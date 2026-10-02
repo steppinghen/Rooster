@@ -1,7 +1,7 @@
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
-import { readFileSync } from 'node:fs';
 import type { BrowserContext } from '@playwright/test';
 import WebSocket from 'ws';
+import { ANON_KEY, SUPABASE_URL } from './agent';
 import { allowBootstrap, testEmail } from './db';
 import { latestCode } from './mail';
 import { totp } from './totp';
@@ -9,14 +9,7 @@ import { totp } from './totp';
 // Programmatic setup through the real APIs (email code from Mailpit, TOTP, pairing), so kid
 // screen tests start from a real family without driving every parent screen each time.
 
-const env = Object.fromEntries(
-  readFileSync('.env.local', 'utf8')
-    .split('\n')
-    .filter((l) => l.includes('=') && !l.startsWith('#'))
-    .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]),
-);
-export const SUPABASE_URL = env.VITE_SUPABASE_URL!;
-const ANON_KEY = env.VITE_SUPABASE_ANON_KEY!;
+export { SUPABASE_URL } from './agent';
 const STORAGE_KEY = `sb-${new URL(SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
 
 function client(): SupabaseClient {
