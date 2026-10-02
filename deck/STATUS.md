@@ -4,7 +4,7 @@ Short summary only. The detailed slice-by-slice handoff is [`PROGRESS.md`](PROGR
 
 ## Currently working on
 
-Phase 1 is built and reviewed locally on branch `deck/phase-1`. **Stopped at Gate 1**: the parent reviews REVIEW.md (sections 2–5) and runs the device test list (section 6).
+Phase 1 is built and reviewed locally on branch `deck/phase-1`. **Gate 1, device testing in progress**: the parent is running REVIEW.md section 6. P1 (TOTP enrollment re-enrolling after app switches) is fixed in `ec004db` and awaits a retest. Start the dev server with `npm run dev` (port 8894).
 
 ## Blockers / open questions
 
@@ -17,7 +17,7 @@ Phase 1 is built and reviewed locally on branch `deck/phase-1`. **Stopped at Gat
 - [x] Root port-table row (8894 / 3997)
 - [x] Scaffold, local Supabase stack, styleguide (slice 0)
 - [x] Slices 1–11, plus reviews (rls-auditor and kid-ux-tester per slice group; phase-reviewer at the end)
-- [ ] Gate 1: parent review and device tests
+- [ ] Gate 1: parent review and device tests (in progress; P1 fixed in ec004db)
 - [ ] Gate 2: hosted Supabase settings, Netlify site `rooster-deck`, then link, push and deploy
 
 ## Backlog

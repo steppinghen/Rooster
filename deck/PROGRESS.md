@@ -333,3 +333,13 @@ Deviation: the reviewer agents run once over slices 2 to 4 together. Running the
 ## Gate 1 device-test fixes
 
 - **P1 (iPhone):** TOTP enrollment re-enrolled every time the app came back from Passwords. It now reuses the pending factor (`src/lib/mfaPending.ts`, kept up to 30 minutes, same user, cleared on verify or sign-out) and cleans up stale unverified factors. Covered by e2e `mfa-resume.spec.ts`. REVIEW.md R1d.
+
+## Where things stand (end of session)
+
+- **Gate 1:** Phase 1 is built and reviewed locally. REVIEW.md is complete. Last full run: pgTAP 2,283, e2e 204, unit 32, build clean.
+- **Device testing in progress.** P1 (TOTP enrollment re-enrolling after switching to Passwords) is fixed in `ec004db`; waiting for the parent to retest on the phone. The other Part A steps haven't been reported yet.
+- **To resume:**
+  1. Run `npm run dev` yourself; netlify dev is on 8894, bound to all interfaces.
+  2. Read REVIEW.md section 6 and continue from the next untested step.
+  3. Fix device bugs the same way: a fix, plus an e2e that reproduces it, plus a REVIEW.md note.
+- **Nothing pushed, linked or deployed.** Gate 2 waits on the parent's G0–G11.
