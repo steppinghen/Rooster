@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Calendar event — imported, phone, parent</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Archivo:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:var(--y)}
+button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.fx{background-image:url(/_blob/e47a0dc8fefa526e06b4d92fd86fbb16);background-size:1000% 900%;background-repeat:no-repeat;display:block;flex-shrink:0}
+.fx-frog{background-position:88.8889% 25.0000%}
+.fx-fox{background-position:77.7778% 25.0000%}
+.fx-octopus{background-position:33.3333% 50.0000%}
+.fx-soccer_ball{background-position:100.0000% 75.0000%}
+.fx-house{background-position:88.8889% 37.5000%}
+.fx-airplane{background-position:0.0000% 0.0000%}
+.fx-birthday_cake{background-position:100.0000% 0.0000%}
+.fx-school{background-position:100.0000% 62.5000%}
+.fx-tent{background-position:0.0000% 100.0000%}
+.fx-beach_with_umbrella{background-position:66.6667% 0.0000%}
+.fx-ferris_wheel{background-position:55.5556% 25.0000%}
+.fx-jack_o_lantern{background-position:0.0000% 50.0000%}
+.fx-sparkles{background-position:11.1111% 87.5000%}
+.fx-star{background-position:33.3333% 87.5000%}
+.fx-pizza{background-position:100.0000% 50.0000%}
+.stk{filter:drop-shadow(2.5px 0 0 #fff) drop-shadow(-2.5px 0 0 #fff) drop-shadow(0 2.5px 0 #fff) drop-shadow(0 -2.5px 0 #fff) drop-shadow(1.5px 0 0 #0A0818) drop-shadow(-1.5px 0 0 #0A0818) drop-shadow(0 1.5px 0 #0A0818) drop-shadow(0 -1.5px 0 #0A0818) drop-shadow(3px 3px 0 #0A0818)}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+
+<div style="display: flex; align-items: center; justify-content: space-between; height: 44px">
+<a href="Phase15Calendar.dc.html" style="display: flex; align-items: center; gap: 2px; height: 44px; color: var(--t); text-decoration: none; font-size: 16px; font-weight: 700"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>Calendar</a>
+<span style="font-size: 16px; font-weight: 800">Event</span>
+<span style="width: 84px"></span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 4px 4px 0">
+<span style="display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; color: var(--m)"><span style="{{calDot}}"></span>{{calName}}</span>
+<h1 style="margin: 0; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 30px; line-height: 1.05">{{title}}</h1>
+</div>
+
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 20px; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 8px 16px"><span style="font-size: 16px; font-weight: 700">Date</span><span style="font-size: 15px; font-weight: 800">{{date}}</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 8px 16px; border-top: 1px solid rgba(var(--rgb),0.12)"><span style="font-size: 16px; font-weight: 700">Time</span><span style="font-size: 15px; font-weight: 800">{{time}}</span></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 8px 16px; border-top: 1px solid rgba(var(--rgb),0.12)"><span style="font-size: 16px; font-weight: 700">Repeats</span><span style="font-size: 15px; font-weight: 800">{{repeats}}</span></div>
+<a href="#" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 8px 16px; border-top: 1px solid rgba(var(--rgb),0.12); color: var(--t); text-decoration: none"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 800">{{editLabel}}</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">Title, date and time come from there</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg></a>
+</div>
+
+<span style="padding: 6px 4px 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Who sees it</span>
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 20px; overflow: hidden">
+<sc-if value="{{canToggleKids}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 8px 16px">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 800">{{kidSwitchLabel}}</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">{{kidSwitchNote}}</span></span>
+<button onClick="{{toggleKids}}" role="switch" aria-checked="{{kidAria}}" aria-label="{{kidSwitchLabel}}" style="{{kidTrack}}"><span style="{{kidKnob}}"></span></button>
+</div>
+</sc-if>
+<sc-if value="{{isWork}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 8px 16px">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 800">Kids' iPads</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">Work events never show to the kids</span></span>
+<span style="font-size: 15px; font-weight: 800; color: var(--m)">Never</span>
+</div>
+</sc-if>
+<a href="Phase15BackOffice.dc.html" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 8px 16px; border-top: 1px solid rgba(var(--rgb),0.12); color: var(--t); text-decoration: none">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 800">Kitchen display</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">{{kitchenNote}}</span></span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="font-size: 15px; font-weight: 800; color: var(--m)">{{kitchenValue}}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></span>
+</a>
+</div>
+
+<sc-if value="{{kidsSee}}" hint-placeholder-val="{{true}}">
+<span style="padding: 6px 4px 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">For the kids</span>
+<sc-if value="{{noLayer}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 20px">
+<span style="font-size: 14px; font-weight: 600; color: var(--m); line-height: 1.4">It shows on their calendar as a plain line: "{{title}}". Add a kid layer for a sticker, a kid title and a countdown on Tour Dates.</span>
+<button onClick="{{addLayer}}" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; border-radius: 14px; background: var(--t); color: var(--g); border: 0; font-size: 15px; font-weight: 800; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add kid layer</button>
+</div>
+</sc-if>
+<sc-if value="{{hasLayer}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 20px; overflow: hidden">
+<label style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px"><span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Kid title</span><input value="{{kidTitle}}" readonly style="height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(var(--rgb),0.12); background: var(--g); color: var(--t); font-family: inherit; font-size: 16px; font-weight: 700"></label>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(var(--rgb),0.12)"><span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Sticker</span>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px"><sc-for list="{{icons}}" as="i" hint-placeholder-count="12"><button onClick="{{i.pick}}" aria-label="{{i.key}}" aria-pressed="{{i.aria}}" style="{{i.style}}"><span class="{{i.cls}}" style="width: 30px; height: 30px"></span></button></sc-for></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(var(--rgb),0.12)"><span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Which kids</span>
+<div style="display: flex; align-items: center; gap: 8px"><button onClick="{{kAll}}" aria-pressed="{{kAllAria}}" style="{{kAllStyle}}">Everyone</button><sc-for list="{{kids}}" as="k" hint-placeholder-count="2"><button onClick="{{k.toggle}}" aria-pressed="{{k.aria}}" aria-label="{{k.name}}" style="{{k.style}}"><span style="{{k.avStyle}}"><span class="{{k.cls}}" style="width: 22px; height: 22px"></span></span></button></sc-for><span style="font-size: 14px; font-weight: 700; color: var(--m)">{{kCaption}}</span></div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 8px 16px; border-top: 1px solid rgba(var(--rgb),0.12)"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 700">Countdown on Tour Dates</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">Starts 14 days out</span></span><button onClick="{{toggleCount}}" role="switch" aria-checked="{{cdAria}}" aria-label="Countdown on Tour Dates" style="{{cdTrack}}"><span style="{{cdKnob}}"></span></button></div>
+</div>
+<span style="padding: 0 4px; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">What the kids see</span>
+<div style="display: flex; justify-content: center; padding: 18px; border-radius: 20px; background-color: #F2E6CC; background-image: radial-gradient(rgba(10,8,24,0.09) 1.2px, transparent 1.7px); background-size: 10px 10px">
+<div style="width: 220px; height: 150px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 0 12px; background: #FFFBF2; color: #15122E; border: 4px solid #0A0818; border-radius: 24px; box-shadow: 6px 6px 0 #0A0818; text-align: center">
+<span class="{{kidIconCls}}" style="width: 60px; height: 60px; transform: rotate(-5deg)"></span>
+<span style="display: flex; flex-direction: column; align-items: center; gap: 2px"><span style="font-family: 'Archivo Black', sans-serif; font-size: 24px; line-height: 1.05">{{sleeps}}</span><span style="font-size: 16px; font-weight: 800; color: #4E4870">{{kidTitle}}</span></span>
+</div>
+</div>
+<button onClick="{{removeLayer}}" style="align-self: flex-start; height: 36px; padding: 0 4px; background: transparent; border: 0; color: #FF8A3D; font-size: 15px; font-weight: 800; cursor: pointer">Remove kid layer</button>
+</sc-if>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"ground": {"editor": "enum", "default": "Night", "options": ["Night", "Day"]}, "kids": {"editor": "enum", "default": "2 kids", "options": ["2 kids", "3 kids"]}, "event": {"editor": "enum", "default": "Visit Grandma (Grandma\u2019s)", "options": ["Visit Grandma (Grandma\u2019s)", "Soccer practice (Family)", "Quarterly review (Steve\u2019s work)"]}, "$preview": {"width": 390, "height": 1500}}'>
+const THEME = {
+  Night: '--g: #15122E; --p: #1E1A3D; --s: #221E45; --p2: #2A2552; --t: #F4EBD9; --m: #BDB5D6; --y: #FFD23F; --on: #9BE564; --rgb: 244,235,217; --mrgb: 189,181,214; --nav: rgba(21,18,46,0.92); ',
+  Day: '--g: #F5EFE2; --p: #FFFDF8; --s: #FFFDF8; --p2: #FFF4D2; --t: #15122E; --m: #5A5478; --y: #B3124F; --on: #2FA84F; --rgb: 21,18,46; --mrgb: 90,84,120; --nav: rgba(245,239,226,0.94); '
+};
+const ROOT = "width: 390px; min-height: 1500px; box-sizing: border-box; position: relative; background: var(--g); color: var(--t); font-family: 'Archivo', system-ui, sans-serif; display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 40px";
+
+const EVENTS = {
+  grandma: { cal: "Grandma's", color: '#A99BFF', title: 'Visit Grandma', date: 'Sat, Oct 17', time: 'All day', repeats: 'Never', edit: 'Open in Apple Calendar',
+    kidDefault: false, kitchen: 'Title', kitchenNote: "Grandma's calendar shows full titles there", kidTitle: "Grandma's house", icon: 'house', sleeps: '15 sleeps' },
+  family: { cal: 'Family', color: '#9BE564', title: 'Soccer practice', date: 'Fri, Oct 2', time: '5:30 – 6:30 PM', repeats: 'Every Friday', edit: 'Open in Apple Calendar',
+    kidDefault: true, kitchen: 'Title', kitchenNote: 'The Family calendar shows full titles there', kidTitle: 'Soccer', icon: 'soccer_ball', sleeps: 'Today!' },
+  work: { cal: "Steve's work", color: '#FF8A3D', title: 'Quarterly review', date: 'Mon, Oct 5', time: '2:00 – 3:30 PM', repeats: 'Never', edit: 'Open in Google Calendar',
+    kidDefault: null, kitchen: 'Busy', kitchenNote: 'Shows as "Busy" when the calendar is on there', kidTitle: '', icon: 'sparkles', sleeps: '' }
+};
+const ICONS = ['house', 'soccer_ball', 'airplane', 'birthday_cake', 'school', 'tent', 'beach_with_umbrella', 'ferris_wheel', 'jack_o_lantern', 'pizza', 'star', 'sparkles'];
+class Component extends DCLogic {
+  renderVals() { const v = this._rv0(); v.rootStyle = THEME[this.props.ground === 'Day' ? 'Day' : 'Night'] + ROOT; return v; }
+  _rv0() {
+    const s = this.state || {};
+    const p = this.props.event || '';
+    const id = p.indexOf('Soccer') === 0 ? 'family' : (p.indexOf('Quarterly') === 0 ? 'work' : 'grandma');
+    const e = EVENTS[id];
+    const st = (s.byEvent || {})[id] || {};
+    const edit = (patch) => { const all = s.byEvent || {}; this.setState({ byEvent: { ...all, [id]: { ...st, ...patch } } }); };
+    const sw = (on) => ({ track: 'width: 52px; height: 32px; flex-shrink: 0; padding: 0; border-radius: 16px; border: 0; cursor: pointer; position: relative; background: ' + (on ? 'var(--on)' : 'rgba(var(--rgb),0.22)'),
+      knob: 'position: absolute; top: 3px; left: ' + (on ? '23px' : '3px') + '; width: 26px; height: 26px; border-radius: 50%; background: var(--t); box-shadow: 0 1px 3px rgba(0,0,0,0.4)' });
+    const v = {};
+    v.calName = e.cal; v.calDot = 'width: 10px; height: 10px; border-radius: 50%; background: ' + e.color;
+    v.title = e.title; v.date = e.date; v.time = e.time; v.repeats = e.repeats; v.editLabel = e.edit;
+    v.isWork = id === 'work'; v.canToggleKids = id !== 'work';
+    const kidsSee = id === 'work' ? false : (st.kids !== undefined ? st.kids : e.kidDefault);
+    v.kidsSee = kidsSee;
+    if (id === 'family') {
+      const hidden = !kidsSee; const o = sw(hidden);
+      v.kidSwitchLabel = 'Hide from kids'; v.kidSwitchNote = hidden ? 'Only parents see it. Shared displays show it as Private until a parent unlocks.' : 'On by default for every Family event';
+      v.kidAria = hidden ? 'true' : 'false'; v.kidTrack = o.track; v.kidKnob = o.knob;
+      v.toggleKids = () => edit({ kids: !kidsSee });
+    } else {
+      const o = sw(kidsSee);
+      v.kidSwitchLabel = 'Show to kids'; v.kidSwitchNote = kidsSee ? 'Shows on the kids\u2019 calendars' : "Grandma's events stay off the kids' calendars unless you turn one on";
+      v.kidAria = kidsSee ? 'true' : 'false'; v.kidTrack = o.track; v.kidKnob = o.knob;
+      v.toggleKids = () => edit({ kids: !kidsSee });
+    }
+    v.kitchenValue = e.kitchen; v.kitchenNote = e.kitchenNote;
+    const layer = st.layer !== undefined ? st.layer : false;
+    v.noLayer = !layer; v.hasLayer = layer;
+    v.addLayer = () => edit({ layer: true }); v.removeLayer = () => edit({ layer: false });
+    const icon = st.icon || e.icon;
+    v.kidTitle = e.kidTitle; v.kidIconCls = 'fx stk fx-' + icon; v.sleeps = e.sleeps;
+    v.icons = ICONS.map((key) => { const on = key === icon; return { key, cls: 'fx stk fx-' + key, aria: on ? 'true' : 'false',
+      style: 'height: 46px; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; border-radius: 12px; border: ' + (on ? '2px solid var(--t)' : '1px solid rgba(var(--rgb),0.15)') + '; background: ' + (on ? 'rgba(var(--rgb),0.16)' : 'transparent'),
+      pick: () => edit({ icon: key }) }; });
+    const K = { A: ['Kid A', 'fox', '#29D3FF'], B: ['Kid B', 'octopus', '#FF3E8A'], C: ['Kid C', 'frog', '#9BE564'] };
+    const ids = this.props.kids === '3 kids' ? ['A', 'B', 'C'] : ['A', 'B'];
+    const kSel = (st.whoSel) || ids;
+    const kEvery = ids.every((i) => kSel.includes(i));
+    v.kids = ids.map((id) => { const on = kSel.includes(id); return { name: K[id][0], cls: 'fx stk fx-' + K[id][1], aria: on ? 'true' : 'false',
+      style: 'width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; background: transparent; border: 0; opacity: ' + (on ? '1' : '0.45') + '; box-shadow: ' + (on ? '0 0 0 3px var(--t)' : 'none'),
+      avStyle: 'width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #0A0818; background: ' + K[id][2],
+      toggle: () => { const next = on ? kSel.filter((x) => x !== id) : kSel.concat([id]); if (next.length) edit({ whoSel: next }); } }; });
+    v.kAll = () => { edit({ whoSel: ids }); };
+    v.kAllAria = kEvery ? 'true' : 'false';
+    v.kAllStyle = 'height: 44px; padding: 0 16px; border-radius: 999px; cursor: pointer; font-size: 15px; font-weight: 800; border: 1px solid ' + (kEvery ? 'var(--t)' : 'rgba(var(--rgb),0.20)') + '; background: ' + (kEvery ? 'var(--t)' : 'transparent') + '; color: ' + (kEvery ? 'var(--g)' : 'var(--t)');
+    v.kCaption = kEvery ? 'All ' + ids.length + ' kids' : kSel.map((i) => K[i][0]).join(', ');
+
+    const cd = st.count !== undefined ? st.count : true; const c = sw(cd);
+    v.cdAria = cd ? 'true' : 'false'; v.cdTrack = c.track; v.cdKnob = c.knob; v.toggleCount = () => edit({ count: !cd });
+    return v;
+  }
+}
+</script>
+</body>
+</html>

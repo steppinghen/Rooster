@@ -1,0 +1,1081 @@
+{
+ "v": 3,
+ "attachments": {},
+ "boards": {
+  "Phase15BOHolidays.dc.html": {
+   "h": 1000,
+   "is_interactive": true,
+   "page": "backoffice",
+   "title": "1.5 · 14 Back Office › Holiday accents",
+   "w": 390,
+   "x": 0,
+   "y": 2300
+  },
+  "Phase15BOSeasons.dc.html": {
+   "h": 1000,
+   "is_interactive": true,
+   "page": "backoffice",
+   "title": "1.5 · 14 Back Office › Seasons and dog",
+   "w": 390,
+   "x": 470,
+   "y": 2300
+  },
+  "Phase15BOTips.dc.html": {
+   "h": 1000,
+   "is_interactive": true,
+   "page": "backoffice",
+   "title": "1.5 · 14 Back Office › Surf Report tips",
+   "w": 390,
+   "x": 940,
+   "y": 2300
+  },
+  "Phase15BackOffice.dc.html": {
+   "h": 1240,
+   "is_interactive": true,
+   "page": "backoffice",
+   "title": "1.5 · 10 Back Office — short root: Family drill-ins, Devices, Calendars, Parents and data (ground prop)",
+   "w": 390,
+   "x": 0,
+   "y": 0
+  },
+  "Phase15BackOfficeKid.dc.html": {
+   "h": 1900,
+   "is_interactive": true,
+   "page": "backoffice",
+   "title": "1.5 · 10 Kid settings — dock picker labels how each module is reached (modules prop: Phase 1.5 / Later)",
+   "w": 390,
+   "x": 470,
+   "y": 0
+  },
+  "Phase15BreatheDay.dc.html": {
+   "h": 820,
+   "page": "kids",
+   "title": "1.5 · Breathing wave — day, normal, landscape",
+   "w": 1180,
+   "x": 2160,
+   "y": 1600
+  },
+  "Phase15BreatheNight.dc.html": {
+   "h": 1180,
+   "page": "kids",
+   "title": "1.5 · Breathing wave — night, focus, portrait",
+   "w": 820,
+   "x": 3420,
+   "y": 1600
+  },
+  "Phase15Calendar.dc.html": {
+   "h": 1500,
+   "is_interactive": true,
+   "page": "family",
+   "title": "1.5 · 11 Calendar — month, day list, Calendars sheet (tap a day; Calendars toggles)",
+   "w": 390,
+   "x": 0,
+   "y": 5360
+  },
+  "Phase15CalendarEvent.dc.html": {
+   "h": 1500,
+   "is_interactive": true,
+   "page": "family",
+   "title": "1.5 · 11 Imported event — who sees it, kitchen, kid layer (event prop: Grandma / Family / work)",
+   "w": 390,
+   "x": 470,
+   "y": 5360
+  },
+  "Phase15CelebrateDay.dc.html": {
+   "h": 1180,
+   "is_interactive": true,
+   "page": "kids",
+   "title": "1.5 · 5c Celebration → pick a sticker → Costa slaps it on — day, normal, portrait (Kid A)",
+   "w": 820,
+   "x": 0,
+   "y": 3200
+  },
+  "Phase15CelebrateNight.dc.html": {
+   "h": 820,
+   "is_interactive": true,
+   "page": "kids",
+   "title": "1.5 · 5c Quiet celebration → Costa’s surprise sticker → Lights out — night, focus, landscape (Kid B)",
+   "w": 1180,
+   "x": 900,
+   "y": 3200
+  },
+  "Phase15Collection.dc.html": {
+   "h": 820,
+   "is_interactive": true,
+   "page": "kids",
+   "title": "1.5 · My week › My stickers — collection, sets, tap a sticker (props: Reader/Pre-reader, Normal/Focus)",
+   "w": 1180,
+   "x": 2160,
+   "y": 4800
+  },
+  "Phase15Decks.dc.html": {
+   "h": 3420,
+   "page": "stickers",
+   "title": "1.5 · Deck designs — 36 (6 worlds × 6 looks, 2 colorways, light + dark)",
+   "w": 1960,
+   "x": 1340,
+   "y": 0
+  },
+  "Phase15DeviceKitchen.dc.html": {
+   "h": 1900,
+   "is_interactive": true,
+   "page": "backoffice",
+   "title": "1.5 · 13 Device page — Family display vs Kid iPad (job switch), calendars Not here/Busy/Title, unlock, screen (ground pr",
+   "w": 390,
+   "x": 1410,
+   "y": 0
+  },
+  "Phase15EventEditor.dc.html": {
+   "h": 1460,
+   "is_interactive": true,
+   "page": "family",
+   "title": "1.5 · 8 Event editor — kid layer, which kids as Everyone + avatars (kids prop)",
+   "w": 390,
+   "x": 470,
+   "y": 3380
+  },
+  "Phase15GetDressed.dc.html": {
+   "h": 820,
+   "page": "kids",
+   "title": "1.5 · 9 Surf Report — pre-reader, spoken tip, day, focus, landscape (Kid B)",
+   "w": 1180,
+   "x": 900,
+   "y": 8000
+  },
+  "Phase15HolidayKit.dc.html": {
+   "h": 1700,
+   "page": "holidays",
+   "title": "1.5 · 5d Holiday kit — trims, corner pieces, holiday decks (9)",
+   "w": 1840,
+   "x": 0,
+   "y": 0
+  },
+  "Phase15HolidayTrims.dc.html": {
+   "h": 1880,
+   "page": "holidays",
+   "title": "1.5 · 5d Holiday trims v2 — a different trim for every holiday, plus winter",
+   "w": 1700,
+   "x": 1920,
+   "y": 0
+  },
+  "Phase15Kids.dc.html": {
+   "h": 1700,
+   "is_interactive": true,
+   "page": "backoffice",
+   "title": "1.5 · 12 Kids tab — kids, routines by time of day, avatar filter, sticker cap (kids prop: 2 or 3)",
+   "w": 390,
+   "x": 940,
+   "y": 0
+  },
+  "Phase15KitchenCalendar.dc.html": {
+   "h": 820,
+   "is_interactive": true,
+   "page": "family",
+   "title": "1.5 · 11 Kitchen hub — Calendar: This week with weather, Month grid, chips, tap event or day, parent unlock (any 6 digit",
+   "w": 1180,
+   "x": 940,
+   "y": 5360
+  },
+  "Phase15KitchenHub.dc.html": {
+   "h": 820,
+   "page": "family",
+   "title": "1.5 · 11 Kitchen hub — Today (props: ground Night/Day, kids 2/3)",
+   "w": 1180,
+   "x": 470,
+   "y": 0
+  },
+  "Phase15KitchenMenu.dc.html": {
+   "h": 820,
+   "page": "family",
+   "title": "1.5 · 11 Kitchen hub — Dinners, today through next Friday (shared nav)",
+   "w": 1180,
+   "x": 470,
+   "y": 1780
+  },
+  "Phase15KitchenParent.dc.html": {
+   "h": 820,
+   "is_interactive": true,
+   "page": "family",
+   "title": "1.5 · 15 Kitchen hub, parent mode — Kids and Back Office tabs, two panes, phone-only items hand off by QR (props: tab, g",
+   "w": 1180,
+   "x": 2200,
+   "y": 5360
+  },
+  "Phase15ManageCalendars.dc.html": {
+   "h": 1000,
+   "is_interactive": true,
+   "page": "backoffice",
+   "title": "1.5 · 14 Manage calendars — list, add a calendar (Apple / Google how-to), per-calendar color and kid default (tap a row)",
+   "w": 390,
+   "x": 1410,
+   "y": 2300
+  },
+  "Phase15MyLookDay.dc.html": {
+   "h": 1180,
+   "is_interactive": true,
+   "page": "personal",
+   "title": "1.5 · 6 My look — pick an icon and color, day, normal, portrait (Kid A)",
+   "w": 820,
+   "x": 0,
+   "y": 0
+  },
+  "Phase15MyLookNight.dc.html": {
+   "h": 820,
+   "is_interactive": true,
+   "page": "personal",
+   "title": "1.5 · 6 My look — color, then sticker, pre-reader, night, normal, landscape (Kid B)",
+   "w": 1180,
+   "x": 900,
+   "y": 0
+  },
+  "Phase15MyWeek.dc.html": {
+   "h": 820,
+   "page": "kids",
+   "title": "1.5 · My week (sticker deck) — My stickers and Old decks buttons, night, normal, landscape",
+   "w": 1180,
+   "x": 0,
+   "y": 4800
+  },
+  "Phase15OldDecks.dc.html": {
+   "h": 1180,
+   "page": "kids",
+   "title": "1.5 · My old decks (deck rack) — day, normal, portrait",
+   "w": 820,
+   "x": 1260,
+   "y": 4800
+  },
+  "Phase15ParentToday.dc.html": {
+   "h": 1700,
+   "is_interactive": true,
+   "page": "family",
+   "title": "1.5 · 7 Parent Today — kid filter strip, dinner chips (props: ground Night/Day, kids 2/3)",
+   "w": 390,
+   "x": 0,
+   "y": 0
+  },
+  "Phase15PointB2.dc.html": {
+   "h": 1180,
+   "page": "point",
+   "title": "The Point B2 — ink dock, overlaid holiday accents, check-in and to-do markers (Kid A, day, normal, portrait)",
+   "w": 820,
+   "x": 0,
+   "y": 0
+  },
+  "Phase15PointB2Christmas.dc.html": {
+   "h": 1180,
+   "page": "point",
+   "title": "The Point B2 — Christmas accents overlaid (Kid A, day, normal, portrait)",
+   "w": 820,
+   "x": 1800,
+   "y": 0
+  },
+  "Phase15PointB2Focus.dc.html": {
+   "h": 1180,
+   "page": "point",
+   "title": "The Point B2 — focus volume, for a kid whose default is focus (Kid A, day, focus, portrait)",
+   "w": 820,
+   "x": 2700,
+   "y": 0
+  },
+  "Phase15PointB2Halloween.dc.html": {
+   "h": 1180,
+   "page": "point",
+   "title": "The Point B2 — Halloween accents overlaid (Kid A, day, normal, portrait)",
+   "w": 820,
+   "x": 900,
+   "y": 0
+  },
+  "Phase15PointB2Land.dc.html": {
+   "h": 820,
+   "page": "point",
+   "title": "The Point B2 — reader landscape (Kid A, day, normal, landscape)",
+   "w": 1180,
+   "x": 0,
+   "y": 2900
+  },
+  "Phase15PointB2Pre.dc.html": {
+   "h": 820,
+   "page": "point",
+   "title": "The Point B2 — pre-reader (Kid B, day, normal, landscape)",
+   "w": 1180,
+   "x": 0,
+   "y": 1600
+  },
+  "Phase15PointB2PreChristmas.dc.html": {
+   "h": 820,
+   "page": "point",
+   "title": "The Point B2 — pre-reader, Christmas accents (Kid B, day, normal, landscape)",
+   "w": 1180,
+   "x": 2520,
+   "y": 1600
+  },
+  "Phase15PointB2PreHalloween.dc.html": {
+   "h": 820,
+   "page": "point",
+   "title": "The Point B2 — pre-reader, Halloween accents (Kid B, day, normal, landscape)",
+   "w": 1180,
+   "x": 1260,
+   "y": 1600
+  },
+  "Phase15RoutineDay.dc.html": {
+   "h": 1180,
+   "is_interactive": true,
+   "page": "kids",
+   "title": "1.5 · Routine checklist — day, normal, portrait (Kid A)",
+   "w": 820,
+   "x": 0,
+   "y": 0
+  },
+  "Phase15RoutineEditor.dc.html": {
+   "h": 1560,
+   "is_interactive": true,
+   "page": "family",
+   "title": "1.5 · 8 Routine editor — who as Everyone + avatars, per-step who (kids prop: 2 or 3)",
+   "w": 390,
+   "x": 0,
+   "y": 3380
+  },
+  "Phase15RoutineNight.dc.html": {
+   "h": 820,
+   "is_interactive": true,
+   "page": "kids",
+   "title": "1.5 · Routine checklist — night, focus, landscape (Kid B)",
+   "w": 1180,
+   "x": 900,
+   "y": 0
+  },
+  "Phase15SnackShack.dc.html": {
+   "h": 1180,
+   "is_interactive": true,
+   "page": "family",
+   "title": "1.5 · 7 Snack Shack — dinner menu, today through next Friday (tap a day)",
+   "w": 390,
+   "x": 0,
+   "y": 1780
+  },
+  "Phase15StickerMix.dc.html": {
+   "h": 1440,
+   "page": "stickers",
+   "title": "1.5 · Sticker mix on the deck — Fluent, R4, and both with one die-cut",
+   "w": 1260,
+   "x": 0,
+   "y": 0
+  },
+  "Phase15SurfReportDay.dc.html": {
+   "h": 1180,
+   "page": "kids",
+   "title": "1.5 · 9 Surf Report — today, tip, this week, trip weather, day, normal, portrait (Kid A)",
+   "w": 820,
+   "x": 0,
+   "y": 8000
+  },
+  "Phase15TourDatesDay.dc.html": {
+   "h": 1180,
+   "page": "kids",
+   "title": "1.5 · Tour Dates — Countdowns view, day, normal, portrait (Kid A)",
+   "w": 820,
+   "x": 0,
+   "y": 6400
+  },
+  "Phase15TourDatesGrid.dc.html": {
+   "h": 820,
+   "is_interactive": true,
+   "page": "kids",
+   "title": "1.5 · Tour Dates — calendar grid, tap a day (Kid A, night, normal, landscape)",
+   "w": 1180,
+   "x": 2160,
+   "y": 6400
+  },
+  "Phase15TourDatesNight.dc.html": {
+   "h": 820,
+   "page": "kids",
+   "title": "1.5 · Tour Dates — Months view with Back / Next, night, normal, landscape",
+   "w": 1180,
+   "x": 900,
+   "y": 6400
+  },
+  "Phase15WaveCheckDay.dc.html": {
+   "h": 1180,
+   "is_interactive": true,
+   "page": "kids",
+   "title": "1.5 · Wave Check — day, normal, portrait (Kid A)",
+   "w": 820,
+   "x": 0,
+   "y": 1600
+  },
+  "Phase15WaveCheckNight.dc.html": {
+   "h": 820,
+   "is_interactive": true,
+   "page": "kids",
+   "title": "1.5 · Wave Check — night, focus, landscape (Kid B)",
+   "w": 1180,
+   "x": 900,
+   "y": 1600
+  },
+  "R2Dog.dc.html": {
+   "h": 1020,
+   "page": "characters",
+   "title": "R2 · Dog (Mara, Goldendoodle) — Sticker Punk poses (skate)",
+   "w": 1180,
+   "x": 2520,
+   "y": 0
+  },
+  "R2DogCosta.dc.html": {
+   "h": 1020,
+   "page": "characters",
+   "title": "Dog season · Costa (German Shepherd) — Sticker Punk poses (skate)",
+   "w": 1180,
+   "x": 0,
+   "y": 2880
+  },
+  "R2DogSeason.dc.html": {
+   "h": 1020,
+   "page": "characters",
+   "title": "Dog season · Mara and Costa swap each quarter",
+   "w": 1180,
+   "x": 2520,
+   "y": 2880
+  },
+  "R2Rooster.dc.html": {
+   "h": 1020,
+   "page": "characters",
+   "title": "R2 · Rooster — Sticker Punk poses (surf)",
+   "w": 1180,
+   "x": 0,
+   "y": 0
+  },
+  "R2Turtle.dc.html": {
+   "h": 1020,
+   "page": "characters",
+   "title": "R2 · Turtle — Sticker Punk poses (snow)",
+   "w": 1180,
+   "x": 1260,
+   "y": 0
+  },
+  "R2bDog.dc.html": {
+   "h": 1020,
+   "page": "characters",
+   "title": "R2 · Dog (Mara) — heads-up, breathing, bedtime, winter",
+   "w": 1180,
+   "x": 2520,
+   "y": 1440
+  },
+  "R2bDogCosta.dc.html": {
+   "h": 1020,
+   "page": "characters",
+   "title": "Dog season · Costa — heads-up, breathing, bedtime, winter",
+   "w": 1180,
+   "x": 1260,
+   "y": 2880
+  },
+  "R2bRooster.dc.html": {
+   "h": 1020,
+   "page": "characters",
+   "title": "R2 · Rooster — heads-up, breathing, bedtime, winter",
+   "w": 1180,
+   "x": 0,
+   "y": 1440
+  },
+  "R2bTurtle.dc.html": {
+   "h": 1020,
+   "page": "characters",
+   "title": "R2 · Turtle — heads-up, breathing, bedtime, winter",
+   "w": 1180,
+   "x": 1260,
+   "y": 1440
+  },
+  "R3Celebrations.dc.html": {
+   "h": 1380,
+   "page": "animations",
+   "title": "R3 · Celebrations — POP, confetti, rooster cheer (sticker slap now lands every sticker, see R6)",
+   "w": 1840,
+   "x": 0,
+   "y": 0
+  },
+  "R3HeadsUp.dc.html": {
+   "h": 400,
+   "page": "animations",
+   "title": "R3 · Heads-up — rooster and two-minute timer",
+   "w": 2220,
+   "x": 0,
+   "y": 1500
+  },
+  "R3Idle.dc.html": {
+   "h": 1360,
+   "page": "animations",
+   "title": "R3 · Idle — small, occasional movement on kid home (both dogs)",
+   "w": 1440,
+   "x": 1920,
+   "y": 0
+  },
+  "R3LightsOut.dc.html": {
+   "h": 740,
+   "page": "animations",
+   "title": "R3 · Lights out — starry night and quiet snowy night",
+   "w": 1960,
+   "x": 0,
+   "y": 2540
+  },
+  "R4Dressing.dc.html": {
+   "h": 1240,
+   "page": "illustrations",
+   "title": "R4 · Surf Report — dressing hints (7) and pairings",
+   "w": 1480,
+   "x": 1560,
+   "y": 0
+  },
+  "R4Stickers.dc.html": {
+   "h": 1240,
+   "page": "stickers",
+   "title": "R4 · Sticker collection — skate, surf, snow (18)",
+   "w": 1480,
+   "x": 0,
+   "y": 3840
+  },
+  "R4WaveExtras.dc.html": {
+   "h": 1240,
+   "page": "illustrations",
+   "title": "R4 · Wave extras — floating turtle, Wave Check surf pictures, stand-in swaps",
+   "w": 1480,
+   "x": 0,
+   "y": 2110
+  },
+  "R4Weather.dc.html": {
+   "h": 990,
+   "page": "illustrations",
+   "title": "R4 · Surf Report — weather icons (8)",
+   "w": 1480,
+   "x": 0,
+   "y": 0
+  },
+  "R5Celebrations.dc.html": {
+   "h": 1420,
+   "page": "animations",
+   "title": "R5 · Celebrations 4–7 — shell spin, kickflip, stoked, squad (bag of seven; Dog tweak: Costa or Mara)",
+   "w": 1840,
+   "x": 0,
+   "y": 3700
+  },
+  "R5FaithSchool.dc.html": {
+   "h": 1060,
+   "page": "stickers",
+   "title": "R5 · Faith and school stickers (10)",
+   "w": 1480,
+   "x": 3120,
+   "y": 3840
+  },
+  "R5Holidays.dc.html": {
+   "h": 1000,
+   "page": "stickers",
+   "title": "R5 · Holiday stickers (16)",
+   "w": 1480,
+   "x": 1560,
+   "y": 3840
+  },
+  "R5SnowReport.dc.html": {
+   "h": 1690,
+   "page": "illustrations",
+   "title": "R5 · Snow Report — winter weather, badges, winter dressing",
+   "w": 1480,
+   "x": 3120,
+   "y": 0
+  },
+  "R6StickerSlap.dc.html": {
+   "h": 1220,
+   "page": "animations",
+   "title": "R6 · Sticker earned v2 — the dog paw-slaps it on (Costa and Mara)",
+   "w": 2040,
+   "x": 0,
+   "y": 5540
+  },
+  "Phase15PointB2PreFocus.dc.html": {
+   "x": 3780,
+   "y": 1600,
+   "w": 1180,
+   "h": 820,
+   "page": "point",
+   "title": "The Point B2 — pre-reader, focus volume (Kid B, day, focus, landscape)"
+  },
+  "Phase15DinnersDay.dc.html": {
+   "x": 0,
+   "y": 9600,
+   "w": 820,
+   "h": 1180,
+   "page": "kids",
+   "title": "1.5 · This week’s dinners — tonight, coming up, day, normal, portrait (Kid A)"
+  },
+  "Phase15DinnersPre.dc.html": {
+   "x": 900,
+   "y": 9600,
+   "w": 1180,
+   "h": 820,
+   "page": "kids",
+   "title": "1.5 · This week’s dinners — pre-reader, spoken cards, day, normal, landscape (Kid B)"
+  },
+  "Phase15HolidayTrimsFull.dc.html": {
+   "x": 0,
+   "y": 2000,
+   "w": 2400,
+   "h": 1800,
+   "page": "holidays",
+   "title": "1.5 · 5d Holiday trims v3 — full width, portrait 640 and landscape 1000, day and night"
+  },
+  "R6Travel.dc.html": {
+   "x": 4680,
+   "y": 3840,
+   "w": 1480,
+   "h": 1060,
+   "page": "stickers",
+   "title": "R6 · Travel stickers (7) — tent, cruise ship, road trip car, plane, beach, theme park, Grandma’s house"
+  }
+ },
+ "createdOnFiles": {
+  "at": "2026-09-30T12:00:00Z",
+  "v": 1
+ },
+ "designSystems": [],
+ "launch": {
+  "page": "point",
+  "view": "canvas"
+ },
+ "notes": {
+  "archP1": {
+   "kind": "title1",
+   "maxW": 5180,
+   "page": "archive",
+   "text": "Phase 1 focus and family screens — replaced by Phase 1.5",
+   "w": 240,
+   "x": 0,
+   "y": 7540
+  },
+  "archPoint": {
+   "kind": "title1",
+   "maxW": 4420,
+   "page": "archive",
+   "text": "Superseded The Point layouts",
+   "w": 240,
+   "x": 0,
+   "y": 5940
+  },
+  "archR3": {
+   "kind": "title1",
+   "maxW": 1960,
+   "page": "archive",
+   "text": "Superseded animations",
+   "w": 240,
+   "x": 0,
+   "y": 5120
+  },
+  "backoffice_r0": {
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "backoffice",
+   "text": "Back Office, Kids tab and devices",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "backoffice_r1": {
+   "kind": "title1",
+   "maxW": 1800,
+   "page": "backoffice",
+   "text": "Drill-in pages and calendars",
+   "w": 240,
+   "x": 0,
+   "y": 2000
+  },
+  "dogseason": {
+   "kind": "title1",
+   "maxW": 3700,
+   "page": "characters",
+   "text": "Dog season — Mara (Goldendoodle) and Costa (German Shepherd)",
+   "w": 240,
+   "x": 0,
+   "y": 2580
+  },
+  "family_r0": {
+   "kind": "title1",
+   "maxW": 1650,
+   "page": "family",
+   "text": "Parent Today and kitchen hub",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "family_r1": {
+   "kind": "title1",
+   "maxW": 1650,
+   "page": "family",
+   "text": "Snack Shack — dinners",
+   "w": 240,
+   "x": 0,
+   "y": 1480
+  },
+  "family_r2": {
+   "kind": "title1",
+   "maxW": 1200,
+   "page": "family",
+   "text": "Routine and event editors",
+   "w": 240,
+   "x": 0,
+   "y": 3080
+  },
+  "family_r3": {
+   "kind": "title1",
+   "maxW": 3380,
+   "page": "family",
+   "text": "Calendar — synced from Apple and Google",
+   "w": 240,
+   "x": 0,
+   "y": 5060
+  },
+  "holidays_r0": {
+   "kind": "title1",
+   "maxW": 3620,
+   "page": "holidays",
+   "text": "Holiday kit and trims (trims to be redrawn full-width, see The Point)",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "illustrations_r0": {
+   "kind": "title1",
+   "maxW": 4600,
+   "page": "illustrations",
+   "text": "Surf Report and Snow Report art",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "illustrations_r1": {
+   "kind": "title1",
+   "maxW": 1480,
+   "page": "illustrations",
+   "text": "Wave extras — floating turtle, surf pictures, stand-in swaps",
+   "w": 240,
+   "x": 0,
+   "y": 1810
+  },
+  "kids_r0": {
+   "kind": "title1",
+   "maxW": 2080,
+   "page": "kids",
+   "text": "Routines",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "kids_r1": {
+   "kind": "title1",
+   "maxW": 4240,
+   "page": "kids",
+   "text": "Wave Check and breathing",
+   "w": 240,
+   "x": 0,
+   "y": 1300
+  },
+  "kids_r2": {
+   "kind": "title1",
+   "maxW": 2080,
+   "page": "kids",
+   "text": "Celebrations and the sticker pick",
+   "w": 240,
+   "x": 0,
+   "y": 2900
+  },
+  "kids_r3": {
+   "kind": "title1",
+   "maxW": 3340,
+   "page": "kids",
+   "text": "My week, my stickers and old decks",
+   "w": 240,
+   "x": 0,
+   "y": 4500
+  },
+  "kids_r4": {
+   "kind": "title1",
+   "maxW": 3340,
+   "page": "kids",
+   "text": "Tour Dates",
+   "w": 240,
+   "x": 0,
+   "y": 6100
+  },
+  "kids_r5": {
+   "kind": "title1",
+   "maxW": 2080,
+   "page": "kids",
+   "text": "Surf Report",
+   "w": 240,
+   "x": 0,
+   "y": 7700
+  },
+  "normaltitle": {
+   "kind": "title1",
+   "maxW": 6220,
+   "page": "archive",
+   "text": "Phase 1 iPad — replaced by Phase 1.5",
+   "w": 240,
+   "x": 0,
+   "y": 2340
+  },
+  "personal_r0": {
+   "kind": "title1",
+   "maxW": 2080,
+   "page": "personal",
+   "text": "My look — avatar icon and color",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "phonekids": {
+   "kind": "title1",
+   "maxW": 860,
+   "page": "archive",
+   "text": "Phase 1 phone — replaced by kid home + R3 animations",
+   "w": 240,
+   "x": 0,
+   "y": 3940
+  },
+  "point_r0": {
+   "kind": "title1",
+   "maxW": 3520,
+   "page": "point",
+   "text": "Kid A — reader, portrait (plain, Halloween, Christmas, focus volume)",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "point_r1": {
+   "kind": "title1",
+   "maxW": 4960,
+   "page": "point",
+   "text": "Kid B — pre-reader, landscape (plain, Halloween, Christmas, focus volume)",
+   "w": 240,
+   "x": 0,
+   "y": 1300
+  },
+  "point_r2": {
+   "kind": "title1",
+   "maxW": 1180,
+   "page": "point",
+   "text": "Kid A — reader, landscape",
+   "w": 240,
+   "x": 0,
+   "y": 2600
+  },
+  "r1rooster": {
+   "kind": "title1",
+   "maxW": 2620,
+   "page": "archive",
+   "text": "Round 1 — rooster (superseded by Sticker Punk R2)",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "r1turtle": {
+   "kind": "title1",
+   "maxW": 2620,
+   "page": "archive",
+   "text": "Round 1 — turtle (superseded by Sticker Punk R2)",
+   "w": 240,
+   "x": 0,
+   "y": 1020
+  },
+  "r2btitle": {
+   "kind": "title1",
+   "maxW": 3700,
+   "page": "characters",
+   "text": "Round 2 — heads-up, breathing, bedtime, winter",
+   "w": 240,
+   "x": 0,
+   "y": 1140
+  },
+  "r2title": {
+   "kind": "title1",
+   "maxW": 3700,
+   "page": "characters",
+   "text": "Round 2 — Sticker Punk poses",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "r3title": {
+   "kind": "title1",
+   "maxW": 3360,
+   "page": "animations",
+   "text": "Round 3 — animations",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "r5anim": {
+   "kind": "title1",
+   "maxW": 1840,
+   "page": "animations",
+   "text": "Round 5 — celebrations 4 to 7",
+   "w": 240,
+   "x": 0,
+   "y": 3400
+  },
+  "r6anim": {
+   "kind": "title1",
+   "maxW": 2040,
+   "page": "animations",
+   "text": "Round 6 — paw slap",
+   "w": 240,
+   "x": 0,
+   "y": 5240
+  },
+  "stickers_r0": {
+   "kind": "title1",
+   "maxW": 3300,
+   "page": "stickers",
+   "text": "Sticker system — the shared die-cut and the 36 deck designs",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "stickers_r1": {
+   "kind": "title1",
+   "maxW": 4600,
+   "page": "stickers",
+   "text": "Sticker art — collection, holidays, faith and school",
+   "w": 240,
+   "x": 0,
+   "y": 3540
+  },
+  "kids_r6": {
+   "x": 0,
+   "y": 9300,
+   "kind": "title1",
+   "maxW": 2080,
+   "page": "kids",
+   "text": "This week’s dinners"
+  }
+ },
+ "order": [
+  "Phase15RoutineDay.dc.html",
+  "Phase15RoutineNight.dc.html",
+  "R2Rooster.dc.html",
+  "R2Turtle.dc.html",
+  "R2Dog.dc.html",
+  "Phase15BreatheNight.dc.html",
+  "Phase15BreatheDay.dc.html",
+  "Phase15WaveCheckDay.dc.html",
+  "Phase15WaveCheckNight.dc.html",
+  "Phase15TourDatesDay.dc.html",
+  "Phase15TourDatesNight.dc.html",
+  "R2bRooster.dc.html",
+  "R2bTurtle.dc.html",
+  "R2bDog.dc.html",
+  "Phase15MyWeek.dc.html",
+  "R3Celebrations.dc.html",
+  "R3HeadsUp.dc.html",
+  "R3LightsOut.dc.html",
+  "R3Idle.dc.html",
+  "Phase15OldDecks.dc.html",
+  "R4Weather.dc.html",
+  "R4Dressing.dc.html",
+  "R4Stickers.dc.html",
+  "R4WaveExtras.dc.html",
+  "Phase15StickerMix.dc.html",
+  "R2DogCosta.dc.html",
+  "R2bDogCosta.dc.html",
+  "R2DogSeason.dc.html",
+  "Phase15Decks.dc.html",
+  "R5SnowReport.dc.html",
+  "R5Holidays.dc.html",
+  "R5Celebrations.dc.html",
+  "R5FaithSchool.dc.html",
+  "Phase15CelebrateDay.dc.html",
+  "Phase15CelebrateNight.dc.html",
+  "R6StickerSlap.dc.html",
+  "Phase15HolidayKit.dc.html",
+  "Phase15HolidayTrims.dc.html",
+  "Phase15MyLookDay.dc.html",
+  "Phase15MyLookNight.dc.html",
+  "Phase15ParentToday.dc.html",
+  "Phase15KitchenHub.dc.html",
+  "Phase15SnackShack.dc.html",
+  "Phase15KitchenMenu.dc.html",
+  "Phase15RoutineEditor.dc.html",
+  "Phase15EventEditor.dc.html",
+  "Phase15SurfReportDay.dc.html",
+  "Phase15GetDressed.dc.html",
+  "Phase15PointB2.dc.html",
+  "Phase15PointB2Pre.dc.html",
+  "Phase15PointB2Halloween.dc.html",
+  "Phase15PointB2Christmas.dc.html",
+  "Phase15PointB2PreHalloween.dc.html",
+  "Phase15PointB2PreChristmas.dc.html",
+  "Phase15BackOffice.dc.html",
+  "Phase15BackOfficeKid.dc.html",
+  "Phase15Calendar.dc.html",
+  "Phase15CalendarEvent.dc.html",
+  "Phase15KitchenCalendar.dc.html",
+  "Phase15Kids.dc.html",
+  "Phase15TourDatesGrid.dc.html",
+  "Phase15DeviceKitchen.dc.html",
+  "Phase15BOHolidays.dc.html",
+  "Phase15BOSeasons.dc.html",
+  "Phase15BOTips.dc.html",
+  "Phase15ManageCalendars.dc.html",
+  "Phase15Collection.dc.html",
+  "Phase15KitchenParent.dc.html",
+  "Phase15PointB2Focus.dc.html",
+  "Phase15PointB2Land.dc.html",
+  "Phase15PointB2PreFocus.dc.html",
+  "Phase15DinnersDay.dc.html",
+  "Phase15DinnersPre.dc.html",
+  "Phase15HolidayTrimsFull.dc.html",
+  "R6Travel.dc.html"
+ ],
+ "pages": [
+  {
+   "id": "point",
+   "name": "The Point"
+  },
+  {
+   "id": "kids",
+   "name": "Kid modules"
+  },
+  {
+   "id": "personal",
+   "name": "Kid personalization"
+  },
+  {
+   "id": "family",
+   "name": "Parent screens"
+  },
+  {
+   "id": "backoffice",
+   "name": "Back Office"
+  },
+  {
+   "id": "stickers",
+   "name": "Stickers & decks"
+  },
+  {
+   "id": "holidays",
+   "name": "Holidays"
+  },
+  {
+   "id": "characters",
+   "name": "Characters"
+  },
+  {
+   "id": "animations",
+   "name": "Animations"
+  },
+  {
+   "id": "illustrations",
+   "name": "Weather & art"
+  },
+  {
+   "id": "archive",
+   "name": "Archive"
+  }
+ ],
+ "title": "The Deck — Comic Shop Screens"
+}

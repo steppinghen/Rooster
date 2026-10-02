@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Snack Shack — dinner menu, phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Archivo:wght@400;600;700;800&amp;family=Permanent+Marker&amp;display=swap">
+<style>
+body{margin:0}
+a{color:var(--y)}
+button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.fx{background-image:url(/_blob/e47a0dc8fefa526e06b4d92fd86fbb16);background-size:1000% 900%;background-repeat:no-repeat;display:block;flex-shrink:0}
+.fx-hamburger{background-position:44.4444% 37.5000%}
+.fx-bowl_with_spoon{background-position:11.1111% 12.5000%}
+.fx-pizza{background-position:100.0000% 50.0000%}
+.fx-pancakes{background-position:66.6667% 50.0000%}
+.fx-carrot{background-position:33.3333% 12.5000%}
+.fx-soccer_ball{background-position:100.0000% 75.0000%}
+.fx-sparkles{background-position:11.1111% 87.5000%}
+.fx-house{background-position:88.8889% 37.5000%}
+.fx-rooster{background-position:55.5556% 62.5000%}
+.stk{filter:drop-shadow(2.5px 0 0 #fff) drop-shadow(-2.5px 0 0 #fff) drop-shadow(0 2.5px 0 #fff) drop-shadow(0 -2.5px 0 #fff) drop-shadow(1.5px 0 0 #0A0818) drop-shadow(-1.5px 0 0 #0A0818) drop-shadow(0 1.5px 0 #0A0818) drop-shadow(0 -1.5px 0 #0A0818) drop-shadow(3px 3px 0 #0A0818)}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+
+<div style="display: flex; align-items: flex-end; justify-content: space-between">
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 14px; font-weight: 700; color: var(--m)">Snack Shack</span><h1 style="margin: 0; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 34px; line-height: 1">Dinners</h1></div>
+<span style="font-size: 13px; font-weight: 700; color: var(--m)">Today through next Friday</span>
+</div>
+
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">{{g.label}}</span>
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 22px; overflow: hidden">
+<sc-for list="{{g.days}}" as="d" hint-placeholder-count="4">
+<button onClick="{{d.open}}" aria-label="{{d.aria}}" style="{{d.rowStyle}}">
+<span style="width: 50px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 1px"><span style="{{d.dowStyle}}">{{d.dow}}</span><span style="font-size: 13px; font-weight: 700; color: var(--m)">{{d.date}}</span></span>
+<span style="width: 34px; height: 34px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--m)"><sc-if value="{{d.hasIcon}}" hint-placeholder-val="{{false}}"><span class="{{d.iconCls}}" style="width: 32px; height: 32px"></span></sc-if><sc-if value="{{d.plate}}" hint-placeholder-val="{{true}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="7"></circle><circle cx="12" cy="13" r="3.5"></circle><path d="M3 3v6M5 3v6M4 9v12M20 3c-1.5 1-2 3-2 6h2v12"></path></svg></sc-if></span>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="{{d.nameStyle}}">{{d.title}}</span>
+<sc-if value="{{d.hasSub}}" hint-placeholder-val="{{true}}"><span style="font-size: 14px; font-weight: 600; color: var(--m); line-height: 1.3">{{d.sub}}</span></sc-if>
+<sc-if value="{{d.hasEvent}}" hint-placeholder-val="{{false}}"><span style="align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-top: 2px; padding: 3px 9px; border-radius: 999px; background: rgba(255,210,63,0.14); color: var(--y); font-size: 12px; font-weight: 800">{{d.event}}</span></sc-if>
+</span>
+<span style="color: var(--m)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-for>
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 18px; border: 1px dashed rgba(var(--rgb),0.25); color: var(--m); font-size: 14px; font-weight: 600; line-height: 1.35"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="7"></circle><circle cx="12" cy="13" r="3.5"></circle><path d="M3 3v6M5 3v6M4 9v12M20 3c-1.5 1-2 3-2 6h2v12"></path></svg><span>Plan any time. The list always runs from today to the same day next week, so two Fridays never collide.</span></div>
+
+<sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; inset: 0; background: rgba(10,8,24,0.62); display: flex; flex-direction: column; justify-content: flex-end">
+<div role="dialog" aria-label="Edit dinner" style="display: flex; flex-direction: column; gap: 16px; padding: 18px 18px 30px; background: var(--s); border-top: 1px solid rgba(var(--rgb),0.12); border-radius: 26px 26px 0 0">
+<div style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: rgba(var(--rgb),0.25)"></div>
+<div style="display: flex; align-items: center; justify-content: space-between"><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 13px; font-weight: 700; color: var(--m)">Dinner</span><span style="font-family: 'Archivo Black', sans-serif; font-size: 24px; line-height: 1">{{sheetDay}}</span></span>
+<button onClick="{{close}}" style="height: 40px; padding: 0 16px; border-radius: 999px; background: var(--t); color: var(--g); border: 0; font-size: 15px; font-weight: 800; cursor: pointer">Done</button></div>
+<sc-if value="{{sheetHasEvent}}" hint-placeholder-val="{{false}}"><span style="align-self: flex-start; padding: 4px 10px; border-radius: 999px; background: rgba(255,210,63,0.14); color: var(--y); font-size: 13px; font-weight: 800">Busy night: {{sheetEvent}}</span></sc-if>
+<div role="radiogroup" aria-label="Kind of dinner" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 14px; background: rgba(var(--rgb),0.08)">
+<sc-for list="{{kinds}}" as="k" hint-placeholder-count="3"><button onClick="{{k.pick}}" role="radio" aria-checked="{{k.on}}" style="{{k.style}}">{{k.label}}</button></sc-for>
+</div>
+<sc-if value="{{isMeal}}" hint-placeholder-val="{{true}}">
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Meal<input value="{{sheetName}}" placeholder="What’s for dinner?" style="height: 48px; box-sizing: border-box; padding: 0 14px; border-radius: 14px; border: 1px solid rgba(var(--rgb),0.12); background: var(--g); color: var(--t); font-family: inherit; font-size: 17px; font-weight: 700; text-transform: none; letter-spacing: 0"></label>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span style="padding: 6px 11px; border-radius: 999px; background: rgba(var(--rgb),0.08); font-size: 13px; font-weight: 700">Bubba burgers</span><span style="padding: 6px 11px; border-radius: 999px; background: rgba(var(--rgb),0.08); font-size: 13px; font-weight: 700">Chicken stir fry</span><span style="padding: 6px 11px; border-radius: 999px; background: rgba(var(--rgb),0.08); font-size: 13px; font-weight: 700">Chicken quesadillas</span><span style="padding: 6px 11px; border-radius: 999px; background: rgba(var(--rgb),0.08); font-size: 13px; font-weight: 700">Spaghetti</span><span style="padding: 6px 11px; border-radius: 999px; background: rgba(var(--rgb),0.08); font-size: 13px; font-weight: 700">Pork loin</span><span style="padding: 6px 11px; border-radius: 999px; background: rgba(var(--rgb),0.08); font-size: 13px; font-weight: 700">Steak-umms</span>
+</div>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">With (optional)<input value="{{sheetSides}}" placeholder="fries, veggie…" style="height: 48px; box-sizing: border-box; padding: 0 14px; border-radius: 14px; border: 1px solid rgba(var(--rgb),0.12); background: var(--g); color: var(--t); font-family: inherit; font-size: 16px; font-weight: 600; text-transform: none; letter-spacing: 0"></label>
+<span style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--m)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Recipe link or ingredients</span>
+</sc-if>
+<sc-if value="{{isFlex}}" hint-placeholder-val="{{false}}">
+<span style="font-size: 14px; font-weight: 600; color: var(--m)">Undecided is fine. Mark the options you’re weighing.</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{flexOpts}}" as="o" hint-placeholder-count="3"><button onClick="{{o.toggle}}" role="checkbox" aria-checked="{{o.on}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{isOpen}}" hint-placeholder-val="{{false}}"><span style="font-size: 14px; font-weight: 600; color: var(--m)">Nothing planned. That’s fine; kids just won’t see a dinner line that day.</span></sc-if>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"ground": {"editor": "enum", "default": "Night", "options": ["Night", "Day"]}, "$preview": {"width": 390, "height": 1180}}'>
+const THEME = {
+  Night: '--g: #15122E; --p: #1E1A3D; --s: #221E45; --p2: #2A2552; --t: #F4EBD9; --m: #BDB5D6; --y: #FFD23F; --on: #9BE564; --rgb: 244,235,217; --mrgb: 189,181,214; --nav: rgba(21,18,46,0.92); ',
+  Day: '--g: #F5EFE2; --p: #FFFDF8; --s: #FFFDF8; --p2: #FFF4D2; --t: #15122E; --m: #5A5478; --y: #B3124F; --on: #2FA84F; --rgb: 21,18,46; --mrgb: 90,84,120; --nav: rgba(245,239,226,0.94); '
+};
+const ROOT = "width: 390px; min-height: 1180px; box-sizing: border-box; position: relative; background: var(--g); color: var(--t); font-family: 'Archivo', system-ui, sans-serif; display: flex; flex-direction: column; gap: 16px; padding: 22px 18px 28px";
+
+const DAYS = [{"id": "fri2", "dow": "Fri", "date": "Oct 2", "week": "This week", "kind": "meal", "name": "Bubba burgers", "sides": "fries", "icon": "hamburger", "event": "", "today": true}, {"id": "sat3", "dow": "Sat", "date": "Oct 3", "week": "This week", "kind": "empty", "name": "", "sides": "", "icon": "", "event": "Soccer game 9:00"}, {"id": "sun4", "dow": "Sun", "date": "Oct 4", "week": "This week", "kind": "meal", "name": "Pork loin", "sides": "loaded baked potato & veggie", "icon": "", "event": "Church 10:00"}, {"id": "mon5", "dow": "Mon", "date": "Oct 5", "week": "Next week", "kind": "meal", "name": "Chicken stir fry", "sides": "", "icon": "bowl_with_spoon", "event": "Grandma’s house"}, {"id": "tue6", "dow": "Tue", "date": "Oct 6", "week": "Next week", "kind": "meal", "name": "Chicken quesadillas", "sides": "", "icon": "", "event": ""}, {"id": "wed7", "dow": "Wed", "date": "Oct 7", "week": "Next week", "kind": "flex", "name": "Something easy", "sides": "", "icon": "", "event": "Life group · Soccer", "options": ["Leftovers", "Out to eat", "Something easy"]}, {"id": "thu8", "dow": "Thu", "date": "Oct 8", "week": "Next week", "kind": "meal", "name": "Spaghetti", "sides": "Italian sausage meat sauce", "icon": "", "event": ""}, {"id": "fri9", "dow": "Fri", "date": "Oct 9", "week": "Next week", "kind": "meal", "name": "Steak-umms", "sides": "", "icon": "", "event": ""}];
+const FLEX = ['Leftovers', 'Out to eat', 'Something easy'];
+class Component extends DCLogic {
+  renderVals() { const v = this._rv0(); v.rootStyle = THEME[this.props.ground === 'Day' ? 'Day' : 'Night'] + ROOT; return v; }
+  _rv0() {
+    const s = this.state || {};
+    const kindOf = (d) => (s.kinds && s.kinds[d.id]) || d.kind;
+    const flexOf = (d) => (s.flex && s.flex[d.id]) || d.options || [];
+    const view = (d) => {
+      const k = kindOf(d);
+      const title = k === 'meal' ? d.name : k === 'flex' ? (flexOf(d).join(' or ') || 'Undecided') : 'Add dinner';
+      const sub = k === 'meal' && d.sides ? 'with ' + d.sides : '';
+      return { ...d, title, sub, hasSub: !!sub, hasEvent: !!d.event, hasIcon: !!d.icon && k === 'meal', plate: !(d.icon && k === 'meal'),
+        iconCls: 'fx stk fx-' + d.icon, aria: d.dow + ' ' + d.date + ': ' + title,
+        rowStyle: 'display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; text-align: left; cursor: pointer; color: var(--t); border: 0; border-top: 1px solid rgba(var(--rgb),0.10); background: ' + (d.today ? 'rgba(255,210,63,0.08)' : 'transparent'),
+        dowStyle: 'font-size: 17px; font-weight: 800; color: ' + (d.today ? 'var(--y)' : 'var(--t)'),
+        nameStyle: 'font-size: 17px; font-weight: 700; line-height: 1.2; color: ' + (k === 'empty' ? 'var(--m)' : 'var(--t)'),
+        open: () => this.setState({ open: d.id }) };
+    };
+    const groups = ['This week', 'Next week'].map((w) => ({ label: w, days: DAYS.filter((d) => d.week === w).map(view) }));
+    const cur = DAYS.find((d) => d.id === s.open);
+    const k = cur ? (kindOf(cur) === 'empty' ? 'open' : kindOf(cur)) : 'meal';
+    const kinds = [['meal', 'Meal'], ['flex', 'Undecided'], ['open', 'Nothing']].map(([id, label]) => ({ label, on: id === k ? 'true' : 'false',
+      style: 'height: 38px; border-radius: 10px; border: 0; cursor: pointer; font-size: 14px; font-weight: 800; background: ' + (id === k ? 'var(--t)' : 'transparent') + '; color: ' + (id === k ? 'var(--g)' : 'var(--t)'),
+      pick: () => cur && this.setState({ kinds: { ...(s.kinds || {}), [cur.id]: id === 'open' ? 'empty' : id } }) }));
+    const chosen = cur ? flexOf(cur) : [];
+    const flexOpts = FLEX.map((label) => { const on = chosen.includes(label); return { label, on: on ? 'true' : 'false',
+      style: 'height: 40px; padding: 0 14px; border-radius: 999px; cursor: pointer; font-size: 15px; font-weight: 700; border: 1px solid ' + (on ? 'var(--t)' : 'rgba(var(--rgb),0.20)') + '; background: ' + (on ? 'var(--t)' : 'transparent') + '; color: ' + (on ? 'var(--g)' : 'var(--t)'),
+      toggle: () => cur && this.setState({ flex: { ...(s.flex || {}), [cur.id]: on ? chosen.filter((x) => x !== label) : FLEX.filter((x) => x === label || chosen.includes(x)) } }) }; });
+    return { groups, sheetOpen: !!cur, sheetDay: cur ? cur.dow + ', ' + cur.date : '', sheetEvent: cur ? cur.event : '', sheetHasEvent: !!(cur && cur.event),
+      sheetName: cur ? cur.name : '', sheetSides: cur ? cur.sides : '', isMeal: k === 'meal', isFlex: k === 'flex', isOpen: k === 'open',
+      kinds, flexOpts, close: () => this.setState({ open: null }) };
+  }
+}
+</script>
+</body>
+</html>

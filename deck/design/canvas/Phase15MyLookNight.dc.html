@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My look — Kid B picks a color, then a sticker (night, normal, landscape, pre-reader)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Archivo:wght@400;600;700;800&amp;family=Permanent+Marker&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#FFD23F}a:hover{color:#FFE27A}
+button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.fx{background-image:url(/_blob/e47a0dc8fefa526e06b4d92fd86fbb16);background-size:1000% 900%;background-repeat:no-repeat;display:block;flex-shrink:0}
+.fx-fox{background-position:77.7778% 25.0000%}
+.fx-lion{background-position:22.2222% 50.0000%}
+.fx-owl{background-position:44.4444% 50.0000%}
+.fx-cat_face{background-position:44.4444% 12.5000%}
+.fx-frog{background-position:88.8889% 25.0000%}
+.fx-unicorn{background-position:88.8889% 100.0000%}
+.fx-t_rex{background-position:88.8889% 87.5000%}
+.fx-shark{background-position:0.0000% 75.0000%}
+.fx-dolphin{background-position:33.3333% 25.0000%}
+.fx-octopus{background-position:33.3333% 50.0000%}
+.fx-rocket{background-position:33.3333% 62.5000%}
+.fx-robot{background-position:22.2222% 62.5000%}
+.stk{filter:drop-shadow(2.5px 0 0 #fff) drop-shadow(-2.5px 0 0 #fff) drop-shadow(0 2.5px 0 #fff) drop-shadow(0 -2.5px 0 #fff) drop-shadow(1.5px 0 0 #0A0818) drop-shadow(-1.5px 0 0 #0A0818) drop-shadow(0 1.5px 0 #0A0818) drop-shadow(0 -1.5px 0 #0A0818) drop-shadow(3px 3px 0 #0A0818)}
+</style>
+</helmet>
+<div style="width: 1180px; height: 820px; box-sizing: border-box; position: relative; background-color: #15122E; background-image: radial-gradient(rgba(244,235,217,0.08) 1.2px, transparent 1.7px); background-size: 10px 10px; color: #F4EBD9; font-family: 'Archivo', system-ui, sans-serif; display: flex; flex-direction: column; gap: 22px; padding: 30px 40px 0; overflow: hidden">
+
+<div style="display: flex; align-items: center; gap: 24px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 10px">
+<h1 style="margin: 0; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 50px; line-height: 0.95; letter-spacing: -1px; text-shadow: 4px 0 0 #29D3FF, -4px 0 0 #FF3E8A">{{title}}</h1>
+<div aria-label="{{stepLabel}}" style="display: flex; gap: 10px">
+<sc-for list="{{pips}}" as="p" hint-placeholder-count="3"><span style="{{p.style}}"></span></sc-for>
+</div>
+</div>
+<button aria-label="Hear it" style="width: 92px; height: 92px; flex-shrink: 0; border-radius: 50%; background: #F4EBD9; color: #15122E; border: 4px solid #0A0818; box-shadow: 0 6px 0 #0A0818; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"></path><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"></path></svg></button>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; display: flex; gap: 40px">
+
+<div style="width: 330px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; background: #221E45; border: 4px solid #0A0818; border-radius: 34px; box-shadow: 0 8px 0 #0A0818">
+<div role="img" aria-label="Your avatar" style="width: 210px; height: 210px; border-radius: 50%; background-color: {{color}}; background-image: radial-gradient(rgba(10,8,24,0.16) 1.8px, transparent 2.4px); background-size: 12px 12px; border: 6px solid #0A0818; box-shadow: 7px 7px 0 #0A0818; display: flex; align-items: center; justify-content: center; transform: {{avatarTilt}}"><span class="{{iconCls}}" style="width: 140px; height: 140px"></span></div>
+<span style="font-family: 'Archivo Black', sans-serif; font-size: 34px; line-height: 1">Kid B</span>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column; gap: 18px; padding-bottom: 8px">
+
+<sc-if value="{{isColor}}" hint-placeholder-val="{{true}}">
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; align-content: center; justify-items: center">
+<sc-for list="{{colors}}" as="c" hint-placeholder-count="6">
+<button onClick="{{c.pick}}" aria-label="{{c.name}}" aria-pressed="{{c.pressed}}" style="{{c.dotStyle}}"><sc-if value="{{c.sel}}" hint-placeholder-val="{{false}}"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></sc-if></button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{isSticker}}" hint-placeholder-val="{{false}}">
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; align-content: center">
+<sc-for list="{{icons}}" as="i" hint-placeholder-count="12">
+<button onClick="{{i.pick}}" aria-label="{{i.name}}" aria-pressed="{{i.pressed}}" style="{{i.tileStyle}}"><span class="{{i.cls}}" style="width: 80px; height: 80px"></span></button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{isDone}}" hint-placeholder-val="{{false}}">
+<div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 22px">
+<div style="align-self: flex-start; font-family: 'Archivo Black', sans-serif; font-size: 40px; line-height: 1.05; padding: 18px 26px; background: #F4EBD9; color: #15122E; border: 4px solid #0A0818; border-radius: 26px; box-shadow: 0 7px 0 #0A0818; transform: rotate(-1.5deg)">A {{colorName}} {{iconName}}!</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px">
+<button onClick="{{save}}" style="height: 136px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: {{color}}; color: #15122E; border: 5px solid #0A0818; border-radius: 28px; box-shadow: 0 8px 0 #0A0818; cursor: pointer; font-family: 'Archivo Black', sans-serif; font-size: 34px"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Yes!</button>
+<button onClick="{{restart}}" style="height: 136px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #221E45; color: #F4EBD9; border: 5px solid #0A0818; border-radius: 28px; box-shadow: 0 8px 0 #0A0818; cursor: pointer; font-family: 'Archivo Black', sans-serif; font-size: 30px"><svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.5-5.8"></path><path d="M4 4v5h5"></path></svg>Change it</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isSaved}}" hint-placeholder-val="{{false}}">
+<div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 24px">
+<div style="font-family: 'Permanent Marker', cursive; font-size: 30px; color: #FFD23F; transform: rotate(-2deg)">Saved!</div>
+<a href="Phase15PointB2Pre.dc.html" style="width: 100%; box-sizing: border-box; height: 120px; display: flex; align-items: center; justify-content: center; gap: 18px; background: #F4EBD9; color: #15122E; border: 5px solid #0A0818; border-radius: 28px; box-shadow: 0 8px 0 #0A0818; text-decoration: none; font-family: 'Archivo Black', sans-serif; font-size: 36px"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-5h4v5"></path></svg>Go home</a>
+</div>
+</sc-if>
+
+<sc-if value="{{showNav}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; gap: 20px">
+<sc-if value="{{canBack}}" hint-placeholder-val="{{false}}">
+<button onClick="{{back}}" aria-label="Back" style="width: 130px; height: 96px; flex-shrink: 0; background: #221E45; color: #F4EBD9; border: 4px solid #0A0818; border-radius: 26px; box-shadow: 0 7px 0 #0A0818; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H6M11 6l-6 6 6 6"></path></svg></button>
+</sc-if>
+<button onClick="{{next}}" aria-label="Next" style="flex-grow: 1; height: 96px; display: flex; align-items: center; justify-content: center; gap: 16px; background: #F4EBD9; color: #15122E; border: 4px solid #0A0818; border-radius: 26px; box-shadow: 0 7px 0 #0A0818; cursor: pointer; font-family: 'Archivo Black', sans-serif; font-size: 34px">Next<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"></path></svg></button>
+</div>
+</sc-if>
+
+</div>
+</div>
+
+<nav aria-label="The Deck" style="position: relative; z-index: 1; flex-shrink: 0; margin: 0 -40px; display: flex; justify-content: center; gap: 24px; padding: 12px 20px 22px; background: #15122E; border-top: 5px solid #0A0818"><a href="Phase15PointB2Pre.dc.html" aria-label="Home" aria-current="page" style="width: 230px; height: 84px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-radius: 20px; text-decoration: none; background: {{color}}; color: #15122E; border: 3px solid #0A0818"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"></path><path d="M5 10v10h14V10"></path><path d="M10 20v-5h4v5"></path></svg><span style="font-size: 15px; font-weight: 800">Home</span></a><a href="Phase15WaveCheckNight.dc.html" aria-label="Wave Check" aria-current="false" style="width: 230px; height: 84px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-radius: 20px; text-decoration: none; background: transparent; color: #FFFBF2; border: 3px solid transparent"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"></path><path d="M2 19c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"></path><path d="M7 11c0-4 3-7 7-7 0 2-1 3-3 3"></path></svg><span style="font-size: 15px; font-weight: 800">Wave Check</span></a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"kidColor": {"editor": "color", "default": "#FF3E8A", "options": ["#FF3E8A", "#29D3FF", "#FFD23F", "#9BE564"]}, "$preview": {"width": 1180, "height": 820}}'>
+const COLORS = [{"hex": "#FF3E8A", "name": "Pink"}, {"hex": "#29D3FF", "name": "Blue"}, {"hex": "#FFD23F", "name": "Yellow"}, {"hex": "#9BE564", "name": "Green"}, {"hex": "#A99BFF", "name": "Purple"}, {"hex": "#FF8A3D", "name": "Orange"}];
+const ICONS = [{"key": "fox", "name": "Fox"}, {"key": "lion", "name": "Lion"}, {"key": "owl", "name": "Owl"}, {"key": "cat_face", "name": "Cat"}, {"key": "frog", "name": "Frog"}, {"key": "unicorn", "name": "Unicorn"}, {"key": "t_rex", "name": "T. rex"}, {"key": "shark", "name": "Shark"}, {"key": "dolphin", "name": "Dolphin"}, {"key": "octopus", "name": "Octopus"}, {"key": "rocket", "name": "Rocket"}, {"key": "robot", "name": "Robot"}];
+const STEPS = ['color', 'sticker', 'done', 'saved'];
+const TITLES = { color: 'Pick your color', sticker: 'Pick your sticker', done: 'That’s you!', saved: 'All set!' };
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const step = s.step || 'color';
+    const color = s.color || this.props.kidColor || '#FF3E8A';
+    const icon = s.icon || 'octopus';
+    const idx = STEPS.indexOf(step);
+    const cName = (COLORS.find((c) => c.hex.toLowerCase() === String(color).toLowerCase()) || { name: '' }).name.toLowerCase();
+    const iName = (ICONS.find((i) => i.key === icon) || ICONS[0]).name.toLowerCase();
+    const colors = COLORS.map((c) => {
+      const sel = c.hex.toLowerCase() === String(color).toLowerCase();
+      return { ...c, sel, pressed: sel ? 'true' : 'false',
+        dotStyle: 'width: 128px; height: 128px; box-sizing: border-box; border-radius: 50%; padding: 0; cursor: pointer; background: ' + c.hex + '; color: #0A0818; display: flex; align-items: center; justify-content: center; border: ' + (sel ? '7px' : '5px') + ' solid #0A0818; box-shadow: ' + (sel ? '0 0 0 6px #F4EBD9, 0 0 0 11px #0A0818' : '0 7px 0 #0A0818'),
+        pick: () => this.setState({ color: c.hex }) };
+    });
+    const icons = ICONS.map((it) => {
+      const sel = it.key === icon;
+      return { ...it, sel, pressed: sel ? 'true' : 'false', cls: 'fx stk fx-' + it.key,
+        tileStyle: 'height: 118px; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; border-radius: 26px; background: ' + (sel ? color : '#221E45') + '; border: ' + (sel ? '6px' : '4px') + ' solid #0A0818; box-shadow: ' + (sel ? '0 0 0 5px #F4EBD9, 0 9px 0 5px #0A0818' : '0 6px 0 #0A0818'),
+        pick: () => this.setState({ icon: it.key }) };
+    });
+    const pips = [0, 1, 2].map((n) => ({ style: 'width: ' + (n === Math.min(idx, 2) ? '44px' : '18px') + '; height: 18px; border-radius: 9px; border: 3px solid #0A0818; background: ' + (n <= idx ? '#F4EBD9' : 'transparent') + '; box-shadow: inset 0 0 0 2px ' + (n <= idx ? '#F4EBD9' : 'rgba(244,235,217,0.45)') }));
+    const go = (st) => () => this.setState({ step: st });
+    return {
+      color, iconCls: 'fx stk fx-' + icon, colorName: cName, iconName: iName,
+      title: TITLES[step], stepLabel: 'Step ' + Math.min(idx + 1, 3) + ' of 3', pips,
+      isColor: step === 'color', isSticker: step === 'sticker', isDone: step === 'done', isSaved: step === 'saved',
+      showNav: step === 'color' || step === 'sticker', canBack: step === 'sticker',
+      avatarTilt: step === 'done' || step === 'saved' ? 'rotate(-5deg) scale(1.04)' : 'none',
+      colors, icons,
+      next: go(step === 'color' ? 'sticker' : 'done'), back: go('color'),
+      save: go('saved'), restart: go('color')
+    };
+  }
+}
+</script>
+</body>
+</html>

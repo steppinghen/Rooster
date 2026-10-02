@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Back Office — Seasons and dog</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Archivo:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:var(--y)}
+button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.fx{background-image:url(/_blob/e47a0dc8fefa526e06b4d92fd86fbb16);background-size:1000% 900%;background-repeat:no-repeat;display:block;flex-shrink:0}
+.fx-fox{background-position:77.7778% 25.0000%}
+.fx-octopus{background-position:33.3333% 50.0000%}
+.fx-sun{background-position:44.4444% 87.5000%}
+.stk{filter:drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(1.5px 0 0 #0A0818) drop-shadow(-1.5px 0 0 #0A0818) drop-shadow(0 1.5px 0 #0A0818) drop-shadow(0 -1.5px 0 #0A0818)}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+<div style="display: flex; align-items: center; justify-content: space-between; height: 44px"><a href="Phase15BackOffice.dc.html" style="display: flex; align-items: center; gap: 2px; height: 44px; color: var(--t); text-decoration: none; font-size: 16px; font-weight: 700"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>Back Office</a><span style="width: 100px"></span></div>
+<h1 style="margin: 4px 4px 0; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 30px; line-height: 1">Seasons and dog</h1>
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 20px; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 8px 16px">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 800">Winter</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">Snowboards for everyone and the Snow Report</span></span>
+<span style="display: flex; gap: 6px"><span style="padding: 6px 10px; border-radius: 10px; background: rgba(var(--rgb),0.08); font-size: 15px; font-weight: 800">Dec 1</span><span style="padding: 6px 10px; border-radius: 10px; background: rgba(var(--rgb),0.08); font-size: 15px; font-weight: 800">Feb 28</span></span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 14px; border-top: 1px solid rgba(var(--rgb),0.12)">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 800">Dog</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">{{dogNote}}</span></span>
+<div role="radiogroup" aria-label="Dog" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 14px; background: rgba(var(--rgb),0.08)">
+<sc-for list="{{dogs}}" as="d" hint-placeholder-count="3"><button onClick="{{d.pick}}" role="radio" aria-checked="{{d.aria}}" style="{{d.style}}">{{d.label}}</button></sc-for>
+</div>
+</div>
+</div>
+<span style="padding: 0 4px; font-size: 13px; font-weight: 600; color: var(--m)">Winter switches everyone to snowboards and the Surf Report to the Snow Report. Both dog sets always ship.</span>
+<nav aria-label="Main" style="position: sticky; bottom: 0; margin: auto -18px 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 10px 8px 26px; background: var(--nav); border-top: 1px solid rgba(var(--rgb),0.12)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4"><a href="{{t.href}}" aria-current="{{t.cur}}" style="{{t.style}}">{{t.label}}</a></sc-for>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"ground": {"editor": "enum", "default": "Night", "options": ["Night", "Day"]}, "$preview": {"width": 390, "height": 1000}}'>
+const THEME = {
+  Night: '--g: #15122E; --p: #1E1A3D; --s: #221E45; --p2: #2A2552; --t: #F4EBD9; --m: #BDB5D6; --y: #FFD23F; --on: #9BE564; --rgb: 244,235,217; --mrgb: 189,181,214; --nav: rgba(21,18,46,0.92); ',
+  Day: '--g: #F5EFE2; --p: #FFFDF8; --s: #FFFDF8; --p2: #FFF4D2; --t: #15122E; --m: #5A5478; --y: #B3124F; --on: #2FA84F; --rgb: 21,18,46; --mrgb: 90,84,120; --nav: rgba(245,239,226,0.94); '
+};
+const ROOT = "width: 390px; min-height: 1000px; box-sizing: border-box; position: relative; background: var(--g); color: var(--t); font-family: 'Archivo', system-ui, sans-serif; display: flex; flex-direction: column; gap: 14px; padding: 16px 18px 0";
+
+const HOLIDAYS = ["Halloween", "Thanksgiving", "Christmas", "New Year", "Valentine's Day", "St. Patrick's Day", "Easter", "Fourth of July", "Birthdays"];
+const TEMPS = [
+  { id: 'cold', tip: 'Heavy jacket, hat and gloves', pre: 'Under ', unit: '°', v: 35 },
+  { id: 'heavy', tip: 'Heavy jacket', pre: 'Under ', unit: '°', v: 45 },
+  { id: 'jacket', tip: 'Bring a jacket', pre: 'Under ', unit: '° or windy', v: 65 },
+  { id: 'shorts', tip: 'Shorts, not pants', pre: 'From ', unit: '°', v: 75 },
+  { id: 'hot', tip: 'Hot! Bring water too', pre: 'From ', unit: '°', v: 85 }
+];
+class Component extends DCLogic {
+  renderVals() { const v = this._rv0(); v.rootStyle = THEME[this.props.ground === 'Day' ? 'Day' : 'Night'] + ROOT; return v; }
+  _rv0() {
+    const s = this.state || {};
+    const sw = (on, dim) => ({
+      track: 'width: 52px; height: 32px; flex-shrink: 0; padding: 0; border-radius: 16px; border: 0; cursor: pointer; position: relative; opacity: ' + (dim ? '0.4' : '1') + '; background: ' + (on ? 'var(--on)' : 'rgba(var(--rgb),0.22)'),
+      knob: 'position: absolute; top: 3px; left: ' + (on ? '23px' : '3px') + '; width: 26px; height: 26px; border-radius: 50%; background: var(--t); box-shadow: 0 1px 3px rgba(0,0,0,0.4)' });
+    const chev = (open) => 'transition: transform 0.2s; transform: rotate(' + (open ? '180deg' : '0deg') + ')';
+    const v = {};
+
+    v.kids = [
+      ['Kid A', 'fox', '#29D3FF', 'Reader · Normal volume · 3 dock picks · PIN on'],
+      ['Kid B', 'octopus', '#FF3E8A', 'Pre-reader · Normal volume · 1 dock pick · No PIN']
+    ].map(([name, icon, col, summary], n) => ({ name, summary, cls: 'fx stk fx-' + icon,
+      avStyle: 'width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #0A0818; box-shadow: 0 0 0 2px ' + col + '; background: ' + col,
+      rowStyle: 'display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 8px 16px; color: var(--t); text-decoration: none; ' + (n ? 'border-top: 1px solid rgba(var(--rgb),0.12)' : '') }));
+
+    const master = s.master !== undefined ? s.master : true;
+    const hol = s.hol || HOLIDAYS.map(() => true);
+    const holOpen = s.holOpen !== undefined ? s.holOpen : true;
+    const m = sw(master, false);
+    v.masterAria = master ? 'true' : 'false'; v.masterTrack = m.track; v.masterKnob = m.knob;
+    v.toggleMaster = () => this.setState({ master: !master });
+    v.holOpen = holOpen; v.holOpenAria = holOpen ? 'true' : 'false'; v.holChevron = chev(holOpen);
+    v.toggleHolOpen = () => this.setState({ holOpen: !holOpen });
+    const onCount = hol.filter(Boolean).length;
+    v.holSummary = master ? (onCount + ' of 9 holidays on · Halloween is next') : 'All holiday accents off';
+    v.holidays = HOLIDAYS.map((name, n) => { const o = sw(hol[n], !master); return { name,
+      aria: hol[n] ? 'true' : 'false', disabled: master ? 'false' : 'true', track: o.track, knob: o.knob,
+      labelStyle: 'font-size: 15px; font-weight: 700; color: ' + (master ? 'var(--t)' : 'rgba(var(--rgb),0.45)'),
+      toggle: () => { if (!master) return; const h = hol.slice(); h[n] = !h[n]; this.setState({ hol: h }); } }; });
+
+    const dog = s.dog || 'season';
+    v.dogNote = dog === 'season' ? 'Swaps each quarter. Costa through December.' : (dog === 'mara' ? 'Mara all year, both dog sets still ship.' : 'Costa all year, both dog sets still ship.');
+    v.dogs = [['season', 'By season'], ['mara', 'Mara'], ['costa', 'Costa']].map(([id, label]) => { const on = dog === id; return { label, aria: on ? 'true' : 'false',
+      style: 'height: 40px; border-radius: 10px; border: 0; cursor: pointer; font-size: 14px; font-weight: 800; background: ' + (on ? 'var(--t)' : 'transparent') + '; color: ' + (on ? 'var(--g)' : 'var(--t)'),
+      pick: () => this.setState({ dog: id }) }; });
+
+    const wxOpen = s.wxOpen !== undefined ? s.wxOpen : true;
+    v.wxOpen = wxOpen; v.wxOpenAria = wxOpen ? 'true' : 'false'; v.wxChevron = chev(wxOpen);
+    v.toggleWxOpen = () => this.setState({ wxOpen: !wxOpen });
+    const vals = s.temps || TEMPS.map((t) => t.v);
+    v.temps = TEMPS.map((t, n) => ({ tip: t.tip, value: vals[n] + '°', rule: t.pre + vals[n] + t.unit,
+      downLabel: t.tip + ', lower', upLabel: t.tip + ', higher',
+      down: () => { const lo = n ? vals[n - 1] + 1 : 0; if (vals[n] - 1 < lo) return; const a = vals.slice(); a[n] = a[n] - 1; this.setState({ temps: a }); },
+      up: () => { const hi = n < vals.length - 1 ? vals[n + 1] - 1 : 110; if (vals[n] + 1 > hi) return; const a = vals.slice(); a[n] = a[n] + 1; this.setState({ temps: a }); } }));
+
+    v.devices = [
+      ['Kitchen iPad', 'Day or night: Auto · Sound on · Read-aloud off'],
+      ["Kid A's iPad", 'Day or night: Auto · Sound on · Read-aloud off'],
+      ["Kid B's iPad", 'Day or night: Auto · Sound on · Read-aloud on']
+    ].map(([name, summary], n) => ({ name, summary,
+      rowStyle: 'display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 16px; color: var(--t); text-decoration: none; ' + (n ? 'border-top: 1px solid rgba(var(--rgb),0.12)' : '') }));
+
+    v.tabs = ['Today', 'Calendar', 'Kids', 'Back Office'].map((label, n) => ({ label, cur: n === 3 ? 'page' : 'false',
+      href: ['Phase15ParentToday.dc.html', 'Phase15Calendar.dc.html', 'Phase15Kids.dc.html', '#'][n],
+      style: 'display: flex; justify-content: center; align-items: center; height: 44px; border-radius: 12px; text-decoration: none; font-size: 14px; font-weight: 800; color: ' + (n === 3 ? 'var(--g)' : 'var(--m)') + '; background: ' + (n === 3 ? 'var(--t)' : 'transparent') }));
+    return v;
+  }
+}
+</script>
+</body>
+</html>

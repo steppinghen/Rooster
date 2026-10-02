@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kitchen hub — calendar, week and month, parent unlock</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Archivo:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:var(--y)}
+button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.fx{background-image:url(/_blob/e47a0dc8fefa526e06b4d92fd86fbb16);background-size:1000% 900%;background-repeat:no-repeat;display:block;flex-shrink:0}
+.fx-soccer_ball{background-position:100.0000% 75.0000%}
+.fx-jack_o_lantern{background-position:0.0000% 50.0000%}
+.fx-books{background-position:0.0000% 12.5000%}
+.fx-house{background-position:88.8889% 37.5000%}
+.fx-school{background-position:100.0000% 62.5000%}
+.fx-sparkles{background-position:11.1111% 87.5000%}
+.fx-birthday_cake{background-position:100.0000% 0.0000%}
+.fx-ghost{background-position:100.0000% 25.0000%}
+.stk{filter:drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(1.5px 0 0 #0A0818) drop-shadow(-1.5px 0 0 #0A0818) drop-shadow(0 1.5px 0 #0A0818) drop-shadow(0 -1.5px 0 #0A0818)}
+.clip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+
+<div style="display: flex; align-items: center; gap: 20px">
+<div style="display: flex; align-items: center; gap: 14px; width: 250px"><div style="display: flex; flex-direction: column; gap: 4px"><span style="font-family: 'Archivo Black', sans-serif; font-size: 56px; line-height: 0.95">7:38</span><span style="font-size: 17px; font-weight: 700; color: var(--m)">Friday, October 2</span></div><span aria-hidden="true" style="width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; background-color: #FF8A3D; background-image: radial-gradient(rgba(255,210,63,0.6) 1.3px, transparent 1.8px); background-size: 6px 6px; border: 2px solid #0A0818"></span></div>
+<div style="flex-grow: 1; display: flex; justify-content: center"><sc-if value="{{locked}}" hint-placeholder-val="{{true}}"><nav aria-label="Kitchen views" style="flex-grow: 1; display: flex; justify-content: center"><div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; width: 420px; padding: 5px; border-radius: 18px; background: rgba(var(--rgb),0.08)"><a href="Phase15KitchenHub.dc.html" style="display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 14px; text-decoration: none; font-size: 16px; font-weight: 800; color: var(--t); background: transparent">Today</a><a href="Phase15KitchenCalendar.dc.html" aria-current="page" style="display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 14px; text-decoration: none; font-size: 16px; font-weight: 800; color: var(--g); background: var(--t)">Calendar</a><a href="Phase15KitchenMenu.dc.html" style="display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 14px; text-decoration: none; font-size: 16px; font-weight: 800; color: var(--t); background: transparent">Dinners</a></div></nav></sc-if><sc-if value="{{unlocked}}" hint-placeholder-val="{{false}}"><nav aria-label="Kitchen views" style="flex-grow: 1; display: flex; justify-content: center"><div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; width: 600px; padding: 5px; border-radius: 18px; background: rgba(var(--rgb),0.08)"><a href="Phase15KitchenHub.dc.html" style="display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 14px; text-decoration: none; font-size: 15px; font-weight: 800; color: var(--t); background: transparent">Today</a><a href="Phase15KitchenCalendar.dc.html" aria-current="page" style="display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 14px; text-decoration: none; font-size: 15px; font-weight: 800; color: var(--g); background: var(--t)">Calendar</a><a href="Phase15KitchenMenu.dc.html" style="display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 14px; text-decoration: none; font-size: 15px; font-weight: 800; color: var(--t); background: transparent">Dinners</a><a href="Phase15KitchenParent.dc.html" style="display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 14px; text-decoration: none; font-size: 15px; font-weight: 800; color: var(--t); background: transparent; box-shadow: inset 0 0 0 1px rgba(var(--rgb),0.22)">Kids</a><a href="Phase15KitchenParent.dc.html" style="display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 14px; text-decoration: none; font-size: 15px; font-weight: 800; color: var(--t); background: transparent; box-shadow: inset 0 0 0 1px rgba(var(--rgb),0.22)">Back Office</a></div></nav></sc-if></div>
+<div style="width: 250px; display: flex; justify-content: flex-end">
+<sc-if value="{{locked}}" hint-placeholder-val="{{true}}">
+<button onClick="{{openUnlock}}" aria-label="Parent unlock" style="display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 8px 0 16px; border-radius: 999px; background: rgba(var(--rgb),0.08); border: 1px solid rgba(var(--rgb),0.12); color: var(--t); cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg> <span style="display: flex"><span style="width: 38px; height: 38px; border-radius: 50%; background: #FFD23F; color: #15122E; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; border: 2px solid var(--g)">S</span><span style="width: 38px; height: 38px; margin-left: -10px; border-radius: 50%; background: #A99BFF; color: #15122E; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; border: 2px solid var(--g)">J</span></span></button>
+</sc-if>
+<sc-if value="{{unlocked}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 6px 0 8px; border-radius: 999px; background: var(--t); color: var(--g)">
+<span style="{{byAv}}">{{byInitial}}</span>
+<span style="display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 800">Parent mode</span><span style="font-size: 12px; font-weight: 700; color: var(--g); opacity: 0.75">Locks after 2 min idle</span></span>
+<button onClick="{{lock}}" style="height: 44px; padding: 0 14px; border-radius: 999px; background: var(--g); color: var(--t); border: 0; font-size: 14px; font-weight: 800; cursor: pointer">Lock</button>
+</div>
+</sc-if>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 16px">
+<div style="display: flex; align-items: center; gap: 16px">
+<div role="radiogroup" aria-label="Calendar view" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; width: 230px; padding: 4px; border-radius: 14px; background: rgba(var(--rgb),0.08)">
+<sc-for list="{{modes}}" as="m" hint-placeholder-count="2"><button onClick="{{m.pick}}" role="radio" aria-checked="{{m.aria}}" style="{{m.style}}">{{m.label}}</button></sc-for>
+</div>
+<sc-if value="{{isWeek}}" hint-placeholder-val="{{true}}"><span style="font-size: 16px; font-weight: 700; color: var(--m)">Fri Oct 2 – Thu Oct 8</span></sc-if>
+<sc-if value="{{isMonth}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 4px"><button aria-label="Previous month" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; color: var(--t); cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button><span style="font-family: 'Archivo Black', sans-serif; font-size: 22px">October 2026</span><button aria-label="Next month" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; border: 0; color: var(--t); cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button></span></sc-if>
+</div>
+<div role="group" aria-label="Calendars on this display" style="display: flex; gap: 8px">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="4"><button onClick="{{c.toggle}}" aria-pressed="{{c.aria}}" style="{{c.style}}"><span style="{{c.dot}}"></span>{{c.label}}</button></sc-for>
+</div>
+</div>
+
+<sc-if value="{{isWeek}}" hint-placeholder-val="{{true}}">
+<div style="flex-grow: 1; min-height: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+<div style="{{d.colStyle}}">
+<span style="{{d.headStyle}}">{{d.label}}</span>
+<div aria-label="{{d.wxLabel}}" style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 14px; background: rgba(var(--rgb),0.06)">
+<span style="width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #FFFBF2"><sc-if value="{{d.w.isSunny}}" hint-placeholder-val="{{false}}"><svg width="34" height="34" viewBox="-14.3 -14.3 148.5 148.5" role="img" aria-label="Sunny" style="display: block; overflow: visible"><g transform="translate(2.6 2.6)"><path d="M91.9 63.1 L111.7 81.4 L84.7 80.4 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M80.4 84.7 L81.4 111.7 L63.1 91.9 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M56.9 91.9 L38.6 111.7 L39.6 84.7 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M35.3 80.4 L8.3 81.4 L28.1 63.1 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M28.1 56.9 L8.3 38.6 L35.3 39.6 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M39.6 35.3 L38.6 8.3 L56.9 28.1 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M63.1 28.1 L81.4 8.3 L80.4 35.3 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M84.7 39.6 L111.7 38.6 L91.9 56.9 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M30 60 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path></g><g><path d="M91.9 63.1 L111.7 81.4 L84.7 80.4 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M80.4 84.7 L81.4 111.7 L63.1 91.9 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M56.9 91.9 L38.6 111.7 L39.6 84.7 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M35.3 80.4 L8.3 81.4 L28.1 63.1 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M28.1 56.9 L8.3 38.6 L35.3 39.6 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M39.6 35.3 L38.6 8.3 L56.9 28.1 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M63.1 28.1 L81.4 8.3 L80.4 35.3 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M84.7 39.6 L111.7 38.6 L91.9 56.9 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M30 60 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path></g><path d="M91.9 63.1 L111.7 81.4 L84.7 80.4 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M80.4 84.7 L81.4 111.7 L63.1 91.9 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M56.9 91.9 L38.6 111.7 L39.6 84.7 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M35.3 80.4 L8.3 81.4 L28.1 63.1 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M28.1 56.9 L8.3 38.6 L35.3 39.6 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M39.6 35.3 L38.6 8.3 L56.9 28.1 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M63.1 28.1 L81.4 8.3 L80.4 35.3 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M84.7 39.6 L111.7 38.6 L91.9 56.9 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M30 60 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z" fill="#FFD23F" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M42 46 a6 4 0 1 0 12 0 a6 4 0 1 0 -12 0 Z" fill="#FFF6C4"></path></svg></sc-if><sc-if value="{{d.w.isCloudy}}" hint-placeholder-val="{{false}}"><svg width="34" height="34" viewBox="-14.3 -14.3 148.5 148.5" role="img" aria-label="Cloudy" style="display: block; overflow: visible"><g transform="translate(2.6 2.6)"><path d="M37.5 62.0 Q30.0 62.0 30.0 53.0 Q30.0 42.5 42.0 42.5 Q43.5 27.5 60.0 27.5 Q73.5 27.5 76.5 38.0 Q93.0 36.5 93.0 51.5 Q93.0 62.0 82.5 62.0 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M21.8 96.0 Q10.0 96.0 10.0 81.8 Q10.0 65.3 28.9 65.3 Q31.2 41.7 57.2 41.7 Q78.4 41.7 83.2 58.2 Q109.1 55.9 109.1 79.5 Q109.1 96.0 92.6 96.0 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path></g><g><path d="M37.5 62.0 Q30.0 62.0 30.0 53.0 Q30.0 42.5 42.0 42.5 Q43.5 27.5 60.0 27.5 Q73.5 27.5 76.5 38.0 Q93.0 36.5 93.0 51.5 Q93.0 62.0 82.5 62.0 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M21.8 96.0 Q10.0 96.0 10.0 81.8 Q10.0 65.3 28.9 65.3 Q31.2 41.7 57.2 41.7 Q78.4 41.7 83.2 58.2 Q109.1 55.9 109.1 79.5 Q109.1 96.0 92.6 96.0 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path></g><path d="M37.5 62.0 Q30.0 62.0 30.0 53.0 Q30.0 42.5 42.0 42.5 Q43.5 27.5 60.0 27.5 Q73.5 27.5 76.5 38.0 Q93.0 36.5 93.0 51.5 Q93.0 62.0 82.5 62.0 Z" fill="#D9D3EA" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M21.8 96.0 Q10.0 96.0 10.0 81.8 Q10.0 65.3 28.9 65.3 Q31.2 41.7 57.2 41.7 Q78.4 41.7 83.2 58.2 Q109.1 55.9 109.1 79.5 Q109.1 96.0 92.6 96.0 Z" fill="#FFFFFF" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path></svg></sc-if><sc-if value="{{d.w.isRain}}" hint-placeholder-val="{{false}}"><svg width="34" height="34" viewBox="-14.3 -14.3 148.5 148.5" role="img" aria-label="Rain" style="display: block; overflow: visible"><g transform="translate(2.6 2.6)"><path d="M25.0 70.0 Q14.0 70.0 14.0 56.8 Q14.0 41.4 31.6 41.4 Q33.8 19.4 58.0 19.4 Q77.8 19.4 82.2 34.8 Q106.4 32.6 106.4 54.6 Q106.4 70.0 91.0 70.0 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M34 81.7 Q41.1 91.4 40.5 95.3 A6.5 6.5 0 1 1 27.5 95.3 Q26.9 91.4 34 81.7 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M60 91.7 Q67.2 101.4 66.5 105.3 A6.5 6.5 0 1 1 53.5 105.3 Q52.9 101.4 60 91.7 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M86 81.7 Q93.2 91.4 92.5 95.3 A6.5 6.5 0 1 1 79.5 95.3 Q78.8 91.4 86 81.7 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path></g><g><path d="M25.0 70.0 Q14.0 70.0 14.0 56.8 Q14.0 41.4 31.6 41.4 Q33.8 19.4 58.0 19.4 Q77.8 19.4 82.2 34.8 Q106.4 32.6 106.4 54.6 Q106.4 70.0 91.0 70.0 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M34 81.7 Q41.1 91.4 40.5 95.3 A6.5 6.5 0 1 1 27.5 95.3 Q26.9 91.4 34 81.7 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M60 91.7 Q67.2 101.4 66.5 105.3 A6.5 6.5 0 1 1 53.5 105.3 Q52.9 101.4 60 91.7 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M86 81.7 Q93.2 91.4 92.5 95.3 A6.5 6.5 0 1 1 79.5 95.3 Q78.8 91.4 86 81.7 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path></g><path d="M25.0 70.0 Q14.0 70.0 14.0 56.8 Q14.0 41.4 31.6 41.4 Q33.8 19.4 58.0 19.4 Q77.8 19.4 82.2 34.8 Q106.4 32.6 106.4 54.6 Q106.4 70.0 91.0 70.0 Z" fill="#FFFFFF" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M34 81.7 Q41.1 91.4 40.5 95.3 A6.5 6.5 0 1 1 27.5 95.3 Q26.9 91.4 34 81.7 Z" fill="#29D3FF" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M60 91.7 Q67.2 101.4 66.5 105.3 A6.5 6.5 0 1 1 53.5 105.3 Q52.9 101.4 60 91.7 Z" fill="#29D3FF" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M86 81.7 Q93.2 91.4 92.5 95.3 A6.5 6.5 0 1 1 79.5 95.3 Q78.8 91.4 86 81.7 Z" fill="#29D3FF" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path></svg></sc-if><sc-if value="{{d.w.isWindy}}" hint-placeholder-val="{{false}}"><svg width="34" height="34" viewBox="-14.3 -14.3 148.5 148.5" role="img" aria-label="Windy" style="display: block; overflow: visible"><g transform="translate(2.6 2.6)"><path d="M10 44 H70 Q86 44 86 30 Q86 18 74 18 Q64 18 64 28" fill="none" stroke="#0A0818" stroke-width="22.4" stroke-linecap="round" stroke-linejoin="round"></path><path d="M18 66 H92 Q110 66 110 82 Q110 96 96 96 Q84 96 84 86" fill="none" stroke="#0A0818" stroke-width="22.4" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 88 H54" fill="none" stroke="#0A0818" stroke-width="22.4" stroke-linecap="round" stroke-linejoin="round"></path><path d="M38 96 Q46 112 66 110 Q62 92 38 96 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path></g><g><path d="M10 44 H70 Q86 44 86 30 Q86 18 74 18 Q64 18 64 28" fill="none" stroke="#FFFBF2" stroke-width="18.6" stroke-linecap="round" stroke-linejoin="round"></path><path d="M18 66 H92 Q110 66 110 82 Q110 96 96 96 Q84 96 84 86" fill="none" stroke="#FFFBF2" stroke-width="18.6" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 88 H54" fill="none" stroke="#FFFBF2" stroke-width="18.6" stroke-linecap="round" stroke-linejoin="round"></path><path d="M38 96 Q46 112 66 110 Q62 92 38 96 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path></g><path d="M10 44 H70 Q86 44 86 30 Q86 18 74 18 Q64 18 64 28" fill="none" stroke="#0A0818" stroke-width="10.0" stroke-linecap="round" stroke-linejoin="round"></path><path d="M10 44 H70 Q86 44 86 30 Q86 18 74 18 Q64 18 64 28" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M18 66 H92 Q110 66 110 82 Q110 96 96 96 Q84 96 84 86" fill="none" stroke="#0A0818" stroke-width="10.0" stroke-linecap="round" stroke-linejoin="round"></path><path d="M18 66 H92 Q110 66 110 82 Q110 96 96 96 Q84 96 84 86" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 88 H54" fill="none" stroke="#0A0818" stroke-width="10.0" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 88 H54" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M38 96 Q46 112 66 110 Q62 92 38 96 Z" fill="#9BE564" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M42 98 Q54 104 64 109" fill="none" stroke="#0A0818" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></span>
+<span style="display: flex; flex-direction: column; line-height: 1.05"><span style="font-family: 'Archivo Black', sans-serif; font-size: 20px">{{d.hi}}</span><span style="font-size: 13px; font-weight: 700; color: var(--m)">{{d.lo}}</span></span>
+</div>
+<sc-for list="{{d.events}}" as="e" hint-placeholder-count="2">
+<button onClick="{{e.open}}" style="{{e.style}}">
+<span style="display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%"><span style="font-size: 13px; font-weight: 800; color: var(--m)">{{e.time}}</span><sc-if value="{{e.hasSticker}}" hint-placeholder-val="{{false}}"><span class="{{e.cls}}" style="width: 24px; height: 24px"></span></sc-if></span>
+<span style="{{e.titleStyle}}">{{e.title}}</span>
+<span style="display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--m)"><span style="{{e.dot}}"></span>{{e.cal}}</span>
+</button>
+</sc-for>
+<sc-if value="{{d.empty}}" hint-placeholder-val="{{false}}"><span style="padding: 0 4px; font-size: 14px; font-weight: 600; color: rgba(var(--mrgb),0.7)">Nothing planned</span></sc-if>
+</div>
+</sc-for>
+</div>
+<span style="margin-top: -6px; align-self: flex-end; font-size: 12px; font-weight: 600; color: rgba(var(--mrgb),0.8)">Weather data by Open-Meteo · updated 7:05</span>
+</sc-if>
+
+<sc-if value="{{isMonth}}" hint-placeholder-val="{{false}}">
+<div style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px">
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px"><sc-for list="{{dow}}" as="w" hint-placeholder-count="7"><span style="padding-left: 10px; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">{{w.l}}</span></sc-for></div>
+<div style="flex-grow: 1; min-height: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
+<div style="{{c.style}}">
+<sc-if value="{{c.real}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<button onClick="{{c.openDay}}" aria-label="{{c.label}}" style="{{c.numStyle}}">{{c.n}}</button>
+<sc-if value="{{c.hasWx}}" hint-placeholder-val="{{false}}"><span aria-label="{{c.wxLabel}}" style="display: flex; align-items: center; gap: 4px"><span style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #FFFBF2"><sc-if value="{{c.w.isSunny}}" hint-placeholder-val="{{false}}"><svg width="20" height="20" viewBox="-14.3 -14.3 148.5 148.5" role="img" aria-label="Sunny" style="display: block; overflow: visible"><g transform="translate(2.6 2.6)"><path d="M91.9 63.1 L111.7 81.4 L84.7 80.4 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M80.4 84.7 L81.4 111.7 L63.1 91.9 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M56.9 91.9 L38.6 111.7 L39.6 84.7 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M35.3 80.4 L8.3 81.4 L28.1 63.1 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M28.1 56.9 L8.3 38.6 L35.3 39.6 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M39.6 35.3 L38.6 8.3 L56.9 28.1 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M63.1 28.1 L81.4 8.3 L80.4 35.3 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M84.7 39.6 L111.7 38.6 L91.9 56.9 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M30 60 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path></g><g><path d="M91.9 63.1 L111.7 81.4 L84.7 80.4 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M80.4 84.7 L81.4 111.7 L63.1 91.9 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M56.9 91.9 L38.6 111.7 L39.6 84.7 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M35.3 80.4 L8.3 81.4 L28.1 63.1 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M28.1 56.9 L8.3 38.6 L35.3 39.6 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M39.6 35.3 L38.6 8.3 L56.9 28.1 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M63.1 28.1 L81.4 8.3 L80.4 35.3 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M84.7 39.6 L111.7 38.6 L91.9 56.9 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M30 60 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path></g><path d="M91.9 63.1 L111.7 81.4 L84.7 80.4 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M80.4 84.7 L81.4 111.7 L63.1 91.9 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M56.9 91.9 L38.6 111.7 L39.6 84.7 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M35.3 80.4 L8.3 81.4 L28.1 63.1 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M28.1 56.9 L8.3 38.6 L35.3 39.6 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M39.6 35.3 L38.6 8.3 L56.9 28.1 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M63.1 28.1 L81.4 8.3 L80.4 35.3 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M84.7 39.6 L111.7 38.6 L91.9 56.9 Z" fill="#FF8A3D" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M30 60 a30 30 0 1 0 60 0 a30 30 0 1 0 -60 0 Z" fill="#FFD23F" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M42 46 a6 4 0 1 0 12 0 a6 4 0 1 0 -12 0 Z" fill="#FFF6C4"></path></svg></sc-if><sc-if value="{{c.w.isCloudy}}" hint-placeholder-val="{{false}}"><svg width="20" height="20" viewBox="-14.3 -14.3 148.5 148.5" role="img" aria-label="Cloudy" style="display: block; overflow: visible"><g transform="translate(2.6 2.6)"><path d="M37.5 62.0 Q30.0 62.0 30.0 53.0 Q30.0 42.5 42.0 42.5 Q43.5 27.5 60.0 27.5 Q73.5 27.5 76.5 38.0 Q93.0 36.5 93.0 51.5 Q93.0 62.0 82.5 62.0 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M21.8 96.0 Q10.0 96.0 10.0 81.8 Q10.0 65.3 28.9 65.3 Q31.2 41.7 57.2 41.7 Q78.4 41.7 83.2 58.2 Q109.1 55.9 109.1 79.5 Q109.1 96.0 92.6 96.0 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path></g><g><path d="M37.5 62.0 Q30.0 62.0 30.0 53.0 Q30.0 42.5 42.0 42.5 Q43.5 27.5 60.0 27.5 Q73.5 27.5 76.5 38.0 Q93.0 36.5 93.0 51.5 Q93.0 62.0 82.5 62.0 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M21.8 96.0 Q10.0 96.0 10.0 81.8 Q10.0 65.3 28.9 65.3 Q31.2 41.7 57.2 41.7 Q78.4 41.7 83.2 58.2 Q109.1 55.9 109.1 79.5 Q109.1 96.0 92.6 96.0 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path></g><path d="M37.5 62.0 Q30.0 62.0 30.0 53.0 Q30.0 42.5 42.0 42.5 Q43.5 27.5 60.0 27.5 Q73.5 27.5 76.5 38.0 Q93.0 36.5 93.0 51.5 Q93.0 62.0 82.5 62.0 Z" fill="#D9D3EA" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M21.8 96.0 Q10.0 96.0 10.0 81.8 Q10.0 65.3 28.9 65.3 Q31.2 41.7 57.2 41.7 Q78.4 41.7 83.2 58.2 Q109.1 55.9 109.1 79.5 Q109.1 96.0 92.6 96.0 Z" fill="#FFFFFF" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path></svg></sc-if><sc-if value="{{c.w.isRain}}" hint-placeholder-val="{{false}}"><svg width="20" height="20" viewBox="-14.3 -14.3 148.5 148.5" role="img" aria-label="Rain" style="display: block; overflow: visible"><g transform="translate(2.6 2.6)"><path d="M25.0 70.0 Q14.0 70.0 14.0 56.8 Q14.0 41.4 31.6 41.4 Q33.8 19.4 58.0 19.4 Q77.8 19.4 82.2 34.8 Q106.4 32.6 106.4 54.6 Q106.4 70.0 91.0 70.0 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M34 81.7 Q41.1 91.4 40.5 95.3 A6.5 6.5 0 1 1 27.5 95.3 Q26.9 91.4 34 81.7 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M60 91.7 Q67.2 101.4 66.5 105.3 A6.5 6.5 0 1 1 53.5 105.3 Q52.9 101.4 60 91.7 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path><path d="M86 81.7 Q93.2 91.4 92.5 95.3 A6.5 6.5 0 1 1 79.5 95.3 Q78.8 91.4 86 81.7 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path></g><g><path d="M25.0 70.0 Q14.0 70.0 14.0 56.8 Q14.0 41.4 31.6 41.4 Q33.8 19.4 58.0 19.4 Q77.8 19.4 82.2 34.8 Q106.4 32.6 106.4 54.6 Q106.4 70.0 91.0 70.0 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M34 81.7 Q41.1 91.4 40.5 95.3 A6.5 6.5 0 1 1 27.5 95.3 Q26.9 91.4 34 81.7 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M60 91.7 Q67.2 101.4 66.5 105.3 A6.5 6.5 0 1 1 53.5 105.3 Q52.9 101.4 60 91.7 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path><path d="M86 81.7 Q93.2 91.4 92.5 95.3 A6.5 6.5 0 1 1 79.5 95.3 Q78.8 91.4 86 81.7 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path></g><path d="M25.0 70.0 Q14.0 70.0 14.0 56.8 Q14.0 41.4 31.6 41.4 Q33.8 19.4 58.0 19.4 Q77.8 19.4 82.2 34.8 Q106.4 32.6 106.4 54.6 Q106.4 70.0 91.0 70.0 Z" fill="#FFFFFF" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M34 81.7 Q41.1 91.4 40.5 95.3 A6.5 6.5 0 1 1 27.5 95.3 Q26.9 91.4 34 81.7 Z" fill="#29D3FF" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M60 91.7 Q67.2 101.4 66.5 105.3 A6.5 6.5 0 1 1 53.5 105.3 Q52.9 101.4 60 91.7 Z" fill="#29D3FF" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M86 81.7 Q93.2 91.4 92.5 95.3 A6.5 6.5 0 1 1 79.5 95.3 Q78.8 91.4 86 81.7 Z" fill="#29D3FF" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path></svg></sc-if><sc-if value="{{c.w.isWindy}}" hint-placeholder-val="{{false}}"><svg width="20" height="20" viewBox="-14.3 -14.3 148.5 148.5" role="img" aria-label="Windy" style="display: block; overflow: visible"><g transform="translate(2.6 2.6)"><path d="M10 44 H70 Q86 44 86 30 Q86 18 74 18 Q64 18 64 28" fill="none" stroke="#0A0818" stroke-width="22.4" stroke-linecap="round" stroke-linejoin="round"></path><path d="M18 66 H92 Q110 66 110 82 Q110 96 96 96 Q84 96 84 86" fill="none" stroke="#0A0818" stroke-width="22.4" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 88 H54" fill="none" stroke="#0A0818" stroke-width="22.4" stroke-linecap="round" stroke-linejoin="round"></path><path d="M38 96 Q46 112 66 110 Q62 92 38 96 Z" fill="#0A0818" stroke="#0A0818" stroke-width="15.8" stroke-linejoin="round"></path></g><g><path d="M10 44 H70 Q86 44 86 30 Q86 18 74 18 Q64 18 64 28" fill="none" stroke="#FFFBF2" stroke-width="18.6" stroke-linecap="round" stroke-linejoin="round"></path><path d="M18 66 H92 Q110 66 110 82 Q110 96 96 96 Q84 96 84 86" fill="none" stroke="#FFFBF2" stroke-width="18.6" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 88 H54" fill="none" stroke="#FFFBF2" stroke-width="18.6" stroke-linecap="round" stroke-linejoin="round"></path><path d="M38 96 Q46 112 66 110 Q62 92 38 96 Z" fill="#FFFBF2" stroke="#FFFBF2" stroke-width="12.0" stroke-linejoin="round"></path></g><path d="M10 44 H70 Q86 44 86 30 Q86 18 74 18 Q64 18 64 28" fill="none" stroke="#0A0818" stroke-width="10.0" stroke-linecap="round" stroke-linejoin="round"></path><path d="M10 44 H70 Q86 44 86 30 Q86 18 74 18 Q64 18 64 28" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M18 66 H92 Q110 66 110 82 Q110 96 96 96 Q84 96 84 86" fill="none" stroke="#0A0818" stroke-width="10.0" stroke-linecap="round" stroke-linejoin="round"></path><path d="M18 66 H92 Q110 66 110 82 Q110 96 96 96 Q84 96 84 86" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 88 H54" fill="none" stroke="#0A0818" stroke-width="10.0" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 88 H54" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M38 96 Q46 112 66 110 Q62 92 38 96 Z" fill="#9BE564" stroke="#0A0818" stroke-width="3.4" stroke-linejoin="round"></path><path d="M42 98 Q54 104 64 109" fill="none" stroke="#0A0818" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></span><span style="font-size: 12px; font-weight: 800; color: var(--m)">{{c.hi}}</span></span></sc-if>
+</div>
+<sc-for list="{{c.chips}}" as="e" hint-placeholder-count="2"><button onClick="{{e.open}}" style="{{e.style}}"><span style="{{e.dot}}"></span><span class="clip" style="{{e.textStyle}}">{{e.title}}</span></button></sc-for>
+<sc-if value="{{c.hasMore}}" hint-placeholder-val="{{false}}"><button onClick="{{c.openDay}}" style="align-self: flex-start; height: 22px; padding: 0 6px; background: transparent; border: 0; color: var(--m); font-size: 12px; font-weight: 800; cursor: pointer">{{c.more}}</button></sc-if>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{dayOpen}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; inset: 0; z-index: 2; background: rgba(10,8,24,0.55); display: flex; justify-content: flex-end">
+<div role="dialog" aria-label="{{dayTitle}}" style="width: 420px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; padding: 28px 26px; background: var(--s); border-left: 1px solid rgba(var(--rgb),0.12)">
+<div style="display: flex; align-items: center; justify-content: space-between"><span style="font-family: 'Archivo Black', sans-serif; font-size: 26px">{{dayTitle}}</span><button onClick="{{closeDay}}" style="height: 44px; padding: 0 18px; border-radius: 999px; background: var(--t); color: var(--g); border: 0; font-size: 15px; font-weight: 800; cursor: pointer">Done</button></div>
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 18px; overflow: hidden">
+<sc-for list="{{dayRows}}" as="r" hint-placeholder-count="3"><button onClick="{{r.open}}" style="{{r.style}}"><span style="width: 74px; flex-shrink: 0; font-size: 14px; font-weight: 800; color: var(--m)">{{r.time}}</span><span style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px"><span style="{{r.titleStyle}}">{{r.title}}</span><span style="display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--m)"><span style="{{r.dot}}"></span>{{r.cal}}</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg></button></sc-for>
+<sc-if value="{{dayEmpty}}" hint-placeholder-val="{{false}}"><span style="padding: 18px 16px; font-size: 15px; font-weight: 600; color: var(--m)">Nothing on the calendars that are on.</span></sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{panelOpen}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; inset: 0; z-index: 3; background: rgba(10,8,24,0.55); display: flex; justify-content: flex-end">
+<div role="dialog" aria-label="Event" style="width: 420px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; padding: 28px 26px; background: var(--s); border-left: 1px solid rgba(var(--rgb),0.12)">
+<div style="display: flex; align-items: center; justify-content: space-between"><span style="display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 800; color: var(--m)"><span style="{{pDot}}"></span>{{pCal}}</span><button onClick="{{closePanel}}" style="height: 44px; padding: 0 18px; border-radius: 999px; background: var(--t); color: var(--g); border: 0; font-size: 15px; font-weight: 800; cursor: pointer">Done</button></div>
+<span style="font-family: 'Archivo Black', sans-serif; font-size: 30px; line-height: 1.05">{{pTitle}}</span>
+<span style="font-size: 17px; font-weight: 700; color: var(--m)">{{pWhen}}</span>
+<sc-if value="{{pMasked}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border-radius: 18px; background: rgba(var(--rgb),0.06)">
+<span style="font-size: 15px; font-weight: 600; line-height: 1.45">{{pMaskNote}}</span>
+<button onClick="{{openUnlock}}" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 18px; border-radius: 14px; background: var(--t); color: var(--g); border: 0; font-size: 15px; font-weight: 800; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Unlock to see it</button>
+</div>
+</sc-if>
+<sc-if value="{{pShowControls}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 18px; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; padding: 8px 16px">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="{{pSwLabelStyle}}">{{pSwLabel}}</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">{{pSwNote}}</span></span>
+<button onClick="{{pToggle}}" role="switch" aria-checked="{{pAria}}" aria-label="{{pSwLabel}}" aria-disabled="{{pDisabled}}" style="{{pTrack}}"><span style="{{pKnob}}"></span></button>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 8px 16px; border-top: 1px solid rgba(var(--rgb),0.12)">
+<span style="{{pSwLabelStyle}}">Kid layer</span>
+<span style="font-size: 15px; font-weight: 800; color: var(--m)">{{pLayer}}</span>
+</div>
+</div>
+<sc-if value="{{locked}}" hint-placeholder-val="{{true}}">
+<button onClick="{{openUnlock}}" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 18px; border-radius: 14px; background: var(--t); color: var(--g); border: 0; font-size: 15px; font-weight: 800; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Unlock to change</button>
+</sc-if>
+</sc-if>
+<span style="margin-top: auto; font-size: 14px; font-weight: 600; color: var(--m); line-height: 1.45">{{pFoot}}</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{unlockOpen}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; inset: 0; z-index: 4; background: rgba(10,8,24,0.72); display: flex; align-items: center; justify-content: center">
+<div role="dialog" aria-label="Parent unlock" style="width: 460px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 26px 28px 28px; background: var(--s); border: 1px solid rgba(var(--rgb),0.12); border-radius: 30px">
+<div style="align-self: stretch; display: flex; align-items: center; justify-content: space-between"><span style="font-family: 'Archivo Black', sans-serif; font-size: 24px">{{unlockTitle}}</span><button onClick="{{closeUnlock}}" style="height: 44px; padding: 0 16px; border-radius: 999px; background: transparent; border: 1px solid rgba(var(--rgb),0.2); color: var(--t); font-size: 15px; font-weight: 800; cursor: pointer">Cancel</button></div>
+<div style="display: flex; gap: 14px">
+<sc-for list="{{parents}}" as="p" hint-placeholder-count="2"><button onClick="{{p.pick}}" aria-pressed="{{p.aria}}" style="{{p.style}}"><span style="{{p.av}}">{{p.initial}}</span>{{p.name}}</button></sc-for>
+</div>
+<div aria-label="{{dotsLabel}}" style="display: flex; gap: 12px; height: 18px; align-items: center"><sc-for list="{{pinDots}}" as="d" hint-placeholder-count="6"><span style="{{d.style}}"></span></sc-for></div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 300px">
+<sc-for list="{{keys}}" as="k" hint-placeholder-count="12"><button onClick="{{k.press}}" aria-label="{{k.aria}}" style="{{k.style}}">{{k.label}}</button></sc-for>
+</div>
+<span style="font-size: 13px; font-weight: 600; color: var(--m); text-align: center; line-height: 1.4">Your parent PIN, not a kid's. Unlocks this display for everyday fixes. Data export, deleting, pairing and PINs stay on your phone.</span>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;ground&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Night&quot;,&quot;options&quot;:[&quot;Night&quot;,&quot;Day&quot;]},&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Month&quot;,&quot;options&quot;:[&quot;This week&quot;,&quot;Month&quot;]},&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:820}}">
+const THEME = {
+  Night: '--g: #15122E; --p: #1E1A3D; --s: #221E45; --p2: #2A2552; --t: #F4EBD9; --m: #BDB5D6; --y: #FFD23F; --on: #9BE564; --rgb: 244,235,217; --mrgb: 189,181,214; --nav: rgba(21,18,46,0.92); ',
+  Day: '--g: #F5EFE2; --p: #FFFDF8; --s: #FFFDF8; --p2: #FFF4D2; --t: #15122E; --m: #5A5478; --y: #B3124F; --on: #2FA84F; --rgb: 21,18,46; --mrgb: 90,84,120; --nav: rgba(245,239,226,0.94); '
+};
+const ROOT = "width: 1180px; height: 820px; box-sizing: border-box; position: relative; background: var(--g); color: var(--t); font-family: 'Archivo', system-ui, sans-serif; display: flex; flex-direction: column; gap: 16px; padding: 26px 32px 24px; overflow: hidden";
+
+const CALS = { family: { name: 'Family', color: '#9BE564' }, grandma: { name: "Grandma's", color: '#A99BFF' }, work: { name: "Steve's work", color: '#FF8A3D' }, holidays: { name: 'Holidays', color: '#FFD23F' } };
+const DOWN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DOWS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const START = 4;
+const WX = { 2: ['Sunny', 68, 52], 3: ['Sunny', 71, 54], 4: ['Cloudy', 66, 55], 5: ['Rain', 60, 50], 6: ['Rain', 58, 48], 7: ['Windy', 62, 47], 8: ['Sunny', 65, 49] };
+const EV = [
+  { id: 'a1', d: 2, t: '10:00', e: '11:00 AM', title: 'Client check-in', cal: 'work' },
+  { id: 'a2', d: 2, t: '3:15', e: '3:30 PM', title: 'School pickup', cal: 'family' },
+  { id: 'a3', d: 2, t: '5:30', e: '6:30 PM', title: 'Soccer practice', cal: 'family', kid: 'soccer_ball' },
+  { id: 'a4', d: 2, t: '7:00', e: '8:30 PM', title: 'Choir rehearsal', cal: 'grandma' },
+  { id: 'b1', d: 3, t: '9:00', e: '10:00 AM', title: 'Soccer game', cal: 'family', kid: 'soccer_ball' },
+  { id: 'b2', d: 3, t: '1:00', e: '3:00 PM', title: 'Pumpkin patch', cal: 'family', kid: 'jack_o_lantern' },
+  { id: 'c1', d: 4, t: '10:00', e: '11:15 AM', title: 'Church', cal: 'family', kid: 'sparkles' },
+  { id: 'd1', d: 5, t: 'All day', e: '', title: "Grandma's house", cal: 'family', kid: 'house' },
+  { id: 'd2', d: 5, t: '2:00', e: '3:30 PM', title: 'Quarterly review', cal: 'work' },
+  { id: 'e1', d: 6, t: '12:15', e: '12:45 PM', title: 'Pick up birthday gift', cal: 'family', hidden: true },
+  { id: 'e2', d: 6, t: '3:30', e: '4:00 PM', title: 'Library books due', cal: 'family', kid: 'books' },
+  { id: 'f1', d: 7, t: '5:30', e: '6:30 PM', title: 'Soccer practice', cal: 'family', kid: 'soccer_ball' },
+  { id: 'f2', d: 7, t: '6:30', e: '8:00 PM', title: 'Life group', cal: 'family' },
+  { id: 'f3', d: 7, t: '7:00', e: '9:00 PM', title: 'Book club', cal: 'grandma' },
+  { id: 'g1', d: 9, t: '5:30', e: '6:30 PM', title: 'Soccer practice', cal: 'family', kid: 'soccer_ball' },
+  { id: 'g2', d: 12, t: 'All day', e: '', title: 'No school, teacher workday', cal: 'family', kid: 'school' },
+  { id: 'g3', d: 14, t: '9:00', e: '4:00 PM', title: 'Planning offsite', cal: 'work' },
+  { id: 'g4', d: 14, t: '5:30', e: '6:30 PM', title: 'Soccer practice', cal: 'family', kid: 'soccer_ball' },
+  { id: 'g5', d: 16, t: '5:30', e: '6:30 PM', title: 'Soccer practice', cal: 'family', kid: 'soccer_ball' },
+  { id: 'g6', d: 17, t: 'All day', e: '', title: 'Visit Grandma', cal: 'grandma' },
+  { id: 'g7', d: 21, t: '5:30', e: '6:30 PM', title: 'Soccer practice', cal: 'family', kid: 'soccer_ball' },
+  { id: 'g8', d: 22, t: '4:15', e: '4:45 PM', title: 'Parent-teacher conference', cal: 'family', hidden: true },
+  { id: 'g9', d: 23, t: '5:30', e: '6:30 PM', title: 'Soccer practice', cal: 'family', kid: 'soccer_ball' },
+  { id: 'h1', d: 24, t: '2:00', e: '4:00 PM', title: 'Birthday party at the rec center', cal: 'family', kid: 'birthday_cake' },
+  { id: 'h2', d: 28, t: '11:30', e: '12:30 PM', title: 'Lunch with the team', cal: 'work' },
+  { id: 'h3', d: 28, t: '5:30', e: '6:30 PM', title: 'Soccer practice', cal: 'family', kid: 'soccer_ball' },
+  { id: 'h4', d: 30, t: '5:30', e: '6:30 PM', title: 'Soccer practice', cal: 'family', kid: 'soccer_ball' },
+  { id: 'h5', d: 31, t: 'All day', e: '', title: 'Halloween', cal: 'holidays', kid: 'jack_o_lantern' },
+  { id: 'h6', d: 31, t: '5:30', e: '7:30 PM', title: 'Trick-or-treat on our street', cal: 'family', kid: 'ghost' }
+];
+const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'];
+const wxFlags = (c) => ({ isSunny: c === 'Sunny', isCloudy: c === 'Cloudy', isRain: c === 'Rain', isWindy: c === 'Windy' });
+class Component extends DCLogic {
+  renderVals() { const v = this._rv0(); v.rootStyle = THEME[this.props.ground === 'Day' ? 'Day' : 'Night'] + ROOT; return v; }
+  _rv0() {
+    const s = this.state || {};
+    const unlocked = !!s.unlocked;
+    const by = s.by || 'Steve';
+    const mode = s.mode || (this.props.view === 'Month' ? 'month' : 'week');
+    const on = s.on || { family: true, grandma: true, work: false, holidays: true };
+    const hiddenOv = s.hid || {}; const shownOv = s.shown || {};
+    const dot = (c, n) => 'width: ' + n + 'px; height: ' + n + 'px; flex-shrink: 0; border-radius: 50%; background: ' + c;
+    const isHidden = (e) => hiddenOv[e.id] !== undefined ? hiddenOv[e.id] : !!e.hidden;
+    const shown = (e) => {
+      if (e.cal === 'work' && !unlocked) return { title: 'Busy', masked: true };
+      if (e.cal === 'family' && isHidden(e) && !unlocked) return { title: 'Private', masked: true };
+      return { title: e.title, masked: false };
+    };
+    const visible = EV.filter((e) => on[e.cal]);
+    const open = (id) => () => this.setState({ panel: id, day: null });
+    const v = {};
+    v.locked = !unlocked; v.unlocked = unlocked;
+    v.byInitial = by[0]; v.byAv = 'width: 40px; height: 40px; border-radius: 50%; background: ' + (by === 'Jess' ? '#A99BFF' : '#FFD23F') + '; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; border: 2px solid var(--g)';
+    v.isWeek = mode === 'week'; v.isMonth = mode === 'month';
+    v.modes = [['week', 'This week'], ['month', 'Month']].map(([id, label]) => ({ label, aria: id === mode ? 'true' : 'false',
+      style: 'height: 42px; border-radius: 10px; border: 0; cursor: pointer; font-size: 15px; font-weight: 800; background: ' + (id === mode ? 'var(--t)' : 'transparent') + '; color: ' + (id === mode ? 'var(--g)' : 'var(--t)'),
+      pick: () => this.setState({ mode: id }) }));
+    v.chips = ['family', 'grandma', 'work', 'holidays'].map((id) => { const o = !!on[id]; return {
+      label: CALS[id].name + (id === 'work' && !unlocked ? ' · Busy' : ''), aria: o ? 'true' : 'false', dot: dot(CALS[id].color, 10),
+      style: 'display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; border-radius: 999px; cursor: pointer; font-size: 15px; font-weight: 800; border: 1px solid ' + (o ? 'var(--t)' : 'rgba(var(--rgb),0.22)') + '; background: ' + (o ? 'rgba(var(--rgb),0.14)' : 'transparent') + '; color: ' + (o ? 'var(--t)' : 'var(--m)'),
+      toggle: () => this.setState({ on: { ...on, [id]: !o } }) }; });
+
+    v.days = [2, 3, 4, 5, 6, 7, 8].map((n, i) => {
+      const evs = visible.filter((e) => e.d === n);
+      const w = WX[n];
+      return { label: (i === 0 ? 'Today · ' : '') + DOWS[(START + n - 1) % 7] + ' ' + n, empty: evs.length === 0,
+        hi: w[1] + '°', lo: w[2] + '°', wxLabel: w[0] + ', high ' + w[1] + ', low ' + w[2], w: wxFlags(w[0]),
+        colStyle: 'display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 14px 10px; border-radius: 22px; background: var(--p); border: 1px solid ' + (i === 0 ? 'rgba(var(--rgb),0.28)' : 'rgba(var(--rgb),0.10)'),
+        headStyle: 'padding: 0 4px; font-size: 14px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: ' + (i === 0 ? 'var(--y)' : 'var(--m)'),
+        events: evs.map((e) => { const sh = shown(e); return { time: e.t, title: sh.title, cal: CALS[e.cal].name, dot: dot(CALS[e.cal].color, 8),
+          hasSticker: !!e.kid && !sh.masked, cls: 'fx stk fx-' + (e.kid || 'house'),
+          titleStyle: 'font-size: 15px; font-weight: 700; line-height: 1.2; ' + (sh.masked ? 'color: var(--m); font-style: italic' : ''),
+          style: 'display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; padding: 9px 10px; border-radius: 14px; text-align: left; cursor: pointer; color: var(--t); ' + (sh.masked ? 'background: transparent; border: 1px dashed rgba(var(--rgb),0.25)' : 'background: rgba(var(--rgb),0.06); border: 0'),
+          open: open(e.id) }; }) };
+    });
+
+    v.dow = DOWS.map((l) => ({ l }));
+    v.cells = [];
+    for (let i = 0; i < 35; i++) {
+      const n = i - START + 1;
+      if (n < 1 || n > 31) { v.cells.push({ real: false, style: 'border-radius: 16px; background: transparent', chips: [], n: '', label: '', numStyle: '', openDay: () => {}, hasWx: false, hasMore: false, more: '', hi: '', wxLabel: '', w: wxFlags('') }); continue; }
+      const evs = visible.filter((e) => e.d === n);
+      const w = WX[n];
+      v.cells.push({ real: true, n: String(n), label: 'October ' + n + ', see the day',
+        style: 'min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; border-radius: 16px; overflow: hidden; background: var(--p); border: ' + (n === 2 ? '2px solid var(--t)' : '1px solid rgba(var(--rgb),0.10)'),
+        numStyle: 'height: 30px; min-width: 30px; padding: 0 4px; border-radius: 8px; border: 0; cursor: pointer; text-align: left; font-family: inherit; font-size: 16px; font-weight: 800; background: transparent; color: ' + (n === 2 ? 'var(--y)' : 'var(--t)'),
+        openDay: () => this.setState({ day: n }),
+        hasWx: !!w, hi: w ? w[1] + '°' : '', wxLabel: w ? w[0] + ', high ' + w[1] : '', w: wxFlags(w ? w[0] : ''),
+        chips: evs.slice(0, 2).map((e) => { const sh = shown(e); return { title: sh.title, dot: dot(CALS[e.cal].color, 7),
+          textStyle: 'min-width: 0; font-size: 12px; font-weight: 700; ' + (sh.masked ? 'font-style: italic; color: var(--m)' : ''),
+          style: 'display: flex; align-items: center; gap: 5px; width: 100%; min-width: 0; height: 24px; padding: 0 6px; border-radius: 7px; cursor: pointer; text-align: left; color: var(--t); ' + (sh.masked ? 'background: transparent; border: 1px dashed rgba(var(--rgb),0.25)' : 'background: rgba(var(--rgb),0.07); border: 0'),
+          open: open(e.id) }; }),
+        hasMore: evs.length > 2, more: '+' + (evs.length - 2) + ' more' });
+    }
+
+    const day = s.day || null;
+    v.dayOpen = !!day; v.closeDay = () => this.setState({ day: null });
+    const dEv = day ? visible.filter((e) => e.d === day) : [];
+    v.dayTitle = day ? DOWN[(START + day - 1) % 7] + ', Oct ' + day : '';
+    v.dayEmpty = !!day && dEv.length === 0;
+    v.dayRows = dEv.map((e, i) => { const sh = shown(e); return { time: e.t === 'All day' ? 'All day' : e.t, title: sh.title, cal: CALS[e.cal].name, dot: dot(CALS[e.cal].color, 8),
+      titleStyle: 'font-size: 16px; font-weight: 700; ' + (sh.masked ? 'font-style: italic; color: var(--m)' : ''),
+      style: 'display: flex; align-items: center; gap: 10px; width: 100%; min-height: 62px; padding: 8px 14px; background: transparent; border: 0; ' + (i ? 'border-top: 1px solid rgba(var(--rgb),0.12); ' : '') + 'color: var(--t); text-align: left; cursor: pointer',
+      open: open(e.id) }; });
+
+    const cur = EV.find((e) => e.id === s.panel);
+    v.panelOpen = !!cur; v.closePanel = () => this.setState({ panel: null });
+    if (cur) {
+      const sh = shown(cur);
+      v.pCal = CALS[cur.cal].name; v.pDot = dot(CALS[cur.cal].color, 10);
+      v.pTitle = sh.title; v.pWhen = DOWN[(START + cur.d - 1) % 7] + ', Oct ' + cur.d + ' · ' + (cur.e ? cur.t + ' – ' + cur.e : 'All day');
+      v.pMasked = sh.masked;
+      v.pMaskNote = cur.cal === 'work' ? 'Work events show as Busy on shared displays. Unlock to see the title.' : 'This one is hidden from kids, so shared displays show it as Private until a parent unlocks.';
+      const fam = cur.cal === 'family';
+      v.pShowControls = !sh.masked && (fam || cur.cal === 'grandma');
+      const kidsSee = fam ? !isHidden(cur) : !!shownOv[cur.id];
+      const swOn = fam ? isHidden(cur) : kidsSee;
+      v.pSwLabel = fam ? 'Hide from kids' : 'Show to kids';
+      v.pSwNote = unlocked ? (fam ? (swOn ? 'Shows as Private here when locked' : 'Kids see it on their calendar') : (swOn ? "Shows on the kids' calendars" : "Off by default for Grandma's")) : 'Unlock to change';
+      v.pSwLabelStyle = 'font-size: 16px; font-weight: 800; color: ' + (unlocked ? 'var(--t)' : 'rgba(var(--rgb),0.55)');
+      v.pAria = swOn ? 'true' : 'false'; v.pDisabled = unlocked ? 'false' : 'true';
+      v.pTrack = 'width: 52px; height: 32px; flex-shrink: 0; padding: 0; border-radius: 16px; border: 0; position: relative; cursor: ' + (unlocked ? 'pointer' : 'default') + '; opacity: ' + (unlocked ? '1' : '0.45') + '; background: ' + (swOn ? 'var(--on)' : 'rgba(var(--rgb),0.22)');
+      v.pKnob = 'position: absolute; top: 3px; left: ' + (swOn ? '23px' : '3px') + '; width: 26px; height: 26px; border-radius: 50%; background: var(--t); box-shadow: 0 1px 3px rgba(0,0,0,0.4)';
+      v.pToggle = () => { if (!unlocked) return; if (fam) this.setState({ hid: { ...hiddenOv, [cur.id]: !isHidden(cur) } }); else this.setState({ shown: { ...shownOv, [cur.id]: !kidsSee } }); };
+      v.pLayer = cur.kid && kidsSee ? 'Sticker · on Tour Dates' : 'None';
+      v.pFoot = cur.cal === 'holidays' ? 'Built-in holiday. It drives the kids\u2019 accents.' : (unlocked ? 'Title and time come from ' + (cur.cal === 'work' ? 'Google' : 'Apple') + ' Calendar. Change them there.' : 'Anyone can look. Changes need a parent.');
+    } else {
+      v.pCal = ''; v.pDot = ''; v.pTitle = ''; v.pWhen = ''; v.pMasked = false; v.pMaskNote = ''; v.pShowControls = false;
+      v.pSwLabel = ''; v.pSwNote = ''; v.pSwLabelStyle = ''; v.pAria = 'false'; v.pDisabled = 'true'; v.pTrack = ''; v.pKnob = ''; v.pToggle = () => {}; v.pLayer = ''; v.pFoot = '';
+    }
+
+    const who = s.who || null; const pin = s.pin || '';
+    v.unlockOpen = !!s.unlock;
+    v.unlockTitle = who ? 'Enter your PIN' : "Who's unlocking?";
+    v.openUnlock = () => this.setState({ unlock: true, who: null, pin: '' });
+    v.closeUnlock = () => this.setState({ unlock: false, who: null, pin: '' });
+    v.lock = () => this.setState({ unlocked: false, panel: null });
+    v.parents = [['S', 'Steve', '#FFD23F'], ['J', 'Jess', '#A99BFF']].map(([initial, name, c]) => { const sel = who === name; return { initial, name, aria: sel ? 'true' : 'false',
+      av: 'width: 40px; height: 40px; border-radius: 50%; background: ' + c + '; color: var(--g); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px',
+      style: 'display: flex; align-items: center; gap: 10px; height: 60px; padding: 0 20px 0 10px; border-radius: 999px; cursor: pointer; font-size: 17px; font-weight: 800; border: 1px solid ' + (sel ? 'var(--t)' : 'rgba(var(--rgb),0.2)') + '; background: ' + (sel ? 'rgba(var(--rgb),0.16)' : 'transparent') + '; color: var(--t)',
+      pick: () => this.setState({ who: name, pin: '' }) }; });
+    v.dotsLabel = pin.length + ' of 6 digits';
+    v.pinDots = [0, 1, 2, 3, 4, 5].map((i) => ({ style: 'width: 14px; height: 14px; border-radius: 50%; ' + (i < pin.length ? 'background: var(--t)' : 'border: 2px solid rgba(var(--rgb),0.4)') }));
+    v.keys = KEYS.map((k) => ({ label: k === 'del' ? '\u232b' : k, aria: k === 'del' ? 'Delete' : (k || 'Blank'),
+      style: 'height: 60px; border-radius: 16px; font-size: 24px; font-weight: 800; cursor: ' + (k && who ? 'pointer' : 'default') + '; color: var(--t); border: ' + (k ? '1px solid rgba(var(--rgb),0.15)' : '0') + '; background: ' + (k && who ? 'rgba(var(--rgb),0.06)' : 'transparent') + '; opacity: ' + (who ? '1' : '0.4'),
+      press: () => { if (!who || !k) return; if (k === 'del') { this.setState({ pin: pin.slice(0, -1) }); return; } const p = pin + k; if (p.length >= 6) this.setState({ unlock: false, unlocked: true, by: who, pin: '', who: null }); else this.setState({ pin: p }); } }));
+    return v;
+  }
+}
+</script>
+</body>
+</html>

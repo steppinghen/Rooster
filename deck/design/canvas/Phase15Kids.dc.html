@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kids tab — kids and routines, phone, parent</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Archivo:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:var(--y)}
+button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.fx{background-image:url(/_blob/e47a0dc8fefa526e06b4d92fd86fbb16);background-size:1000% 900%;background-repeat:no-repeat;display:block;flex-shrink:0}
+.fx-fox{background-position:77.7778% 25.0000%}
+.fx-octopus{background-position:33.3333% 50.0000%}
+.fx-sun{background-position:44.4444% 87.5000%}
+.fx-backpack{background-position:33.3333% 0.0000%}
+.fx-house{background-position:88.8889% 37.5000%}
+.fx-bed{background-position:77.7778% 0.0000%}
+.fx-crescent_moon{background-position:0.0000% 25.0000%}
+.fx-sparkles{background-position:11.1111% 87.5000%}
+.fx-frog{background-position:88.8889% 25.0000%}
+.fx-star{background-position:33.3333% 87.5000%}
+.stk{filter:drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(1.5px 0 0 #0A0818) drop-shadow(-1.5px 0 0 #0A0818) drop-shadow(0 1.5px 0 #0A0818) drop-shadow(0 -1.5px 0 #0A0818)}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+
+<h1 style="margin: 6px 0 0; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 32px; line-height: 1">Kids</h1>
+
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 20px; overflow: hidden">
+<sc-for list="{{kidRows}}" as="k" hint-placeholder-count="2">
+<a href="Phase15BackOfficeKid.dc.html" style="{{k.rowStyle}}">
+<span style="{{k.avStyle}}"><span class="{{k.cls}}" style="width: 26px; height: 26px"></span></span>
+<span style="flex-grow: 1; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 800">{{k.name}}</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">{{k.summary}}</span></span>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"></path></svg>
+</a>
+</sc-for>
+<button style="display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 16px; background: transparent; border: 0; border-top: 1px solid rgba(var(--rgb),0.12); color: var(--t); font-size: 16px; font-weight: 800; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add a kid</button>
+</div>
+<span style="margin-top: -6px; padding: 0 4px; font-size: 13px; font-weight: 600; color: var(--m)">Each kid's look, dock, volume, check-in moments and PIN.</span>
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 4px 0">
+<span style="font-family: 'Archivo Black', sans-serif; font-size: 24px">Routines</span>
+<a href="Phase15RoutineEditor.dc.html" style="display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 999px; background: var(--t); color: var(--g); text-decoration: none; font-size: 15px; font-weight: 800"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>New</a>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px">
+<div role="radiogroup" aria-label="Show routines for" style="display: flex; align-items: center; gap: 8px">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="3"><button onClick="{{f.pick}}" role="radio" aria-checked="{{f.aria}}" aria-label="{{f.label}}" style="{{f.style}}"><sc-if value="{{f.hasAv}}" hint-placeholder-val="{{false}}"><span style="{{f.avStyle}}"><span class="{{f.cls}}" style="width: 22px; height: 22px"></span></span></sc-if><sc-if value="{{f.isAll}}" hint-placeholder-val="{{true}}">Everyone</sc-if></button></sc-for>
+</div>
+<span style="font-size: 14px; font-weight: 700; color: var(--m)">{{filterCaption}}</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 16px; background: rgba(var(--rgb),0.06)">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Sticker routines on school days</span>
+<span style="margin-top: -4px; font-size: 13px; font-weight: 600; color: var(--m)">Each finished sticker routine earns one sticker, up to 4 a day per kid. Squares show how many of the 4 are used.</span>
+<sc-for list="{{caps}}" as="c" hint-placeholder-count="2">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="{{c.avStyle}}"><span class="{{c.cls}}" style="width: 16px; height: 16px"></span></span>
+<span style="width: 52px; font-size: 14px; font-weight: 800">{{c.name}}</span>
+<span style="display: flex; gap: 5px"><sc-for list="{{c.slots}}" as="s" hint-placeholder-count="4"><span style="{{s.style}}"></span></sc-for></span>
+<span style="font-size: 13px; font-weight: 700; color: var(--m)">{{c.label}}</span>
+</div>
+</sc-for>
+</div>
+
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+<span style="padding: 8px 4px 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">{{g.label}}</span>
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 20px; overflow: hidden">
+<sc-for list="{{g.items}}" as="r" hint-placeholder-count="2">
+<a href="Phase15RoutineEditor.dc.html" style="{{r.rowStyle}}">
+<span class="{{r.cls}}" style="width: 36px; height: 36px"></span>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 16px; font-weight: 800">{{r.name}}</span>
+<span style="font-size: 13px; font-weight: 600; color: var(--m)">{{r.when}}</span>
+<span style="display: flex; align-items: center; gap: 6px">
+<span style="display: flex"><sc-for list="{{r.kids}}" as="k" hint-placeholder-count="2"><span style="{{k.style}}"><span class="{{k.cls}}" style="width: 14px; height: 14px"></span></span></sc-for></span>
+<span style="font-size: 12px; font-weight: 700; color: var(--m)">{{r.steps}}</span>
+<sc-if value="{{r.sticker}}" hint-placeholder-val="{{true}}"><span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: rgba(var(--rgb),0.10); font-size: 12px; font-weight: 800"><span class="fx stk fx-star" style="width: 14px; height: 14px"></span>Sticker</span></sc-if>
+</span>
+</span>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M9 5l7 7-7 7"></path></svg>
+</a>
+</sc-for>
+</div>
+</sc-for>
+<span style="padding: 0 4px; font-size: 13px; font-weight: 600; color: var(--m)">One routine can serve several kids; each step says who does it. Tap one to edit it.</span>
+
+<nav aria-label="Main" style="position: sticky; bottom: 0; margin: auto -16px 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 10px 8px 26px; background: var(--nav); border-top: 1px solid rgba(var(--rgb),0.12)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4"><a href="{{t.href}}" aria-current="{{t.cur}}" style="{{t.style}}">{{t.label}}</a></sc-for>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"ground": {"editor": "enum", "default": "Night", "options": ["Night", "Day"]}, "kids": {"editor": "enum", "default": "2 kids", "options": ["2 kids", "3 kids"]}, "$preview": {"width": 390, "height": 1700}}'>
+const THEME = {
+  Night: '--g: #15122E; --p: #1E1A3D; --s: #221E45; --p2: #2A2552; --t: #F4EBD9; --m: #BDB5D6; --y: #FFD23F; --on: #9BE564; --rgb: 244,235,217; --mrgb: 189,181,214; --nav: rgba(21,18,46,0.92); ',
+  Day: '--g: #F5EFE2; --p: #FFFDF8; --s: #FFFDF8; --p2: #FFF4D2; --t: #15122E; --m: #5A5478; --y: #B3124F; --on: #2FA84F; --rgb: 21,18,46; --mrgb: 90,84,120; --nav: rgba(245,239,226,0.94); '
+};
+const ROOT = "width: 390px; min-height: 1700px; box-sizing: border-box; position: relative; background: var(--g); color: var(--t); font-family: 'Archivo', system-ui, sans-serif; display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 0";
+
+const KIDS = { A: { name: 'Kid A', icon: 'fox', color: '#29D3FF', summary: 'Reader · Normal volume · 3 dock picks · PIN on' }, B: { name: 'Kid B', icon: 'octopus', color: '#FF3E8A', summary: 'Pre-reader · Normal volume · 1 dock pick · No PIN' }, C: { name: 'Kid C', icon: 'frog', color: '#9BE564', summary: 'Pre-reader · Focus volume · 1 dock pick · No PIN' } };
+const ROUTINES = [
+  { type: 'morning', name: 'Dawn Patrol', icon: 'sun', when: 'School days · 6:45 AM · finish by 7:50, bus', kids: ['A', 'B'], steps: 6, sticker: true, school: true },
+  { type: 'morning', name: 'Weekend Dawn Patrol', icon: 'sparkles', when: 'Sat, Sun · 8:00 AM', kids: ['A', 'B'], steps: 4, sticker: false, school: false },
+  { type: 'after', name: 'Home from school', icon: 'backpack', when: 'School days · 3:30 PM', kids: ['A'], steps: 4, sticker: true, school: true },
+  { type: 'after', name: 'Tidy up', icon: 'house', when: 'Every day · 5:00 PM', kids: ['A', 'B'], steps: 3, sticker: true, school: true },
+  { type: 'bedtime', name: 'Last Run', icon: 'crescent_moon', when: 'Every day · 7:15 PM', kids: ['A', 'B'], steps: 6, sticker: true, school: true }
+];
+const GROUPS = [['morning', 'Morning'], ['after', 'After school'], ['bedtime', 'Bedtime']];
+class Component extends DCLogic {
+  renderVals() { const v = this._rv0(); v.rootStyle = THEME[this.props.ground === 'Day' ? 'Day' : 'Night'] + ROOT; return v; }
+  _rv0() {
+    const s = this.state || {};
+    const ids = this.props.kids === '3 kids' ? ['A', 'B', 'C'] : ['A', 'B'];
+    const f = s.filter && (s.filter === 'all' || ids.includes(s.filter)) ? s.filter : 'all';
+    const kidsOf = (r) => ids.length === 3 && r.kids.length > 1 ? r.kids.concat(['C']) : r.kids;
+    const av = (id, size, extra) => 'width: ' + size + 'px; height: ' + size + 'px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #0A0818; background: ' + KIDS[id].color + '; ' + (extra || '');
+    const v = {};
+    v.kidRows = ids.map((id, n) => ({ name: KIDS[id].name, summary: KIDS[id].summary, cls: 'fx stk fx-' + KIDS[id].icon,
+      avStyle: av(id, 40, 'box-shadow: 0 0 0 2px ' + KIDS[id].color),
+      rowStyle: 'display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 8px 16px; color: var(--t); text-decoration: none; ' + (n ? 'border-top: 1px solid rgba(var(--rgb),0.12)' : '') }));
+    v.filters = ['all'].concat(ids).map((id) => { const on = f === id; const all = id === 'all'; return { label: all ? 'Everyone' : KIDS[id].name, aria: on ? 'true' : 'false', hasAv: !all, isAll: all,
+      cls: all ? 'fx' : 'fx stk fx-' + KIDS[id].icon, avStyle: all ? '' : av(id, 34),
+      style: all ? 'height: 44px; padding: 0 16px; border-radius: 999px; cursor: pointer; font-size: 15px; font-weight: 800; border: 1px solid ' + (on ? 'var(--t)' : 'rgba(var(--rgb),0.20)') + '; background: ' + (on ? 'var(--t)' : 'transparent') + '; color: ' + (on ? 'var(--g)' : 'var(--t)')
+        : 'width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; background: transparent; border: 0; box-shadow: ' + (on ? '0 0 0 3px var(--t)' : 'none'),
+      pick: () => this.setState({ filter: id }) }; });
+    v.filterCaption = f === 'all' ? 'All routines' : KIDS[f].name + "'s routines";
+    v.caps = ids.map((id) => { const n = ROUTINES.filter((r) => r.sticker && r.school && kidsOf(r).includes(id)).length; return { name: KIDS[id].name, cls: 'fx stk fx-' + KIDS[id].icon, avStyle: av(id, 24),
+      slots: [0, 1, 2, 3].map((i) => ({ style: 'width: 14px; height: 14px; border-radius: 4px; ' + (i < n ? 'background: ' + KIDS[id].color : 'border: 2px solid rgba(var(--rgb),0.3)') })),
+      label: n + ' of 4 sticker routines' + (n >= 4 ? ' · full' : '') }; });
+    const list = ROUTINES.filter((r) => f === 'all' || kidsOf(r).includes(f));
+    v.groups = GROUPS.map(([type, label]) => ({ label, items: list.filter((r) => r.type === type).map((r, n) => ({ name: r.name, when: r.when, sticker: r.sticker, cls: 'fx stk fx-' + r.icon,
+      steps: r.steps + ' steps',
+      kids: kidsOf(r).map((k, i) => ({ cls: 'fx stk fx-' + KIDS[k].icon, style: av(k, 22, i ? 'margin-left: -6px' : '') })),
+      rowStyle: 'display: flex; align-items: center; gap: 12px; min-height: 76px; padding: 10px 14px 10px 14px; color: var(--t); text-decoration: none; ' + (n ? 'border-top: 1px solid rgba(var(--rgb),0.12)' : '') })) })).filter((g) => g.items.length);
+    v.tabs = ['Today', 'Calendar', 'Kids', 'Back Office'].map((label, n) => ({ label, cur: n === 2 ? 'page' : 'false',
+      href: ['Phase15ParentToday.dc.html', 'Phase15Calendar.dc.html', '#', 'Phase15BackOffice.dc.html'][n],
+      style: 'display: flex; justify-content: center; align-items: center; height: 44px; border-radius: 12px; text-decoration: none; font-size: 14px; font-weight: 800; color: ' + (n === 2 ? 'var(--g)' : 'var(--m)') + '; background: ' + (n === 2 ? 'var(--t)' : 'transparent') }));
+    return v;
+  }
+}
+</script>
+</body>
+</html>

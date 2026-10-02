@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kitchen hub — parent mode, Kids and Back Office</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Archivo:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:var(--y)}
+button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.fx{background-image:url(/_blob/e47a0dc8fefa526e06b4d92fd86fbb16);background-size:1000% 900%;background-repeat:no-repeat;display:block;flex-shrink:0}
+.fx-fox{background-position:77.7778% 25.0000%}
+.fx-octopus{background-position:33.3333% 50.0000%}
+.fx-sun{background-position:44.4444% 87.5000%}
+.fx-backpack{background-position:33.3333% 0.0000%}
+.fx-house{background-position:88.8889% 37.5000%}
+.fx-crescent_moon{background-position:0.0000% 25.0000%}
+.fx-sparkles{background-position:11.1111% 87.5000%}
+.fx-t_shirt{background-position:100.0000% 87.5000%}
+.fx-bowl_with_spoon{background-position:11.1111% 12.5000%}
+.fx-toothbrush{background-position:22.2222% 100.0000%}
+.fx-running_shoe{background-position:66.6667% 62.5000%}
+.fx-books{background-position:0.0000% 12.5000%}
+.stk{filter:drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(1.5px 0 0 #0A0818) drop-shadow(-1.5px 0 0 #0A0818) drop-shadow(0 1.5px 0 #0A0818) drop-shadow(0 -1.5px 0 #0A0818)}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+
+<div style="display: flex; align-items: center; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 4px; width: 190px"><span style="font-family: 'Archivo Black', sans-serif; font-size: 48px; line-height: 0.95">7:38</span><span style="font-size: 16px; font-weight: 700; color: var(--m)">Friday, October 2</span></div>
+<nav aria-label="Kitchen views" style="flex-grow: 1; display: flex; justify-content: center">
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; width: 620px; padding: 5px; border-radius: 18px; background: rgba(var(--rgb),0.08)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="5"><a href="{{t.href}}" onClick="{{t.pick}}" aria-current="{{t.cur}}" style="{{t.style}}">{{t.label}}</a></sc-for>
+</div>
+</nav>
+<div style="display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 6px 0 8px; border-radius: 999px; background: var(--t); color: var(--g)">
+<span style="width: 40px; height: 40px; border-radius: 50%; background: #FFD23F; color: #15122E; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px">S</span>
+<span style="display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 800">Parent mode</span><span style="font-size: 12px; font-weight: 700; opacity: 0.75">Locks after 2 min idle</span></span>
+<a href="Phase15KitchenHub.dc.html" style="height: 44px; padding: 0 14px; display: flex; align-items: center; border-radius: 999px; background: var(--g); color: var(--t); text-decoration: none; font-size: 14px; font-weight: 800">Lock</a>
+</div>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 20px">
+
+<div style="min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 24px">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+<span style="padding: 6px 6px 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">{{g.label}}</span>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<sc-for list="{{g.items}}" as="i" hint-placeholder-count="3">
+<button onClick="{{i.pick}}" aria-current="{{i.cur}}" style="{{i.style}}">
+<sc-if value="{{i.hasAv}}" hint-placeholder-val="{{false}}"><span style="{{i.av}}"><span class="{{i.cls}}" style="{{i.iconStyle}}"></span></span></sc-if>
+<span style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left"><span style="font-size: 16px; font-weight: 800">{{i.name}}</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">{{i.sub}}</span></span>
+<sc-if value="{{i.phoneOnly}}" hint-placeholder-val="{{false}}"><span style="flex-shrink: 0; padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(var(--rgb),0.25); font-size: 12px; font-weight: 800; color: var(--m)">Phone</span></sc-if>
+</button>
+</sc-for>
+</div>
+</sc-for>
+</div>
+
+<div style="min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 14px; padding: 22px 24px; background: var(--p); border: 1px solid rgba(var(--rgb),0.12); border-radius: 24px">
+<div style="display: flex; align-items: center; gap: 14px">
+<sc-if value="{{pHasAv}}" hint-placeholder-val="{{false}}"><span style="{{pAv}}"><span class="{{pCls}}" style="width: 40px; height: 40px"></span></span></sc-if>
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-family: 'Archivo Black', sans-serif; font-size: 28px; line-height: 1">{{pTitle}}</span><span style="font-size: 15px; font-weight: 700; color: var(--m)">{{pSub}}</span></span>
+</div>
+
+<sc-if value="{{isKid}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Look</span>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 16px; background: rgba(var(--rgb),0.06)"><span style="font-size: 16px; font-weight: 800">Can change their look</span><button onClick="{{toggleLook}}" role="switch" aria-checked="{{lookAria}}" aria-label="Can change their look" style="{{lookTrack}}"><span style="{{lookKnob}}"></span></button></div>
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Volume</span>
+<div role="radiogroup" aria-label="Volume" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 14px; background: rgba(var(--rgb),0.08)"><sc-for list="{{vols}}" as="o" hint-placeholder-count="2"><button onClick="{{o.pick}}" role="radio" aria-checked="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div>
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Check-in moments</span>
+<sc-for list="{{moments}}" as="c" hint-placeholder-count="2"><div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 14px; background: rgba(var(--rgb),0.06); font-size: 15px; font-weight: 700"><span>{{c.label}}</span><span style="color: var(--m)">{{c.time}}</span></div></sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Dock</span>
+<div style="display: flex; gap: 4px; padding: 6px; border-radius: 12px; background: #0A0818"><sc-for list="{{dock}}" as="d" hint-placeholder-count="4"><span style="{{d.style}}">{{d.label}}</span></sc-for></div>
+<sc-for list="{{mods}}" as="m" hint-placeholder-count="3"><div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: 14px; background: rgba(var(--rgb),0.06)"><span style="font-size: 15px; font-weight: 800">{{m.name}}</span><span style="{{m.tagStyle}}">{{m.route}}</span></div></sc-for>
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Profile PIN</span>
+<button onClick="{{openPhone}}" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 14px; background: transparent; border: 1px dashed rgba(var(--rgb),0.3); color: var(--t); cursor: pointer"><span style="display: flex; flex-direction: column; gap: 2px; text-align: left"><span style="font-size: 15px; font-weight: 800">{{pinLine}}</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">PINs change on your phone</span></span><span style="padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(var(--rgb),0.25); font-size: 12px; font-weight: 800; color: var(--m)">Phone</span></button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isRoutine}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+<span style="font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">{{routineWho}}</span>
+<sc-for list="{{rKids}}" as="k" hint-placeholder-count="2"><span style="{{k.style}}"><span class="{{k.cls}}" style="width: 22px; height: 22px"></span></span></sc-for>
+<span style="padding: 6px 12px; border-radius: 10px; background: rgba(var(--rgb),0.08); font-size: 15px; font-weight: 800">{{rWhen}}</span>
+<span style="padding: 6px 12px; border-radius: 10px; background: rgba(var(--rgb),0.08); font-size: 15px; font-weight: 800">{{rSticker}}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{rSteps}}" as="s" hint-placeholder-count="6"><div style="display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px; border-radius: 16px; background: rgba(var(--rgb),0.06)"><span class="{{s.cls}}" style="width: 36px; height: 36px"></span><span style="flex-grow: 1; font-size: 16px; font-weight: 700">{{s.text}}</span><span style="font-size: 12px; font-weight: 800; color: var(--m)">{{s.who}}</span></div></sc-for>
+</div>
+<span style="font-size: 14px; font-weight: 600; color: var(--m)">Tap a step to change its words, picture or who. Same editor as the phone, laid out wide.</span>
+</sc-if>
+
+<sc-if value="{{isList}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 8px 16px; border-radius: 16px; background: rgba(var(--rgb),0.06)">
+<span style="display: flex; align-items: center; gap: 10px"><sc-if value="{{r.hasDot}}" hint-placeholder-val="{{false}}"><span style="{{r.dot}}"></span></sc-if><span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 800">{{r.name}}</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">{{r.sub}}</span></span></span>
+<sc-if value="{{r.isSwitch}}" hint-placeholder-val="{{true}}"><button onClick="{{r.toggle}}" role="switch" aria-checked="{{r.aria}}" aria-label="{{r.name}}" style="{{r.track}}"><span style="{{r.knob}}"></span></button></sc-if>
+<sc-if value="{{r.isValue}}" hint-placeholder-val="{{false}}"><span style="padding: 6px 12px; border-radius: 10px; background: rgba(var(--rgb),0.08); font-size: 15px; font-weight: 800">{{r.value}}</span></sc-if>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{isPhone}}" hint-placeholder-val="{{false}}">
+<div style="flex-grow: 1; display: flex; align-items: center; gap: 30px; padding: 10px 6px">
+<div role="img" aria-label="QR code that opens this screen on your phone" style="width: 220px; height: 220px; flex-shrink: 0; box-sizing: border-box; padding: 14px; border-radius: 20px; background: #FFFDF8; display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 3px">
+<sc-for list="{{qr}}" as="q" hint-placeholder-count="121"><span style="{{q.style}}"></span></sc-for>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px; max-width: 360px">
+<span style="font-family: 'Archivo Black', sans-serif; font-size: 26px; line-height: 1.1">Do this on your phone</span>
+<span style="font-size: 16px; font-weight: 600; line-height: 1.45; color: var(--m)">{{phoneWhy}}</span>
+<span style="font-size: 16px; font-weight: 700; line-height: 1.45">Scan with your phone's camera. It opens this exact screen in The Deck.</span>
+</div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"ground": {"editor": "enum", "default": "Night", "options": ["Night", "Day"]}, "tab": {"editor": "enum", "default": "Kids", "options": ["Kids", "Back Office"]}, "$preview": {"width": 1180, "height": 820}}'>
+const THEME = {
+  Night: '--g: #15122E; --p: #1E1A3D; --t: #F4EBD9; --m: #BDB5D6; --y: #FFD23F; --on: #9BE564; --rgb: 244,235,217; ',
+  Day: '--g: #F5EFE2; --p: #FFFDF8; --t: #15122E; --m: #5A5478; --y: #B3124F; --on: #2FA84F; --rgb: 21,18,46; '
+};
+const K = { A: ['Kid A', 'fox', '#29D3FF', 'Reader · Normal volume', ['After school 3:30 PM', 'Bedtime 7:45 PM'], 'PIN on'], B: ['Kid B', 'octopus', '#FF3E8A', 'Pre-reader · Normal volume', ['Afternoon 3:00 PM', 'Bedtime 7:15 PM'], 'No PIN'] };
+const ROUTINES = { dawn: ['Dawn Patrol', 'sun', 'School days · 6:45 AM · bus 7:50', ['A', 'B'], true, [['t_shirt', 'Get dressed', 'All'], ['bowl_with_spoon', 'Eat breakfast', 'All'], ['toothbrush', 'Brush teeth', 'All'], ['running_shoe', 'Shoes on', 'All'], ['backpack', 'Pack backpack', 'Kid A'], ['books', 'Reading log', 'Kid A']]],
+  home: ['Home from school', 'backpack', 'School days · 3:30 PM', ['A'], true, [['backpack', 'Unpack backpack', 'All'], ['bowl_with_spoon', 'Snack', 'All'], ['books', 'Homework', 'All'], ['sparkles', 'Free time', 'All']]],
+  last: ['Last Run', 'crescent_moon', 'Every day · 7:15 PM', ['A', 'B'], true, [['toothbrush', 'Brush teeth', 'All'], ['t_shirt', 'Pajamas', 'All'], ['books', 'Reading', 'All'], ['sparkles', 'Wave Check', 'All']]] };
+const PHONE = { pin: 'Kid PINs keep siblings out of each other\u2019s profiles, so they only change on a parent\u2019s phone.', pair: 'Pairing a new iPad gives it access to the family, so it starts from a parent\u2019s phone.', parents: 'Adding or removing a parent changes who can run everything, so it only happens on a phone.', export: 'The export holds every family record, so it downloads to a parent\u2019s phone, never a shared screen.', del: 'Deleting the family wipes everything. That only happens on a phone, after typing the family name.' };
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const ground = this.props.ground === 'Day' ? 'Day' : 'Night';
+    const tab = s.tab || (this.props.tab === 'Back Office' ? 'bo' : 'kids');
+    const sel = s.sel || (tab === 'kids' ? 'kid:A' : 'bo:holidays');
+    const sw = (on) => ({ aria: on ? 'true' : 'false',
+      track: 'width: 52px; height: 32px; flex-shrink: 0; padding: 0; border-radius: 16px; border: 0; cursor: pointer; position: relative; background: ' + (on ? 'var(--on)' : 'rgba(var(--rgb),0.22)'),
+      knob: 'position: absolute; top: 3px; left: ' + (on ? '23px' : '3px') + '; width: 26px; height: 26px; border-radius: 50%; background: #FFFDF8; box-shadow: 0 1px 3px rgba(0,0,0,0.35)' });
+    const seg = (on) => 'height: 40px; border-radius: 10px; border: 0; cursor: pointer; font-size: 14px; font-weight: 800; background: ' + (on ? 'var(--t)' : 'transparent') + '; color: ' + (on ? 'var(--g)' : 'var(--t)');
+    const av = (id, n) => 'width: ' + n + 'px; height: ' + n + 'px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #0A0818; background: ' + K[id][2];
+    const v = {};
+    v.rootStyle = THEME[ground] + 'width: 1180px; height: 820px; box-sizing: border-box; position: relative; background: var(--g); color: var(--t); font-family: \'Archivo\', system-ui, sans-serif; display: flex; flex-direction: column; gap: 18px; padding: 26px 32px 24px; overflow: hidden';
+    v.tabs = [['Today', 'Phase15KitchenHub.dc.html', null], ['Calendar', 'Phase15KitchenCalendar.dc.html', null], ['Dinners', 'Phase15KitchenMenu.dc.html', null], ['Kids', '#', 'kids'], ['Back Office', '#', 'bo']].map(([label, href, id]) => { const on = id === tab; return { label, href, cur: on ? 'page' : 'false',
+      pick: id ? () => this.setState({ tab: id, sel: id === 'kids' ? 'kid:A' : 'bo:holidays' }) : () => {},
+      style: 'display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 14px; text-decoration: none; font-size: 15px; font-weight: 800; color: ' + (on ? 'var(--g)' : 'var(--t)') + '; background: ' + (on ? 'var(--t)' : 'transparent') + (id ? '; box-shadow: inset 0 0 0 1px rgba(var(--rgb),' + (on ? '0' : '0.22') + ')' : '') }; });
+    const item = (key, name, sub, extra) => { const on = sel === key; return Object.assign({ name, sub, cur: on ? 'page' : 'false', hasAv: false, phoneOnly: false, av: '', cls: 'fx', iconStyle: '',
+      style: 'display: flex; align-items: center; gap: 12px; width: 100%; min-height: 54px; padding: 6px 12px; border-radius: 14px; border: 0; cursor: pointer; color: var(--t); background: ' + (on ? 'rgba(var(--rgb),0.14)' : 'transparent'),
+      pick: () => this.setState({ sel: key, phone: null }) }, extra || {}); };
+    if (tab === 'kids') {
+      v.groups = [
+        { label: 'Kids', items: ['A', 'B'].map((id) => item('kid:' + id, K[id][0], K[id][3], { hasAv: true, av: av(id, 38), cls: 'fx stk fx-' + K[id][1], iconStyle: 'width: 24px; height: 24px' })) },
+        { label: 'Routines', items: Object.keys(ROUTINES).map((rid) => { const r = ROUTINES[rid]; return item('r:' + rid, r[0], r[2], { hasAv: true, av: 'width: 38px; height: 38px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: rgba(var(--rgb),0.08)', cls: 'fx stk fx-' + r[1], iconStyle: 'width: 26px; height: 26px' }); }) }
+      ];
+    } else {
+      v.groups = [
+        { label: 'Family', items: [item('bo:holidays', 'Holiday accents', '9 of 9 on'), item('bo:seasons', 'Seasons and dog', 'Winter Dec 1 – Feb 28'), item('bo:tips', 'Surf Report tips', 'Heavy jacket under 45°'), item('bo:cals', 'Calendars', '4 calendars')] },
+        { label: 'Devices and data', items: [item('bo:kitchen', 'Kitchen iPad', 'This display'), item('ph:pair', 'Pair a device', 'Starts on a phone', { phoneOnly: true }), item('ph:parents', 'Parents', '2', { phoneOnly: true }), item('ph:export', 'Export all family data', '', { phoneOnly: true }), item('ph:del', 'Delete family', '', { phoneOnly: true })] }
+      ];
+    }
+    const [kind, key] = sel.split(':');
+    const phoneKey = s.phone || null;
+    v.isKid = kind === 'kid' && !phoneKey; v.isRoutine = kind === 'r' && !phoneKey; v.isList = kind === 'bo' && !phoneKey; v.isPhone = kind === 'ph' || !!phoneKey;
+    v.pHasAv = kind === 'kid'; v.pAv = kind === 'kid' ? av(key, 60) : ''; v.pCls = kind === 'kid' ? 'fx stk fx-' + K[key][1] : 'fx';
+    v.pTitle = ''; v.pSub = '';
+    if (kind === 'kid') {
+      const k = K[key]; const ed = (s.k || {})[key] || {};
+      v.pTitle = k[0]; v.pSub = k[3];
+      const look = ed.look !== undefined ? ed.look : true; const l = sw(look);
+      v.lookAria = l.aria; v.lookTrack = l.track; v.lookKnob = l.knob;
+      v.toggleLook = () => this.setState({ k: { ...(s.k || {}), [key]: { ...ed, look: !look } } });
+      const vol = ed.vol || 'normal';
+      v.vols = [['normal', 'Normal'], ['focus', 'Focus']].map(([id, label]) => ({ label, aria: id === vol ? 'true' : 'false', style: seg(id === vol), pick: () => this.setState({ k: { ...(s.k || {}), [key]: { ...ed, vol: id } } }) }));
+      v.moments = k[4].map((x) => { const i = x.lastIndexOf(' ', x.length - 4); return { label: x.slice(0, i), time: x.slice(i + 1) }; });
+      v.dock = ['Home', 'My week', 'Wave Check', 'Coop TV'].map((label, n) => ({ label, style: 'flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; height: 38px; border-radius: 9px; font-size: 12px; font-weight: 800; text-align: center; ' + (n === 0 ? 'background: ' + k[2] + '; color: #0A0818' : 'background: rgba(244,235,217,0.10); color: #F4EBD9') }));
+      v.mods = [['Coop TV', 'On the dock', true], ['Session', 'Comes in Phase 2', false], ['Tune Shop', 'Comes in Phase 3', false]].map(([name, route, on]) => ({ name, route,
+        tagStyle: 'padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; ' + (on ? 'background: var(--t); color: var(--g)' : 'border: 1px solid rgba(var(--rgb),0.25); color: var(--m)') }));
+      v.pinLine = k[5];
+      v.openPhone = () => this.setState({ phone: 'pin' });
+    } else { v.lookAria = 'false'; v.lookTrack = ''; v.lookKnob = ''; v.toggleLook = () => {}; v.vols = []; v.moments = []; v.dock = []; v.mods = []; v.pinLine = ''; v.openPhone = () => {}; }
+    if (kind === 'r') {
+      const r = ROUTINES[key]; v.pTitle = r[0]; v.pSub = 'Routine';
+      v.routineWho = 'Who';
+      v.rKids = r[3].map((id, n) => ({ cls: 'fx stk fx-' + K[id][1], style: av(id, 34) + (n ? '; margin-left: -6px' : '') }));
+      v.rWhen = r[2]; v.rSticker = r[4] ? 'Earns a sticker' : 'No sticker';
+      v.rSteps = r[5].map(([icon, text, who]) => ({ cls: 'fx stk fx-' + icon, text, who: who === 'All' ? '' : who + ' only' }));
+    } else { v.routineWho = ''; v.rKids = []; v.rWhen = ''; v.rSticker = ''; v.rSteps = []; }
+    v.rows = [];
+    if (kind === 'bo') {
+      const sws = s.sws || {};
+      const swRow = (id, name, sub, def) => { const on = sws[id] !== undefined ? sws[id] : def; const o = sw(on); return { name, sub, isSwitch: true, isValue: false, hasDot: false, dot: '', value: '', aria: o.aria, track: o.track, knob: o.knob, toggle: () => this.setState({ sws: { ...sws, [id]: !on } }) }; };
+      const valRow = (name, sub, value, dot) => ({ name, sub, value, isSwitch: false, isValue: true, hasDot: !!dot, dot: dot ? 'width: 12px; height: 12px; border-radius: 50%; background: ' + dot : '', aria: 'false', track: '', knob: '', toggle: () => {} });
+      if (key === 'holidays') { v.pTitle = 'Holiday accents'; v.pSub = 'Each switch turns that holiday\u2019s trim, deck and stickers on or off';
+        v.rows = [swRow('master', 'Holiday accents', 'Master switch', true)].concat(['Halloween', 'Thanksgiving', 'Christmas', 'New Year', 'Birthdays'].map((h) => swRow(h, h, '', true))); }
+      if (key === 'seasons') { v.pTitle = 'Seasons and dog'; v.pSub = 'Winter switches boards and the Surf Report';
+        v.rows = [valRow('Winter starts', 'Snowboards and the Snow Report', 'Dec 1'), valRow('Winter ends', '', 'Feb 28'), valRow('Dog', 'Swaps each quarter', 'By season · Costa now')]; }
+      if (key === 'tips') { v.pTitle = 'Surf Report tips'; v.pSub = 'The temperatures behind each day\u2019s tip';
+        v.rows = [valRow('Heavy jacket, hat and gloves', 'Under', '35°'), valRow('Heavy jacket', 'Under', '45°'), valRow('Bring a jacket', 'Under, or windy', '65°'), valRow('Shorts, not pants', 'From', '75°'), valRow('Hot! Bring water too', 'From', '85°')]; }
+      if (key === 'cals') { v.pTitle = 'Calendars'; v.pSub = 'Synced from Apple and Google every 15 minutes';
+        v.rows = [valRow('Family', 'Apple Calendar', 'Kids: shown', '#9BE564'), valRow("Grandma's", 'Apple Calendar', 'Kids: hidden', '#A99BFF'), valRow("Steve's work", 'Google Calendar', 'Kids: never', '#FF8A3D'), valRow('Holidays', 'Built in', 'Kids: shown', '#FFD23F')]; }
+      if (key === 'kitchen') { v.pTitle = 'Kitchen iPad'; v.pSub = 'Family display · this screen';
+        v.rows = [valRow('Start view', 'Goes back after 5 minutes idle', 'Today'), valRow('Day or night', 'Day from Dawn Patrol until Last Run', 'Auto'), valRow("Steve's work here", 'Calendars it can show', 'Busy'), swRow('sound', 'Sound', 'Taps and cheers', true), swRow('dim', 'Dim at Lights out', '', true)]; }
+    }
+    const pk = phoneKey || (kind === 'ph' ? key : null);
+    v.phoneWhy = pk ? PHONE[pk] : '';
+    if (pk && !v.pTitle) v.pTitle = { pair: 'Pair a device', parents: 'Parents', export: 'Export all family data', del: 'Delete family', pin: 'Profile PIN' }[pk];
+    if (pk === 'pin' && kind === 'kid') { v.pSub = K[key][0]; }
+    v.qr = [];
+    for (let i = 0; i < 121; i++) { const x = i % 11, y = Math.floor(i / 11);
+      const finder = (x < 3 && y < 3) || (x > 7 && y < 3) || (x < 3 && y > 7);
+      const on = finder ? true : ((x * 7 + y * 13 + x * y) % 3 === 0);
+      v.qr.push({ style: 'border-radius: 2px; background: ' + (on ? '#15122E' : 'transparent') }); }
+    return v;
+  }
+}
+</script>
+</body>
+</html>

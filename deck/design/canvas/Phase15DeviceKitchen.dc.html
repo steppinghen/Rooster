@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Back Office — device settings, phone, parent</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Archivo:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:var(--y)}
+button{font-family:inherit;-webkit-tap-highlight-color:transparent}
+.fx{background-image:url(/_blob/e47a0dc8fefa526e06b4d92fd86fbb16);background-size:1000% 900%;background-repeat:no-repeat;display:block;flex-shrink:0}
+.fx-fox{background-position:77.7778% 25.0000%}
+.fx-octopus{background-position:33.3333% 50.0000%}
+.fx-frog{background-position:88.8889% 25.0000%}
+.stk{filter:drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(1.5px 0 0 #0A0818) drop-shadow(-1.5px 0 0 #0A0818) drop-shadow(0 1.5px 0 #0A0818) drop-shadow(0 -1.5px 0 #0A0818)}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+
+<div style="display: flex; align-items: center; justify-content: space-between; height: 44px">
+<a href="Phase15BackOffice.dc.html" style="display: flex; align-items: center; gap: 2px; height: 44px; color: var(--t); text-decoration: none; font-size: 16px; font-weight: 700"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg>Back Office</a>
+<span style="font-size: 16px; font-weight: 800">Device</span>
+<span style="width: 100px"></span>
+</div>
+
+<div style="display: flex; align-items: center; gap: 14px; padding: 4px 4px 0">
+<span style="width: 60px; height: 60px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 16px; background: var(--f)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="2.5"></rect><path d="M11 17h2"></path></svg></span>
+<span style="display: flex; flex-direction: column; gap: 4px"><span style="font-family: 'Archivo Black', sans-serif; font-size: 26px; line-height: 1">{{name}}</span><span style="font-size: 14px; font-weight: 700; color: var(--m)">Paired Sep 14 · Last seen 2 min ago</span></span>
+</div>
+
+<span style="padding: 8px 4px 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Its job</span>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; background: var(--p); border: 1px solid var(--h); border-radius: 20px">
+<div role="radiogroup" aria-label="Device job" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 14px; background: var(--f)">
+<sc-for list="{{jobs}}" as="j" hint-placeholder-count="2"><button onClick="{{j.pick}}" role="radio" aria-checked="{{j.aria}}" style="{{j.style}}">{{j.label}}</button></sc-for>
+</div>
+<span style="font-size: 13px; font-weight: 600; color: var(--m)">{{jobNote}}</span>
+</div>
+
+<sc-if value="{{isDisplay}}" hint-placeholder-val="{{true}}">
+<span style="padding: 8px 4px 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Calendars it can show</span>
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid var(--h); border-radius: 20px; overflow: hidden">
+<sc-for list="{{cals}}" as="c" hint-placeholder-count="4">
+<div style="{{c.rowStyle}}">
+<span style="display: flex; align-items: center; gap: 8px"><span style="{{c.dot}}"></span><span style="font-size: 16px; font-weight: 800">{{c.name}}</span></span>
+<div role="radiogroup" aria-label="{{c.name}}" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; padding: 3px; border-radius: 12px; background: var(--f)">
+<sc-for list="{{c.opts}}" as="o" hint-placeholder-count="3"><button onClick="{{o.pick}}" role="radio" aria-checked="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+</div>
+</div>
+</sc-for>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 8px 16px; border-top: 1px solid var(--h); color: var(--m)"><span style="font-size: 16px; font-weight: 700">Bills</span><span style="font-size: 14px; font-weight: 700">Later</span></div>
+</div>
+<span style="margin-top: -6px; padding: 0 4px; font-size: 13px; font-weight: 600; color: var(--m)">Busy shows the time without the title. Anyone at the display can turn the allowed ones on and off; work starts off.</span>
+
+<span style="padding: 8px 4px 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Start view</span>
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid var(--h); border-radius: 20px; overflow: hidden">
+<div style="padding: 14px 16px">
+<div role="radiogroup" aria-label="Start view" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 14px; background: var(--f)">
+<sc-for list="{{views}}" as="o" hint-placeholder-count="3"><button onClick="{{o.pick}}" role="radio" aria-checked="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+</div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 8px 16px; border-top: 1px solid var(--h)">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 800">Go back to it</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">After 5 minutes with no taps</span></span>
+<button onClick="{{toggleReturn}}" role="switch" aria-checked="{{retAria}}" aria-label="Go back to start view" style="{{retTrack}}"><span style="{{retKnob}}"></span></button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isKid}}" hint-placeholder-val="{{false}}">
+<span style="padding: 8px 4px 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Who uses it</span>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; background: var(--p); border: 1px solid var(--h); border-radius: 20px">
+<div style="display: flex; align-items: center; gap: 8px">
+<button onClick="{{kAll}}" aria-pressed="{{kAllAria}}" style="{{kAllStyle}}">Everyone</button>
+<sc-for list="{{kids}}" as="k" hint-placeholder-count="2"><button onClick="{{k.toggle}}" aria-pressed="{{k.aria}}" aria-label="{{k.name}}" style="{{k.style}}"><span style="{{k.avStyle}}"><span class="{{k.cls}}" style="width: 22px; height: 22px"></span></span></button></sc-for>
+<span style="font-size: 14px; font-weight: 700; color: var(--m)">{{kCaption}}</span>
+</div>
+<span style="font-size: 13px; font-weight: 600; color: var(--m)">{{kNote}}</span>
+</div>
+<span style="margin-top: -6px; padding: 0 4px; font-size: 13px; font-weight: 600; color: var(--m)">Dock, volume, check-ins and PIN live on each kid's page, so they follow the kid to any iPad.</span>
+</sc-if>
+
+<span style="padding: 8px 4px 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Parent unlock</span>
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid var(--h); border-radius: 20px; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 8px 16px">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 800">Allow parent unlock</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">{{unlockNote}}</span></span>
+<button onClick="{{toggleUnlock}}" role="switch" aria-checked="{{unAria}}" aria-label="Allow parent unlock" style="{{unTrack}}"><span style="{{unKnob}}"></span></button>
+</div>
+<sc-if value="{{unlockOn}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 8px 16px; border-top: 1px solid var(--h)">
+<span style="font-size: 16px; font-weight: 800">Lock again after</span>
+<div role="radiogroup" aria-label="Lock again after" style="display: flex; gap: 6px"><sc-for list="{{locks}}" as="o" hint-placeholder-count="3"><button onClick="{{o.pick}}" role="radio" aria-checked="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for></div>
+</div>
+</sc-if>
+</div>
+<span style="margin-top: -6px; padding: 0 4px; font-size: 13px; font-weight: 600; color: var(--m)">Export, deleting, pairing and PINs never unlock here. They stay on your phone.</span>
+
+<span style="padding: 8px 4px 0; font-size: 13px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--m)">Screen and sound</span>
+<div style="display: flex; flex-direction: column; background: var(--p); border: 1px solid var(--h); border-radius: 20px; overflow: hidden">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 800">Day or night</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">{{groundNote}}</span></span>
+<div role="radiogroup" aria-label="Day or night" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 14px; background: var(--f)">
+<sc-for list="{{grounds}}" as="o" hint-placeholder-count="4"><button onClick="{{o.pick}}" role="radio" aria-checked="{{o.aria}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+</div>
+</div>
+<sc-for list="{{switches}}" as="w" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 8px 16px; border-top: 1px solid var(--h)">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 800">{{w.label}}</span><span style="font-size: 13px; font-weight: 600; color: var(--m)">{{w.note}}</span></span>
+<button onClick="{{w.toggle}}" role="switch" aria-checked="{{w.aria}}" aria-label="{{w.label}}" style="{{w.track}}"><span style="{{w.knob}}"></span></button>
+</div>
+</sc-for>
+</div>
+
+<button style="height: 46px; border-radius: 14px; background: transparent; border: 1px solid rgba(255,138,61,0.55); color: var(--o); font-size: 15px; font-weight: 800; cursor: pointer">Unpair this iPad</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"ground": {"editor": "enum", "default": "Night", "options": ["Night", "Day"]}, "job": {"editor": "enum", "default": "Family display", "options": ["Family display", "Kid iPad"]}, "kids": {"editor": "enum", "default": "2 kids", "options": ["2 kids", "3 kids"]}, "$preview": {"width": 390, "height": 1900}}'>
+const THEME = {
+  Night: '--g: #15122E; --p: #1E1A3D; --t: #F4EBD9; --m: #BDB5D6; --h: rgba(244,235,217,0.12); --f: rgba(244,235,217,0.08); --y: #FFD23F; --o: #FF8A3D; --off: rgba(244,235,217,0.22); --on: #9BE564',
+  Day: '--g: #F5EFE2; --p: #FFFDF8; --t: #15122E; --m: #5A5478; --h: rgba(21,18,46,0.12); --f: rgba(21,18,46,0.06); --y: #B3124F; --o: #B34A0E; --off: rgba(21,18,46,0.18); --on: #2FA84F'
+};
+const CALS = [['family', 'Family', '#9BE564', 'title'], ['grandma', "Grandma's", '#A99BFF', 'title'], ['work', "Steve's work", '#FF8A3D', 'busy'], ['holidays', 'Holidays', '#FFD23F', 'title']];
+const K = { A: ['Kid A', 'fox', '#29D3FF'], B: ['Kid B', 'octopus', '#FF3E8A'], C: ['Kid C', 'frog', '#9BE564'] };
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const ground = this.props.ground === 'Day' ? 'Day' : 'Night';
+    const job = s.job || (this.props.job === 'Kid iPad' ? 'kid' : 'display');
+    const ids = this.props.kids === '3 kids' ? ['A', 'B', 'C'] : ['A', 'B'];
+    const seg = (on) => 'height: 40px; border-radius: 10px; border: 0; cursor: pointer; font-size: 14px; font-weight: 800; background: ' + (on ? 'var(--t)' : 'transparent') + '; color: ' + (on ? 'var(--g)' : 'var(--t)');
+    const sw = (on) => ({ aria: on ? 'true' : 'false',
+      track: 'width: 52px; height: 32px; flex-shrink: 0; padding: 0; border-radius: 16px; border: 0; cursor: pointer; position: relative; background: ' + (on ? 'var(--on)' : 'var(--off)'),
+      knob: 'position: absolute; top: 3px; left: ' + (on ? '23px' : '3px') + '; width: 26px; height: 26px; border-radius: 50%; background: #FFFDF8; box-shadow: 0 1px 3px rgba(0,0,0,0.35)' });
+    const v = {};
+    v.rootStyle = THEME[ground] + '; width: 390px; min-height: 1900px; box-sizing: border-box; position: relative; background: var(--g); color: var(--t); font-family: \'Archivo\', system-ui, sans-serif; display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 40px';
+    v.isDisplay = job === 'display'; v.isKid = job === 'kid';
+    v.name = job === 'display' ? 'Kitchen iPad' : "Kid A's iPad";
+    v.jobs = [['display', 'Family display'], ['kid', "Kid's iPad"]].map(([id, label]) => ({ label, aria: id === job ? 'true' : 'false', style: seg(id === job), pick: () => this.setState({ job: id }) }));
+    v.jobNote = job === 'display' ? 'Shared by everyone: the kitchen hub with Today, Calendar and Dinners. Kids can see it, so private things stay locked.' : 'A kid opens their own profile here. It never shows parent screens.';
+    const cal = s.cal || {};
+    v.cals = CALS.map(([id, name, color, def], n) => { const cur = cal[id] || def; return { name,
+      dot: 'width: 10px; height: 10px; border-radius: 50%; background: ' + color,
+      rowStyle: 'display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; ' + (n ? 'border-top: 1px solid var(--h)' : ''),
+      opts: [['off', 'Not here'], ['busy', 'Busy'], ['title', 'Title']].map(([oid, label]) => ({ label, aria: oid === cur ? 'true' : 'false',
+        style: 'height: 36px; border-radius: 9px; border: 0; cursor: pointer; font-size: 13px; font-weight: 800; background: ' + (oid === cur ? 'var(--t)' : 'transparent') + '; color: ' + (oid === cur ? 'var(--g)' : 'var(--t)'),
+        pick: () => this.setState({ cal: { ...cal, [id]: oid } }) })) }; });
+    const view = s.view || 'today';
+    v.views = [['today', 'Today'], ['calendar', 'Calendar'], ['dinners', 'Dinners']].map(([id, label]) => ({ label, aria: id === view ? 'true' : 'false', style: seg(id === view), pick: () => this.setState({ view: id }) }));
+    const ret = s.ret !== undefined ? s.ret : true; const r = sw(ret);
+    v.retAria = r.aria; v.retTrack = r.track; v.retKnob = r.knob; v.toggleReturn = () => this.setState({ ret: !ret });
+    const kSel = s.kSel || ['A'];
+    const every = ids.every((i) => kSel.includes(i));
+    v.kids = ids.map((id) => { const on = kSel.includes(id); return { name: K[id][0], cls: 'fx stk fx-' + K[id][1], aria: on ? 'true' : 'false',
+      style: 'width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; background: transparent; border: 0; opacity: ' + (on ? '1' : '0.45') + '; box-shadow: ' + (on ? '0 0 0 3px var(--t)' : 'none'),
+      avStyle: 'width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #0A0818; background: ' + K[id][2],
+      toggle: () => { const next = on ? kSel.filter((x) => x !== id) : kSel.concat([id]); if (next.length) this.setState({ kSel: next }); } }; });
+    v.kAll = () => this.setState({ kSel: ids }); v.kAllAria = every ? 'true' : 'false';
+    v.kAllStyle = 'height: 44px; padding: 0 16px; border-radius: 999px; cursor: pointer; font-size: 15px; font-weight: 800; border: 1px solid ' + (every ? 'var(--t)' : 'var(--h)') + '; background: ' + (every ? 'var(--t)' : 'transparent') + '; color: ' + (every ? 'var(--g)' : 'var(--t)');
+    v.kCaption = every ? 'All ' + ids.length + ' kids' : kSel.map((i) => K[i][0]).join(', ');
+    v.kNote = kSel.length === 1 ? 'Opens straight into ' + K[kSel[0]][0] + "'s profile." : 'Kids tap their avatar to start.';
+    const unDef = job === 'display';
+    const un = s.un && s.un[job] !== undefined ? s.un[job] : unDef; const u = sw(un);
+    v.unAria = u.aria; v.unTrack = u.track; v.unKnob = u.knob; v.unlockOn = un;
+    v.toggleUnlock = () => this.setState({ un: { ...(s.un || {}), [job]: !un } });
+    v.unlockNote = un ? 'Tap your face in the corner and enter your parent PIN' : (job === 'kid' ? 'Off for kid iPads. Use your phone instead.' : 'Off: fixes happen on your phone');
+    const lk = s.lock || '2';
+    v.locks = ['1', '2', '5'].map((m) => ({ label: m + ' min', aria: m === lk ? 'true' : 'false',
+      style: 'height: 36px; padding: 0 12px; border-radius: 999px; cursor: pointer; font-size: 14px; font-weight: 800; border: 1px solid ' + (m === lk ? 'var(--t)' : 'var(--h)') + '; background: ' + (m === lk ? 'var(--t)' : 'transparent') + '; color: ' + (m === lk ? 'var(--g)' : 'var(--t)'),
+      pick: () => this.setState({ lock: m }) }));
+    const gr = s.gr || 'auto';
+    v.grounds = [['auto', 'Auto'], ['day', 'Day'], ['night', 'Night'], ['device', 'Device']].map(([id, label]) => ({ label, aria: id === gr ? 'true' : 'false', style: seg(id === gr), pick: () => this.setState({ gr: id }) }));
+    v.groundNote = { auto: 'Day from Dawn Patrol until Last Run, night after', day: 'Always the light look', night: 'Always the dark look', device: "Follows the iPad's own light or dark setting" }[gr];
+    const sws = s.sws || {};
+    const list = [['sound', 'Sound', 'Taps, cheers and celebrations', true], ['speak', 'Read-aloud', job === 'display' ? 'Speaks dinner and countdowns when tapped' : 'Reads steps and labels out loud', job === 'kid'], ['dim', 'Dim at Lights out', 'Turns the screen way down after bedtime', true]];
+    v.switches = list.map(([id, label, note, def]) => { const on = sws[id] !== undefined ? sws[id] : def; const o = sw(on); return { label, note, aria: o.aria, track: o.track, knob: o.knob, toggle: () => this.setState({ sws: { ...sws, [id]: !on } }) }; });
+    return v;
+  }
+}
+</script>
+</body>
+</html>
