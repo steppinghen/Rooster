@@ -178,6 +178,10 @@ My look (icon and color) is the start. More personalization is wanted later, but
 
 Direction the family likes: island, Caribbean, Hawaiian warmth, a touch of Disney, and something that ties into the Spanish goal. Candidates so far: Marea (tide; the day has tides), La Ola (the wave), Puerto (harbour, where ships come home), Casita (little house), Honu (Hawaiian green sea turtle, echoing the turtle mascot), Hale (Hawaiian for house, a fit for the home-base layer). Ohana is loved but very widely used by family apps and strongly tied to Disney.
 
+### Coop TV folds into the Deck
+
+The 1.5 embedded view is the first step. The direction is for Coop TV to become a full Deck module: restyled in the Deck's look (Sticker Punk, day and night, normal and focus), skipping its profile picker because the Deck already knows which kid the iPad belongs to, and moving its parent settings (channels, per-kid limits, personalization) into the Deck's Back Office, possibly as its own module settings page. Needs its own design pass before any code, starting from the current Coop TV screens and its open bugs.
+
 ### Special stickers a parent hands out
 
 Some stickers may later be given by a parent instead of earned through a routine: the travel stickers for a trip that happened, or a one-off for a big moment. Not designed yet. If it comes back, it must follow the sticker rules already in place (never a reward taken away, never a count of what was missed, no sibling comparison) and land through the same paw-slap moment.
