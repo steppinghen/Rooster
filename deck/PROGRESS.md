@@ -407,3 +407,34 @@ Session handoff for `PHASE15_PLAN.md`. On a new session or after compaction, rea
 - **rls-auditor:** 1 blocking finding, fixed. A locked display could read titles from calendars it shows as Busy or Not here; display reads now need Title (`private.my_display_mode`). Hardening taken: display-only `device_calendars`, a fixed-code `last_error`, sticker week and distinct offer, unlock rules (display only, Lock final), parents-only signals for unlistable calendars, notes of a departed author. REVIEW.md P1b. Its 7 `audit_phase15_*` files were added; their fixed todos were promoted to plain assertions. One `todo` remains for slice 8 (award source).
 - New questions for the smoke check: **A65** (schema: a table for the look RPC's rate limit, needed by slice 13) and **A66** (home location readable by iPads).
 - pgTAP on `deck-build`: 32 files, **4,659 assertions PASS** (1 expected todo). e2e: the full run after the schema passed (207 + export-delete fixed and rerun 3/3).
+
+## Slice 2: Theme and core components (done)
+
+- Tokens (`src/styles/tokens.css`):
+  - 1.5 switch variables for the dock's active item, the header avatar, the corner and the trim.
+  - The kid's color resolves on each component through `var(--kid, var(--accent))` and the "initial" fallback, so a kid scope can set either.
+  - The headline shadow is now cyan right and magenta left, as in the B2 frames.
+  - A parent token set for Night and Day under `data-look="parent"` (docs "Parent light mode"). Parent screens adopt it in slice 14.
+- `DieCut` + `sizeClass`:
+  - One die-cut for every sticker, with `lg`/`md`/`sm` chosen by rendered size and volume; focus never uses `lg`.
+  - The rim is thinner at `sm`, and tilt applies at normal volume only. Phase 1's `Sticker` now renders through it.
+- `KidHeader`: the sky band layers (the trim, and the 400 px corner at the sun's spot, both hidden in focus), the marker greeting, the offset headline, and an avatar button (82 px for pre-readers).
+- `InkDock`:
+  - Full, and slim (Home and Wave Check, centred, 230 × 84).
+  - One active item: filled with the kid's color at normal volume, ringed in focus.
+  - Cyan "Check in" and yellow to-do tags: tilted and popping once at normal volume, still and straight in focus or with Reduce Motion. Text on them is ink.
+- `.dk-kidscreen`: the frame every 1.5 kid screen uses (sky band, content, dock flush at the bottom, no scroll).
+- Styleguide: "Phase 1.5 kit" (every ground × volume × age) and "Parent look". e2e `slice15-2-kit.spec.ts`. The Phase 1 overflow check exempts the corner overhang, as it does the day sun.
+- **kid-ux-tester:** no blocking findings. Its spec `slice15-2-ux.spec.ts` (and `e2e/helpers/frames.ts`, which renders a canvas frame from its `renderVals()` defaults for side-by-side comparison) passes. Fixes taken from its non-blocking list:
+  - The dock never shrinks, and `.dk-kidscreen__body` takes what's left.
+  - Dock icons are 34 px (46 px for pre-readers), with the frames' glyphs: a side-view skateboard, a wave curl, a closed book, a TV.
+  - The `.dk-kidscreen--task` variant has a 34 px sky band, with the sun higher.
+  - The check-in tag is hidden on an active Wave Check item, and only one tag pops at a time.
+  - Dev warnings fire when Wave Check is missing or the active key isn't on the dock.
+  - Inactive dock labels are paper.
+- Left for later slices:
+  - The reader-landscape dock size (the frame gives readers 96 px items in landscape): slice 5.
+  - What "pops once" means across remounts: slice 4.
+  - A shared check that the dock's bottom stays on screen: slice 5, with the first real screen.
+  - The slim dock's active item on routines is **Home**. The RoutineDay frame shows none; the brief says exactly one. Recorded as deviation V4.
+- e2e on `deck-build`: 215 passed, 0 failed before the fixes; the slice 2, styleguide and kid-home specs (152) pass after them.

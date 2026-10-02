@@ -1,10 +1,13 @@
 import { useState, type CSSProperties } from 'react';
-import { ART, ART_KEYS } from '../art/art';
+import { ART, ART_KEYS, artSrc } from '../art/art';
 import { RootTheme, ThemeScope } from '../theme/ThemeScope';
 import type { Ground, Volume } from '../theme/volume';
 import { AvatarChip } from '../ui/AvatarChip';
 import { Burst } from '../ui/Burst';
 import { DaySun } from '../ui/DaySun';
+import { DieCut } from '../ui/DieCut';
+import { InkDock, type DockItem } from '../ui/InkDock';
+import { KidHeader } from '../ui/KidHeader';
 import { Icon } from '../ui/Icon';
 import { NavBar, type NavItem } from '../ui/NavBar';
 import { PressButton } from '../ui/PressButton';
@@ -41,6 +44,48 @@ function Toggle<T extends string>({ label, value, options, onChange }: { label: 
           {o}
         </PressButton>
       ))}
+    </div>
+  );
+}
+
+const DOCK: DockItem[] = [
+  { key: 'home', label: 'Home', icon: 'home', onSelect: () => {} },
+  { key: 'my_week', label: 'My week', icon: 'skate', onSelect: () => {} },
+  { key: 'wave_check', label: 'Wave Check', icon: 'wave', onSelect: () => {}, tag: { kind: 'checkin', text: 'Check in', pop: true } },
+  { key: 'coop_tv', label: 'Coop TV', icon: 'tv', onSelect: () => {} },
+];
+const CUTS = [
+  { px: 96, tilt: -8, art: 'beach' },
+  { px: 64, tilt: 6, art: 'star' },
+  { px: 44, tilt: -5, art: 'moon' },
+] as const;
+const DOCK_TODO: DockItem[] = [...DOCK.slice(0, 3), { key: 'session', label: 'Session', icon: 'bookClosed', onSelect: () => {}, tag: { kind: 'todo', text: '1 mission' } }];
+
+/**
+ * Phase 1.5 kit, once: the kid header (sky band, greeting, offset headline, avatar on the corner
+ * slot), the die-cut at each size class, and the ink dock full and slim. The corner and trim art
+ * arrive with the export (slice 3); here they are outlined placeholders.
+ */
+function KitSet({ age = 'reader', dock = DOCK }: { age?: 'reader' | 'prereader'; dock?: DockItem[] }) {
+  return (
+    <div className="sg-kit dk-kidscreen" data-age={age} data-audience="kid" style={{ '--kid': 'var(--cyan)', '--accent': 'var(--cyan)' } as CSSProperties}>
+      <KidHeader
+        greeting="Morning, Kid A!"
+        title="The Point"
+        kid={{ nickname: 'Kid A', avatar: 'star', accent: 'cyan' }}
+        onAvatar={() => {}}
+        corner={<span className="sg-placeholder sg-placeholder--circle">sun / holiday circle (slice 3)</span>}
+        trim={<span className="sg-placeholder sg-placeholder--trim">holiday trim (slice 3)</span>}
+      />
+      <div className="sg-row sg-cuts" data-testid="cuts">
+        {CUTS.map((c) => (
+          <DieCut key={c.px} size={c.px} tilt={c.tilt} label={`${c.px} px sticker`}>
+            <img src={artSrc(c.art)} alt="" />
+          </DieCut>
+        ))}
+      </div>
+      <InkDock items={dock} active="home" />
+      <InkDock items={dock} active="wave_check" variant="slim" />
     </div>
   );
 }
@@ -197,6 +242,48 @@ export function Styleguide() {
               <p className="sg-scope__label">Pre-reader sizing (night · normal)</p>
               <ComponentSet age="prereader" />
             </ThemeScope>
+          </div>
+        </section>
+
+        <section aria-labelledby="sg-kit">
+          <h2 id="sg-kit" className="sg-h2">
+            Phase 1.5 kit: header, die-cut and ink dock
+          </h2>
+          <p className="sg-note">
+            Every ground × volume, reader and pre-reader. Focus: no marker, no offset headline, no corner or trim, the dock's active item ringed instead of filled, tags still and straight.
+          </p>
+          <div className="sg-matrix sg-matrix--kit">
+            {COMBOS.flatMap((c) =>
+              (['reader', 'prereader'] as const).map((age) => (
+                <ThemeScope key={`${c.ground}-${c.volume}-${age}`} {...c} className="sg-scope sg-scope--kit" data-testid={`kit-${c.ground}-${c.volume}-${age}`}>
+                  <p className="sg-scope__label">
+                    {c.ground} · {c.volume} · {age}
+                  </p>
+                  <KitSet age={age} dock={age === 'reader' ? DOCK_TODO : DOCK} />
+                </ThemeScope>
+              )),
+            )}
+          </div>
+        </section>
+
+        <section aria-labelledby="sg-parent">
+          <h2 id="sg-parent" className="sg-h2">
+            Parent look (Night and Day)
+          </h2>
+          <div className="sg-matrix">
+            {(['night', 'day'] as const).map((g) => (
+              <div key={g} data-look="parent" data-ground={g} className="sg-parent" data-testid={`parent-${g}`}>
+                <p className="sg-parent__title">Today</p>
+                <div className="sg-parent__panel">
+                  <p>Kid A · Dawn Patrol</p>
+                  <p className="sg-parent__muted">Shoes, Teeth, Backpack left</p>
+                  <a href="#sg-parent">Add a note</a>
+                </div>
+                <button type="button" className="sg-parent__btn">
+                  Save
+                </button>
+              </div>
+            ))}
           </div>
         </section>
 

@@ -197,24 +197,7 @@
 
 /* ---------- Sticker ---------- */
 
-/* White die-cut border, heavy ink outline, hard offset shadow, small tilt (normal only). */
-.dk-sticker {
-  display: inline-block;
-  line-height: 0;
-  transform: rotate(calc(var(--tilt, 0deg) * var(--tilt-on)));
-  filter: drop-shadow(3px 0 0 var(--white)) drop-shadow(-3px 0 0 var(--white))
-    drop-shadow(0 3px 0 var(--white)) drop-shadow(0 -3px 0 var(--white))
-    drop-shadow(2px 0 0 var(--ink)) drop-shadow(-2px 0 0 var(--ink))
-    drop-shadow(0 2px 0 var(--ink)) drop-shadow(0 -2px 0 var(--ink))
-    drop-shadow(4px 5px 0 var(--ink));
-}
-
-.dk-sticker img {
-  width: var(--sticker-size, 96px);
-  height: var(--sticker-size, 96px);
-  object-fit: contain;
-  pointer-events: none;
-}
+/* .dk-sticker is a DieCut (see "Die-cut" below); this hook only remains for screen-level sizing. */
 
 /* ---------- Avatar chip ---------- */
 
@@ -466,4 +449,299 @@
   text-transform: uppercase;
   text-shadow: var(--headline-shadow-sm);
   margin-bottom: 14px;
+}
+
+/* ---------- Die-cut (Phase 1.5) ----------
+   One cut for every sticker: paper rim, ink line, hard offset shadow (B2 frames .stk / .stk-s).
+   The small class gets the thinner cut. Tilt only at normal volume (--tilt-on). */
+.dk-cut {
+  --rim: 2.5px;
+  --line: 1.5px;
+  --drop: 3px;
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--cut-size);
+  height: var(--cut-size);
+  line-height: 0;
+  transform: rotate(calc(var(--tilt, 0deg) * var(--tilt-on)));
+  filter: drop-shadow(var(--rim) 0 0 var(--paper)) drop-shadow(calc(-1 * var(--rim)) 0 0 var(--paper))
+    drop-shadow(0 var(--rim) 0 var(--paper)) drop-shadow(0 calc(-1 * var(--rim)) 0 var(--paper))
+    drop-shadow(var(--line) 0 0 var(--ink)) drop-shadow(calc(-1 * var(--line)) 0 0 var(--ink))
+    drop-shadow(0 var(--line) 0 var(--ink)) drop-shadow(0 calc(-1 * var(--line)) 0 var(--ink))
+    drop-shadow(var(--drop) var(--drop) 0 var(--ink));
+}
+.dk-cut--sm {
+  --rim: 1.75px;
+  --line: 1px;
+  --drop: 2px;
+}
+.dk-cut > img,
+.dk-cut > svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* ---------- Kid screen frame (Phase 1.5) ----------
+   Every kid browsing or task screen: the permanent sky band on top (accents hang in it), the
+   content, and the ink dock flush along the bottom. Fits the iPad with no scrolling. */
+.dk-kidscreen {
+  --sky-band: 70px;
+  --gutter: 40px;
+  position: relative;
+  box-sizing: border-box;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: var(--sky-band) var(--gutter) 0;
+}
+@media (orientation: landscape) {
+  .dk-kidscreen {
+    --sky-band: 60px;
+  }
+}
+/* Task and info screens have a thinner sky band, and the sun sits higher (RoutineDay frame). */
+.dk-kidscreen--task {
+  --sky-band: 34px;
+  --corner-top: -170px;
+}
+/* The screen's own content takes what's left, and gives way before the dock does. */
+.dk-kidscreen__body {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Holiday trim: a layer above the background and below all content; never tappable. */
+.dk-trim {
+  display: var(--corner-display);
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 72px;
+  max-height: 72px;
+  z-index: 0;
+  pointer-events: none;
+}
+.dk-trim > * {
+  height: 72px;
+}
+
+/* Seasonal sun or holiday circle: 400 px, at exactly the sun's spot behind the avatar. */
+.dk-corner {
+  display: var(--corner-display);
+  position: absolute;
+  right: -150px;
+  top: var(--corner-top, -134px);
+  width: 400px;
+  height: 400px;
+  z-index: 0;
+  pointer-events: none;
+}
+.dk-corner > * {
+  width: 100%;
+  height: 100%;
+}
+
+.dk-kidhead {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.dk-kidhead__words {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.dk-kidhead__greet {
+  font-size: 22px;
+  align-self: flex-start;
+}
+[data-volume='focus'] .dk-kidhead__greet {
+  font-size: 20px;
+  font-weight: 800;
+}
+.dk-kidhead__title {
+  margin: 0;
+  font-weight: 400;
+  /* 58 px on the iPad; shrinks on narrow screens rather than overflowing. */
+  font-size: min(58px, 11vw);
+  line-height: 0.95;
+  letter-spacing: -1px;
+}
+[data-age='prereader'] .dk-kidhead__title,
+.dk-kidscreen--landscape .dk-kidhead__title {
+  font-size: min(50px, 10vw);
+}
+
+.dk-head-avatar {
+  appearance: none;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 78px;
+  height: 78px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--head-avatar-bg, var(--kid, var(--accent)));
+  border: 4px solid var(--ink);
+  box-shadow: var(--head-avatar-ring, 0 0 0 4px var(--kid, var(--accent))), var(--head-avatar-shadow);
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.dk-head-avatar:is(span) {
+  cursor: default;
+}
+/* The 5-year-old's targets are at least 80 pt. */
+[data-age='prereader'] .dk-head-avatar {
+  width: 82px;
+  height: 82px;
+}
+.dk-head-avatar img {
+  width: 52px;
+  height: 52px;
+  pointer-events: none;
+}
+
+/* ---------- Ink dock (Phase 1.5) ---------- */
+.dk-dock {
+  position: relative;
+  z-index: 1;
+  margin: 4px calc(-1 * var(--gutter, 40px)) 0;
+  display: flex;
+  gap: 6px;
+  padding: 12px 20px max(22px, env(safe-area-inset-bottom));
+  background: var(--night-text);
+  border-top: 5px solid var(--ink);
+  margin-top: auto;
+  /* Never pushed below the fold: content gives way, the dock doesn't. */
+  flex-shrink: 0;
+}
+[data-age='prereader'] .dk-dock {
+  padding: 10px 60px max(18px, env(safe-area-inset-bottom));
+}
+.dk-dock__item {
+  appearance: none;
+  position: relative;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 20px;
+  border: 3px solid transparent;
+  background: transparent;
+  color: var(--paper);
+  text-decoration: none;
+  font: inherit;
+  cursor: pointer;
+}
+[data-age='prereader'] .dk-dock__item {
+  height: 96px;
+}
+.dk-dock__item[aria-current='page'] {
+  background: var(--dock-active-bg, var(--kid, var(--accent)));
+  color: var(--dock-active-fg);
+  border-color: var(--dock-active-border, var(--kid, var(--accent)));
+}
+.dk-dock__item:active {
+  transform: translateY(2px);
+}
+.dk-dock__icon {
+  display: flex;
+  line-height: 0;
+}
+/* The pre-reader's picture is the main cue: bigger icons (frames: 46 px). */
+[data-age='prereader'] .dk-dock__icon svg {
+  width: 46px;
+  height: 46px;
+}
+.dk-dock__label {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+[data-age='prereader'] .dk-dock__label {
+  font-size: 15px;
+}
+.dk-dock__tag {
+  position: absolute;
+  top: -12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.dk-dock__tag--checkin {
+  right: 0;
+  padding-left: 6px;
+  background: var(--cyan);
+  transform: rotate(calc(6deg * var(--dock-tag-tilt)));
+}
+.dk-dock__tag--todo {
+  right: 2px;
+  background: var(--yellow);
+  transform: rotate(calc(-6deg * var(--dock-tag-tilt)));
+}
+
+/* Tag pop: stepped frames 0.4 → 1.15 → 1, once. Reduce Motion: it just appears. */
+@keyframes dk-pop-checkin {
+  0% { transform: rotate(6deg) scale(0.4); }
+  50% { transform: rotate(6deg) scale(1.15); }
+  100% { transform: rotate(6deg) scale(1); }
+}
+@keyframes dk-pop-todo {
+  0% { transform: rotate(-6deg) scale(0.4); }
+  50% { transform: rotate(-6deg) scale(1.15); }
+  100% { transform: rotate(-6deg) scale(1); }
+}
+.dk-dock__tag--checkin.dk-pop {
+  animation: dk-pop-checkin 0.36s steps(1, end) 1 both;
+}
+.dk-dock__tag--todo.dk-pop {
+  animation: dk-pop-todo 0.36s steps(1, end) 1 both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dk-dock__tag.dk-pop {
+    animation: none;
+  }
+}
+/* Slim dock (task screens): Home and Wave Check, centred, fixed width (RoutineDay frame). */
+.dk-dock--slim {
+  justify-content: center;
+  gap: 24px;
+}
+.dk-dock--slim .dk-dock__item {
+  flex: 0 0 auto;
+  width: min(230px, 42%);
+  height: 84px;
+}
+.dk-dock--slim .dk-dock__label {
+  font-size: 15px;
 }

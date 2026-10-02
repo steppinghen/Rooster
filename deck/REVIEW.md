@@ -825,3 +825,12 @@ Needs changes to the Coop TV app (outside `rooster/deck`, not built):
 |---|---|---|
 | A65 | **(schema) The kid-side look RPC's rate limit (slice 13) needs a table** for attempts, like `pin_attempts`. The data model doesn't list one, so per the plan this is a stop. | **Ask at the smoke check, before slice 13.** Default: `look_attempts (family_id, device_user_id, kid_id, attempted_at)` with RLS on and no grants, purged nightly, covered by Delete family; at most 10 look saves per kid per device per hour |
 | A66 | Home location on iPads (P1 trade-off) | Default: keep it in `families.settings` as approved; iPads can read the rounded location. Say if you want it moved to a parents-only place (a schema change) |
+
+## 1.5-3. Deviations (Phase 1.5)
+
+| # | Deviation | From | Why |
+|---|---|---|---|
+| V1 | The `sm` die-cut has a **thinner** rim (1.75 px rim, 1 px line) | Art spec "sm: Off, thicker rim" | `docs/stickers-and-holidays.md` ("A thinner cut is used at the 44 px My week size") and the frames (`.stk-s`) both use the thinner one; the frame wins on visuals |
+| V2 | Text on the dock's active item and its tags is ink `#0A0818` | Frames use `#15122E` | The brief: "Text on accents is always ink"; the two are visually the same, and the Phase 1 contrast check holds the brief's rule |
+| V4 | Routine and other task screens light **Home** on the slim dock | RoutineDay frame: no active item | The brief: every screen shows exactly one active dock item; MyLookDay shows Home lit on the same slim dock |
+| V3 | The kid headline shrinks below 58 px on screens narrower than about 530 px (`min(58px, 11vw)`) | Frame: 58 px | Kid screens are for iPads; on a phone the header must not overflow |

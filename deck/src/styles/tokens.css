@@ -29,7 +29,9 @@
   --lilac: #a99bff;
   --orange: #ff8a3d;
 
-  /* Per-kid accent; kid-scoped containers override it. Text on accents is always ink. */
+  /* Per-kid accent; kid-scoped containers override it. Text on accents is always ink.
+     The art spec calls it --kid (kid-tinted decks and trims); components read
+     var(--kid, var(--accent)) so either one set on a kid scope works. */
   --accent: var(--magenta);
 
   --font-display: 'Archivo Black', 'Arial Black', system-ui, sans-serif;
@@ -109,8 +111,9 @@
   --ground-image: radial-gradient(var(--halftone-dot) 1.2px, transparent 1.7px);
   --ground-image-size: 10px 10px;
   --tilt-on: 1;
-  --headline-shadow: 4px 0 0 var(--magenta), -4px 0 0 var(--cyan);
-  --headline-shadow-sm: 2px 0 0 var(--magenta), -2px 0 0 var(--cyan);
+  /* Misregistered headline: cyan right, magenta left, whatever the kid's color (B2 frames). */
+  --headline-shadow: 4px 0 0 var(--cyan), -4px 0 0 var(--magenta);
+  --headline-shadow-sm: 2px 0 0 var(--cyan), -2px 0 0 var(--magenta);
   --marker-font: var(--font-marker-face);
   --marker-weight: 400;
   --marker-color: var(--marker);
@@ -128,6 +131,18 @@
   --feel-text: var(--ink);
   --halftone-on: 1;
   --dot-max: 999px;
+  /* Ink dock: the active item fills with the kid's color; tags tilt and pop. "initial" is
+     guaranteed-invalid, so the component falls back to the kid color resolved on itself. */
+  --dock-active-bg: initial;
+  --dock-active-fg: var(--ink);
+  --dock-active-border: var(--ink);
+  --dock-tag-tilt: 1;
+  /* Header avatar: accent disc with a hard shadow. */
+  --head-avatar-bg: initial;
+  --head-avatar-ring: 0 0 0 0 transparent;
+  --head-avatar-shadow: 4px 4px 0 var(--ink);
+  /* The seasonal sun or holiday circle and the holiday trim show at normal volume only. */
+  --corner-display: block;
 }
 
 [data-volume='focus'] {
@@ -155,9 +170,54 @@
   --halftone-on: 0;
   /* Progress dots stay small in focus: the accent is an indicator, not a fill. */
   --dot-max: 32px;
+  /* Ink dock stays ink; the active item gets a ring in the kid's color, tags show still. */
+  --dock-active-bg: transparent;
+  --dock-active-fg: var(--nav-text);
+  --dock-active-border: initial;
+  --dock-tag-tilt: 0;
+  --head-avatar-bg: var(--paper);
+  --head-avatar-ring: initial;
+  --head-avatar-shadow: 0 0 0 0 transparent;
+  --corner-display: none;
 }
 
 /* Last Run and Lights out are always night, flat and darker (applied with data-scene). */
 [data-scene='lastrun'] {
   --ground: var(--ground-lastrun);
+}
+
+/* ---------- Parent look (Phase 1.5) ----------
+   Parent screens (phone and kitchen hub) use a quieter third look with its own day/night
+   switch, written once (docs/design-system.md "Parent light mode"). Set data-look="parent"
+   next to data-ground on the parent root. */
+
+[data-look='parent'][data-ground='night'],
+[data-look='parent'] [data-ground='night'] {
+  --p-ground: #15122e;
+  --p-panel: #1e1a3d;
+  --p-text: #f4ebd9;
+  --p-muted: #bdb5d6;
+  --p-link: #ffd23f;
+  --p-hair: rgba(244, 235, 217, 0.14);
+  --p-fill: rgba(244, 235, 217, 0.07);
+  --p-switch-on: #9be564;
+  --p-btn-bg: #ffd23f;
+  --p-btn-fg: var(--ink);
+  --p-focus: #ffd23f;
+}
+
+[data-look='parent'][data-ground='day'],
+[data-look='parent'] [data-ground='day'] {
+  --p-ground: #f5efe2;
+  --p-panel: #fffdf8;
+  --p-text: #15122e;
+  --p-muted: #5a5478;
+  --p-link: #b3124f;
+  --p-hair: rgba(10, 8, 24, 0.14);
+  --p-fill: rgba(10, 8, 24, 0.05);
+  --p-switch-on: #2fa84f;
+  /* Primary buttons flip to ink with paper text by day. */
+  --p-btn-bg: var(--ink);
+  --p-btn-fg: var(--paper);
+  --p-focus: #b3124f;
 }

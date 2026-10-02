@@ -493,7 +493,8 @@ test.describe('slice 0: layout and overflow', () => {
       for (const root of clipRoots) {
         const rr = root.getBoundingClientRect();
         for (const el of root.querySelectorAll('*')) {
-          if (el.closest('.dk-sun') || el.closest('svg')) continue;
+          // The day sun and the 1.5 corner circle (sun or holiday) overhang the screen on purpose.
+          if (el.closest('.dk-sun') || el.closest('.dk-corner') || el.closest('svg')) continue;
           const r = el.getBoundingClientRect();
           if (!r.width || !r.height) continue;
           // tolerate 2px for rotation antialiasing
@@ -504,7 +505,7 @@ test.describe('slice 0: layout and overflow', () => {
       // The day sun overhangs on purpose (clipped by the scope), so it is hidden while measuring.
       // Small tilts legitimately add 2-3 px of overflow, so rows of tilted children get 3 px slack.
       const qa = (window as unknown as { __qa: QA }).__qa;
-      const suns = [...document.querySelectorAll<HTMLElement>('.dk-sun')];
+      const suns = [...document.querySelectorAll<HTMLElement>('.dk-sun, .dk-corner')];
       suns.forEach((x) => (x.style.display = 'none'));
       for (const el of document.querySelectorAll('main.sg *')) {
         const he = el as HTMLElement;

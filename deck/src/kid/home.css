@@ -139,7 +139,7 @@
 
 @media (max-width: 560px) {
   .home__hero .dk-sticker {
-    --sticker-size: 110px !important;
+    --cut-size: 110px !important;
   }
   .home__speak {
     width: 72px;
