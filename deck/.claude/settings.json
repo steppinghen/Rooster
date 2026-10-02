@@ -50,6 +50,10 @@
       "Bash(npx supabase link:*)",
       "Bash(npx supabase db push:*)",
       "Bash(npx supabase * --linked*)",
+      "Bash(supabase functions deploy:*)",
+      "Bash(supabase secrets set:*)",
+      "Bash(npx supabase functions deploy:*)",
+      "Bash(npx supabase secrets set:*)",
 
       "Bash(netlify deploy:*)",
       "Bash(netlify link:*)",

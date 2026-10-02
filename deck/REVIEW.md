@@ -579,6 +579,36 @@ Added on top of Phase 1's. Branch `deck/phase-1.5`.
 
 `CLAUDE.md` and `docs/` read against `PHASE15_PLAN.md` and the 76 frames in `design/canvas/`. Each item has the default I'll take if you don't change it. **Items marked (schema) need a data-model change the brief doesn't list**, which the plan says is a stop; I need a yes or no on each before slice 1.
 
+### Parent's answers (2026-10-02)
+
+Every default above is taken, except:
+
+| # | Answer |
+|---|---|
+| A4 | **Coop TV is a module screen inside the Deck, never a link out.** A full-screen view of the Coop TV app served from the Deck's own origin (`/tv`, through a Netlify rewrite, so Safari doesn't partition its storage), with the Deck's dock underneath and Coop TV active. Focus modes and access holds close the view after the heads-up and hide the dock item. In 1.5 the view shows Coop TV's own profile picker. Anything that changes the Coop TV app itself is outside `rooster/deck`: planned in "Coop TV view" below, not built. Device test added: open Coop TV from the dock under Guided Access and come back. **Direction (not 1.5):** Coop TV becomes a full Deck module in the Deck's look, skips its profile picker because the Deck knows the kid, and its settings move into Back Office. |
+| A59 | **Show and speak Mara and Costa in 1.5.** Dog names are stored in `families.settings` (defaults Mara and Costa), editable by a parent later. The rooster and turtle stay unnamed until Phase 2 (X5). |
+| A36, A37, A39, A40, A41, A43 | **Approved**, plus the dog-names key in `families.settings` (A59). |
+| A14 | **The display's per-calendar mode decides** (Title, Busy or Not here). **Any event hidden from kids shows as Busy** on a locked display, even when its calendar is Title. Filtered in the database. (A15 follows: hidden is Busy, not "Private".) |
+| A48 | Costa's rider sticker will be drawn on the canvas and sent as an updated frame. Until then the Mara rider is used for both dogs, and the export check keeps flagging it. |
+| Gate 2 | `supabase functions deploy` and `supabase secrets set` are **added to the deny list now**; the parent runs them at Gate 2. |
+
+### Coop TV view (A4): plan and what blocks the later move
+
+Built in slice 14 with the dock picker (Deck side only):
+- `/tv/*` is a Netlify proxy rewrite (`status = 200`) to the Coop TV site; locally, Vite proxies `/tv` to Coop TV's `netlify dev` on 8893. The kid screen `/kid/:id/tv` shows it full screen in an iframe at `/tv/`, with the full dock underneath, Coop TV active.
+- Focus modes and access holds: the module leaves the dock, and an open view closes when the heads-up ends (it stays open, with the heads-up over it, during the 2 minutes).
+- The Deck's service worker must not answer `/tv` (`navigateFallbackDenylist`), and the anti-framing headers become `X-Frame-Options: SAMEORIGIN` and `frame-ancestors 'self'` so the Deck can frame its own `/tv` while no one else can frame the Deck.
+
+Needs changes to the Coop TV app (outside `rooster/deck`, not built):
+1. **Its function calls are absolute** (`/.netlify/functions/parent-write`, `kid-update`, `sync-now`). Under `/tv` they'd hit the Deck's functions. Coop TV needs a configurable function base (for example `/tv/api/…`, which the Deck proxies to Coop TV's functions).
+2. **Third-party scripts on the Deck's origin.** Coop TV's page loads supabase-js from jsDelivr, Google Fonts, and the YouTube IFrame API script into the page itself. Served from the Deck's origin, those scripts run with full access to the Deck's `localStorage`, which holds the iPad's device session. That breaks the brief's "no third parties beyond what's self-hosted" (req. 7) for the Deck. Coop TV would need to self-host supabase-js and its fonts, and play videos in a cross-origin YouTube iframe without loading `iframe_api` into its own page (or load the player inside a nested `/tv/player` frame that holds nothing).
+3. **Being told which kid is watching** (for skipping its picker later): a `postMessage` handshake from the Deck to the `/tv` frame with the kid's Coop profile id, with no Deck token shared. Coop TV's profiles need a mapping to Deck kids (stored on the Coop side).
+4. **Settings into Back Office** (later): Coop TV's parent writes go through its own PIN-checked function on the shared rooster project. Moving them into the Deck's Back Office means either the Deck calling those functions server-side, or migrating Coop TV's tables into the Deck's project. The second conflicts with A1's separate-project decision; decide when that phase comes.
+
+| # | Question | Default |
+|---|---|---|
+| A64 | Item 2: until Coop TV drops its third-party scripts, any script it loads can read the Deck's device session on a kid iPad | **Ask.** Default: build the view in slice 14 as decided, but **Coop TV stays unpickable** ("Coming soon" in Kid settings) until Coop TV is self-hosted and no third-party script runs on its page. The alternative is to accept the risk for 1.5 |
+
 ### Decided
 
 | # | Item | Decision |
@@ -591,7 +621,7 @@ Added on top of Phase 1's. Branch `deck/phase-1.5`.
 | # | Where | Contradiction | Default |
 |---|---|---|---|
 | A3 | parent-screens "Kid settings" vs "Reachability rule" | Dock picks are "Session, Coop TV, Tune Shop, Sticker Wall and Tour Dates", but also "Sticker Wall and Tour Dates are no longer dock items" | Picks are **Session, Coop TV, Tune Shop**, shown with their reach labels; only **Coop TV** can be picked in 1.5 (Session "Comes in Phase 2", Tune Shop "Phase 3"), as BackOfficeKid draws it |
-| A4 | Coop TV | It's the only real pick, but it's a separate rooster app (`coop/`), not a module in The Deck. Nothing says what the dock item opens. | **Ask.** Default: a `coop_tv` module whose dock item opens the Coop TV site in the same window, from a URL a parent enters in Back Office. Kids leave The Deck for it (Guided Access permitting), and nothing calls out from the server |
+| A4 | Coop TV | It's the only real pick, but it's a separate rooster app (`coop/`), not a module in The Deck. Nothing says what the dock item opens. | **Answered: see Parent's answers.** Was: a `coop_tv` module whose dock item opens the Coop TV site in the same window, from a URL a parent enters in Back Office. Kids leave The Deck for it (Guided Access permitting), and nothing calls out from the server |
 | A5 | Accent colors | design-system names magenta, cyan, yellow, lime, lilac, orange; kid-screens and My look say Pink, Blue, Yellow, Green, Purple, Orange; data-model says "accent hexes" | Keep Phase 1's `accent` enum keys (magenta…orange). Show the friendly names (Pink…Orange) to kids and parents |
 | A6 | Sticker cap | "At most 4 sticker routines a day" (an editor cap) vs acceptance item 4, "a fifth sticker routine in a day earns no sticker" | The editor shows the count against 4 per kid but doesn't block. The **database caps awards at 4 per kid per family-local day**, and a fifth finished sticker routine plays only the celebration. Last Run's quiet reveal counts toward the 4 |
 | A7 | Birthday window | "Accents show from 14 days before" vs "the birthday kid gets the trim and Party Bunting deck in their birthday week" | Birthday trim and circle in the same 14-day window as holidays; Party Bunting deck in the Mon–Sun birthday week; birthday kid only |
