@@ -30,13 +30,15 @@ export function buildExportZip(ex: FamilyExport): Uint8Array {
   const t = ex.tables;
   const kids = new Map((t.kids ?? []).map((k) => [str(k.id), str(k.nickname)]));
   const routines = new Map((t.routines ?? []).map((r) => [str(r.id), r]));
+  const routineKids = new Map<string, string[]>();
+  for (const rk of t.routine_kids ?? []) routineKids.set(str(rk.routine_id), [...(routineKids.get(str(rk.routine_id)) ?? []), kids.get(str(rk.kid_id)) ?? '']);
 
   const files: Record<string, Uint8Array> = {
     'export.json': strToU8(JSON.stringify(ex, null, 2)),
     'events.csv': strToU8(
       toCsv(
-        ['date', 'title', 'kind', 'shown to kids', 'every year', 'icon'],
-        (t.events ?? []).map((e) => [e.on_date, e.title, e.kind, e.visible_to_kids ? 'yes' : 'no', e.repeats_yearly ? 'yes' : 'no', e.icon]),
+        ['date', 'title', 'kind', 'kids (inherit, shown, hidden)', 'countdown', 'every year', 'icon', 'kid title'],
+        (t.events ?? []).map((e) => [e.on_date, e.title, e.kind, e.kid_visibility, e.countdown ? 'yes' : 'no', e.repeats_yearly ? 'yes' : 'no', e.icon, e.kid_title]),
       ),
     ),
     'kids.csv': strToU8(
@@ -49,7 +51,7 @@ export function buildExportZip(ex: FamilyExport): Uint8Array {
       toCsv(
         ['routine', 'time of day', 'starts', 'for', 'step', 'step text', 'step icon'],
         (t.routines ?? []).flatMap((r) =>
-          ((r.steps as { id: string; text: string; icon: string }[]) ?? []).map((s, i) => [r.name, r.slot, str(r.starts_at).slice(0, 5), r.kid_id ? kids.get(str(r.kid_id)) : 'everyone', i + 1, s.text, s.icon]),
+          ((r.steps as { id: string; text: string; icon: string }[]) ?? []).map((s, i) => [r.name, r.slot, str(r.starts_at).slice(0, 5), routineKids.get(str(r.id))?.join(', ') || 'everyone', i + 1, s.text, s.icon]),
         ),
       ),
     ),

@@ -1,9 +1,14 @@
-export const SNAPSHOT_KEY = 'deck.snapshot.v2'; // v2 adds resetPlans and checkins
+// v3 (Phase 1.5): routines carry kid_ids, events kids_see and countdown. An older snapshot is
+// simply not read; the iPad fetches a fresh one.
+export const SNAPSHOT_KEY = 'deck.snapshot.v3';
 export const OUTBOX_KEY = 'deck.outbox.v1';
+/** Older snapshot keys: never read, always removed (they hold kid data too). */
+export const LEGACY_SNAPSHOT_KEYS = ['deck.snapshot.v2'];
 
 export function clearDeviceCache() {
   try {
     localStorage.removeItem(SNAPSHOT_KEY);
+    for (const k of LEGACY_SNAPSHOT_KEYS) localStorage.removeItem(k);
     localStorage.removeItem(OUTBOX_KEY);
     localStorage.removeItem('deck.currentKid');
   } catch {

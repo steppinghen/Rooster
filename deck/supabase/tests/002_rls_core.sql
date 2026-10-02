@@ -22,9 +22,10 @@ select is_empty($$select 1 from public.kids where family_id = '00000000-0000-400
   'parent: cannot see another family''s kids');
 select results_eq('select count(*)::int from public.feelings_checkins', 'values (1)',
   'parent: sees their family''s check-ins only');
-select results_eq('select count(*)::int from public.events', 'values (2)',
+-- 2 typed-in (Phase 1) + 5 synced (Phase 1.5 fixture), work and hidden ones included.
+select results_eq('select count(*)::int from public.events', 'values (7)',
   'parent: sees all their family''s events, including parents-only ones');
-select results_eq('select count(*)::int from public.devices', 'values (2)', 'parent: sees their family''s devices only');
+select results_eq('select count(*)::int from public.devices', 'values (3)', 'parent: sees their family''s devices only');
 select results_eq('select count(*)::int from public.parents', 'values (2)', 'parent: sees their family''s parents only');
 select results_eq('select count(*)::int from public.parent_allowlist', 'values (1)',
   'parent: sees their family''s allowlist only (not bootstrap rows, not other families)');
@@ -86,7 +87,11 @@ select throws_ok('select * from public.kids', '42501', null, 'device: select * o
 select is_empty('select 1 from public.parents', 'device: cannot see parents');
 select is_empty('select 1 from public.parent_allowlist', 'device: cannot see the allowlist');
 select is_empty('select 1 from public.pairing_codes', 'device: cannot see pairing codes');
-select results_eq('select title from public.events', $$values ('Beach trip')$$, 'device: sees only kid-visible events');
+-- Typed-in Beach trip, the Family calendar's Soccer (inherits shown), and Grandma's visit
+-- (shown on purpose). Not: hidden typed-in or Family events, Grandma's inherited, work even
+-- when marked shown (work is never).
+select results_eq('select title from public.events order by title', $$values ('Beach trip'), ('Soccer practice'), ('Visit Grandma')$$,
+  'device: sees only kid-visible events');
 select is_empty('select 1 from public.feelings_checkins', 'device: cannot read check-ins');
 select is_empty('select 1 from public.usage_events', 'device: cannot read usage events');
 select results_eq('select count(*)::int from public.devices', 'values (1)', 'device: sees only its own device row');

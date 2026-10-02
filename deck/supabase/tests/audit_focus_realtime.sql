@@ -454,7 +454,7 @@ select results_eq($$select mode::text, ends_at is not null from public.kid_focus
 -- Parent-only events still signal the family topic, so a paired iPad learns when parents edit
 -- an event it cannot read (timing only, no content).
 select pg_temp.collect();
-select is(pg_temp.as_b($$insert into public.events (family_id, title, on_date, kind, visible_to_kids) values ('00000000-0000-4000-8000-0000000000f2', 'Parents only', current_date + 1, 'other', false) returning 'x'$$), 'ok:x', 'audit setup: a parent-only event');
+select is(pg_temp.as_b($$insert into public.events (family_id, title, on_date, kind, kid_visibility) values ('00000000-0000-4000-8000-0000000000f2', 'Parents only', current_date + 1, 'other', 'hidden') returning 'x'$$), 'ok:x', 'audit setup: a parent-only event');
 select is((select count(*)::int from new_msgs where topic = 'family:00000000-0000-4000-8000-0000000000f2'), 0,
   'audit hardening: a parent-only event sends no signal that iPads hear');
 

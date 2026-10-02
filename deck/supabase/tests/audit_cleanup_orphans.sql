@@ -78,6 +78,7 @@ end $$;
 create temp table fam_before as select * from pg_temp.fam_counts();
 
 create temp table users_before as select id from auth.users;
+create temp table catalog_before as select count(*)::int as n from public.module_catalog;
 
 select lives_ok($$select private.cleanup_orphans()$$, 'cleanup runs');
 
@@ -113,7 +114,7 @@ select is_empty($$
     and b.rel::regclass <> 'public.parents'::regclass -- aa10 joined above
 $$, 'cleanup: no family-scoped row of either family changed (every table, from the catalog)');
 select is((select count(*)::int from public.parents where family_id = '00000000-0000-4000-8000-0000000000f2'), 2, 'cleanup: family 2 parents are Parent B and the new joiner');
-select is((select count(*)::int from public.module_catalog), 6, 'cleanup: the module catalog is untouched');
+select is((select count(*)::int from public.module_catalog), (select n from catalog_before), 'cleanup: the module catalog is untouched');
 
 -- ----- housekeeping -----
 select results_eq($$select label from public.pairing_codes where id in ('00000000-0000-4000-8000-00000000c0a1', '00000000-0000-4000-8000-00000000c0a2', '00000000-0000-4000-8000-00000000c0a3') order by label$$,

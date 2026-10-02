@@ -596,7 +596,7 @@ test('feelings never carry scores: parent Today and the kid snapshot (slice 9)',
   // A check-in exists; nothing on the kid side may count or reward it.
   sql(`insert into public.feelings_checkins (family_id, kid_id, feeling, size, moment) values (${lit(f.parent.familyId)}, ${lit(f.ids['Kid A']!)}, 'pumping', 4, 'morning')`);
   const { ctx, page } = await kidPage(browser, f, 'Kid A', T.seven);
-  const snap = await page.evaluate(() => localStorage.getItem('deck.snapshot.v2') ?? '');
+  const snap = await page.evaluate(() => localStorage.getItem('deck.snapshot.v3') ?? '');
   expect.soft(snap, 'snapshot has no score-like fields for feelings').not.toMatch(/"(points|score|streak|reward)"/);
   expect.soft(await page.locator('body').innerText()).not.toMatch(SCORE_WORDS);
   // The device can't read the feelings table directly (parents only).

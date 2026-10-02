@@ -27,8 +27,10 @@ test('export opens and has every table; delete wipes the family (slice 6)', asyn
   expect(names).toEqual(expect.arrayContaining(['export.json', 'events.csv', 'kids.csv', 'routines.csv', 'routine_progress.csv', 'usage.csv', 'README.txt']));
   const json = JSON.parse(strFromU8(Object.entries(files).find(([n]) => n.endsWith('export.json'))![1]));
   // Every family table in the database is in the export.
-  const familyTables = sql(`select table_name from information_schema.columns where table_schema = 'public' and column_name = 'family_id' and table_name <> 'families' order by 1`);
+  // Every family table except the unlock lockout rows, which are listed under "omitted".
+  const familyTables = sql(`select table_name from information_schema.columns where table_schema = 'public' and column_name = 'family_id' and table_name not in ('families', 'display_unlock_attempts') order by 1`);
   expect(Object.keys(json.tables).sort()).toEqual(familyTables);
+  expect(json.omitted).toHaveProperty('display_unlock_attempts');
   expect(json.tables.kids).toHaveLength(2);
   expect(JSON.stringify(json)).not.toMatch(/\$2[ab]\$/); // no bcrypt hashes
   await page.screenshot({ path: `${SHOTS}/iphone-export.png`, fullPage: true });

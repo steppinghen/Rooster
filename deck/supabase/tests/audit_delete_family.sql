@@ -173,11 +173,12 @@ select is((select mine from after where tbl = 'public.pairing_attempts'), 0::big
 select is_empty($$select 1 from auth.users where id = '00000000-0000-4000-8000-0000000000d1'$$,
   'delete family: the deleted family''s iPad auth user is gone');
 select tests.authenticate('00000000-0000-4000-8000-0000000000d1', 'aal1', true);
-select ok(result in ('none', 'denied'), format('former iPad of deleted family: %s %s -> %s', tbl, op, result))
+-- (blocked:23514: since 1.5 a trigger refuses display modes for a device that isn't a Family display.)
+select ok(result in ('none', 'denied') or result = 'blocked:23514', format('former iPad of deleted family: %s %s -> %s', tbl, op, result))
   from audit.sweep() where tbl <> 'public.module_catalog';
 reset role;
 select tests.authenticate('00000000-0000-4000-8000-0000000000a1');
-select ok(result in ('none', 'denied'), format('former parent of deleted family: %s %s -> %s', tbl, op, result))
+select ok(result in ('none', 'denied') or result = 'blocked:23514', format('former parent of deleted family: %s %s -> %s', tbl, op, result))
   from audit.sweep() where tbl <> 'public.module_catalog';
 reset role;
 

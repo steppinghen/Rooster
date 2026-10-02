@@ -130,6 +130,12 @@ insert into device_allowed values
   ('public.routine_completions', 'select'), ('public.events', 'select'), ('public.reset_plans', 'select'),
   ('public.module_catalog', 'select'), ('public.family_modules', 'select'), ('public.kid_focus', 'select'),
   ('public.devices', 'select'),
+  -- Phase 1.5: kid-facing reads (calendars and events only where kids can see them, or the
+  -- display shows them; device_calendars only the iPad's own rows. The Kitchen iPad has no
+  -- device_kids rows of its own; 009_phase15_rls.sql covers a kid iPad reading its own).
+  ('public.calendars', 'select'), ('public.checkin_moments', 'select'), ('public.device_calendars', 'select'),
+  ('public.event_kids', 'select'), ('public.kid_decks', 'select'),
+  ('public.routine_kids', 'select'), ('public.sticker_awards', 'select'), ('public.weather_cache', 'select'),
   -- kid-facing writes
   ('public.routine_completions', 'insert'), ('public.routine_completions', 'update'),
   ('public.feelings_checkins', 'insert'),
@@ -153,7 +159,8 @@ select ok(s.result not in ('none', 'denied'), format('device, own family, allowe
 -- Reads that are allowed are still narrowed.
 select results_eq('select id from public.devices', $$values ('00000000-0000-4000-8000-000000000dd1'::uuid)$$,
   'device: reads only its own devices row, not the family''s other iPads');
-select results_eq('select title from public.events', $$values ('Beach trip')$$, 'device: reads only kid-visible events');
+select results_eq('select title from public.events order by title', $$values ('Beach trip'), ('Soccer practice'), ('Visit Grandma')$$,
+  'device: reads only kid-visible events (not hidden, not Grandma''s inherited, never work)');
 
 -- ---- PIN hashes: no path reads, filters on, sorts by, or writes pin_hash ------------------
 select throws_ok('select pin_hash from public.kids', '42501', null, 'device pin_hash: direct column');
@@ -163,7 +170,7 @@ select throws_ok('select to_jsonb(k) from public.kids k', '42501', null, 'device
 select throws_ok($$select nickname from public.kids where pin_hash = extensions.crypt('1234', pin_hash)$$, '42501', null,
   'device pin_hash: cannot test a guess in WHERE');
 select throws_ok('select nickname from public.kids order by pin_hash', '42501', null, 'device pin_hash: cannot sort by it');
-select throws_ok($$select r.name from public.routines r join public.kids k on k.id = r.kid_id and k.pin_hash is not null$$, '42501', null,
+select throws_ok($$select r.routine_id from public.routine_kids r join public.kids k on k.id = r.kid_id and k.pin_hash is not null$$, '42501', null,
   'device pin_hash: cannot reference it in a join');
 select throws_ok($$update public.kids set nickname = nickname where pin_hash is null$$, '42501', null,
   'device pin_hash: cannot reference it in an UPDATE filter');

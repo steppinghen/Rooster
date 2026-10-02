@@ -32,7 +32,9 @@ select ok(not has_schema_privilege('authenticated', 'public', 'create') and not 
 select is_empty($$
   select p.proname from pg_proc p where p.pronamespace = 'private'::regnamespace
     and has_function_privilege('authenticated', p.oid, 'execute')
-    and p.proname not in ('is_aal2_user', 'is_anonymous_session', 'is_parent_of', 'is_device_of', 'is_member_of', 'is_any_member', 'valid_routine_steps', 'short_ids', 'short_id_list')
+    and p.proname not in ('is_aal2_user', 'is_anonymous_session', 'is_parent_of', 'is_device_of', 'is_member_of', 'is_any_member', 'valid_routine_steps', 'short_ids', 'short_id_list',
+                          -- Phase 1.5: policy helpers and CHECK-constraint validators
+                          'my_device_id', 'my_device_job', 'my_display_mode', 'event_kid_visible', 'valid_routine_steps_v2', 'valid_family_settings', 'valid_month_day')
 $$, 'trigger and check functions in private are not executable by API roles');
 
 -- Caller can't steer the helpers: shadow tables in pg_temp plus a hostile search_path.

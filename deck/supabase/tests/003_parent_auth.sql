@@ -45,7 +45,7 @@ select tests.authenticate('00000000-0000-4000-8000-0000000000b8');
 select results_eq('select role from public.whoami()', $$values ('bootstrap'::text)$$, 'whoami: bootstrap-listed account');
 select lives_ok($$select public.create_family('Family Boot', 'Parent Boot', 'America/New_York')$$, 'create_family: works for a bootstrap-listed account');
 select results_eq('select role, family_name, timezone from public.whoami()', $$values ('parent'::text, 'Family Boot'::text, 'America/New_York'::text)$$, 'create_family: caller is now that family''s parent');
-select results_eq('select count(*)::int from public.family_modules', 'values (6)', 'create_family: every catalog module is set up');
+select results_eq('select count(*)::int from public.family_modules', 'select count(*)::int from public.module_catalog', 'create_family: every catalog module is set up');
 select throws_ok($$select public.create_family('Again', 'Y', 'UTC')$$, '23505', null, 'create_family: a parent cannot make a second family');
 reset role;
 select is((select count(*)::int from public.parent_allowlist where email = 'boot@example.test' and family_id is null), 0, 'create_family: the bootstrap row was consumed');

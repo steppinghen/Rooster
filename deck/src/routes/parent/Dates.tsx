@@ -11,6 +11,7 @@ import { PressButton } from '../../ui/PressButton';
 import { Panel } from '../../ui/surfaces';
 import { Headline } from '../../ui/type';
 import './dates.css';
+import { EVENT_SELECT, toEvent } from '../../lib/events';
 
 const EVENT_ART = artInGroup('event');
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -28,7 +29,7 @@ function monthItems(events: DeckEvent[], kids: Kid[], y: number, m: number): Ite
   const out: Item[] = [];
   for (const e of events) {
     const date = e.repeats_yearly ? `${y}-${e.on_date.slice(5)}` : e.on_date;
-    if (date.startsWith(prefix)) out.push({ key: e.id, date, title: e.title, icon: e.icon, kidsSee: e.visible_to_kids, event: e });
+    if (date.startsWith(prefix)) out.push({ key: e.id, date, title: e.title, icon: e.icon, kidsSee: e.kids_see, event: e });
   }
   for (const k of kids) {
     if (k.birthday_month === m && k.birthday_day) out.push({ key: `b-${k.id}`, date: nextOccurrence(`${y}-${pad(m)}-01`, m, k.birthday_day), title: `${k.nickname}'s birthday`, icon: 'cake', kidsSee: true });
@@ -46,10 +47,10 @@ export function ParentDates() {
   const [editing, setEditing] = useState<DeckEvent | { new: string } | null>(null);
   const data = useAsync(async () => {
     const [e, k] = await Promise.all([
-      supabase.from('events').select('id, family_id, title, icon, on_date, kind, visible_to_kids, repeats_yearly').eq('family_id', familyId).order('on_date'),
+      supabase.from('events').select(EVENT_SELECT).eq('family_id', familyId).order('on_date'),
       supabase.from('kids').select(KID_COLUMNS).eq('family_id', familyId),
     ]);
-    return { events: must(e) as DeckEvent[], kids: must(k) as Kid[] };
+    return { events: (must(e) as Parameters<typeof toEvent>[0][]).map(toEvent), kids: must(k) as Kid[] };
   }, [familyId]);
   if (who.role !== 'parent') return null;
 
@@ -155,7 +156,7 @@ function EventEditor({ familyId, event, date, onDone }: { familyId: string; even
   const [icon, setIcon] = useState(event?.icon ?? 'star');
   const [onDate, setOnDate] = useState(date);
   const [kind, setKind] = useState<EventKind>(event?.kind ?? 'other');
-  const [kidsSee, setKidsSee] = useState(event?.visible_to_kids ?? true);
+  const [kidsSee, setKidsSee] = useState(event?.kids_see ?? true);
   const [yearly, setYearly] = useState(event?.repeats_yearly ?? false);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -163,7 +164,8 @@ function EventEditor({ familyId, event, date, onDone }: { familyId: string; even
 
   async function save(e: FormEvent) {
     e.preventDefault();
-    const row = { title: title.trim(), icon, on_date: onDate, kind, visible_to_kids: kidsSee, repeats_yearly: yearly };
+    // Typed-in events live in "Added in The Deck" (kids see it by default); kids seeing it means a countdown.
+    const row = { title: title.trim(), icon, on_date: onDate, kind, kid_visibility: kidsSee ? 'inherit' : 'hidden', countdown: kidsSee, repeats_yearly: yearly };
     const { error } = event ? await supabase.from('events').update(row).eq('id', event.id) : await supabase.from('events').insert({ ...row, family_id: familyId });
     if (error) return setError(error.message);
     onDone(true);

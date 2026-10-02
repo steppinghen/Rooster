@@ -7,7 +7,7 @@ import { doneCount, formatTime, routineNow, routinesForKid } from '../../kid/rou
 import { FEELINGS, SIZES } from '../../kid/wave/feelings';
 import { useSession } from '../../lib/session';
 import { supabase } from '../../lib/supabase';
-import { accentVar, KID_COLUMNS, type DeckEvent, type FocusMode, type Kid, type KidFocus, type Routine } from '../../lib/types';
+import { accentVar, KID_COLUMNS, type FocusMode, type Kid, type KidFocus, type Routine } from '../../lib/types';
 import { must, useAsync } from '../../lib/useAsync';
 import { useMediaQuery } from '../../lib/useMediaQuery';
 import { localMinutes } from '../../theme/ground';
@@ -18,6 +18,8 @@ import { ProgressDots } from '../../ui/ProgressDots';
 import { Panel } from '../../ui/surfaces';
 import { Headline, Marker } from '../../ui/type';
 import './today.css';
+import { ROUTINE_SELECT, toRoutine } from '../../lib/routines';
+import { EVENT_SELECT, toEvent } from '../../lib/events';
 
 type Checkin = { kid_id: string; feeling: string; size: number; moment: string; created_at: string };
 type Usage = { kid_id: string | null; module_key: string; action: string; created_at: string };
@@ -42,9 +44,9 @@ async function load(familyId: string, timezone: string) {
   const since = new Date(Date.now() - 30 * 86400_000).toISOString();
   const [kids, routines, completions, events, focus, checkins, usage, now] = await Promise.all([
     supabase.from('kids').select(KID_COLUMNS).eq('family_id', familyId).order('sort_order').order('created_at'),
-    supabase.from('routines').select('id, family_id, kid_id, slot, name, starts_at, steps, sort_order').eq('family_id', familyId),
+    supabase.from('routines').select(ROUTINE_SELECT).eq('family_id', familyId),
     supabase.from('routine_completions').select('routine_id, kid_id, on_date, completed_steps, completed_at').eq('family_id', familyId).eq('on_date', today),
-    supabase.from('events').select('id, family_id, title, icon, on_date, kind, visible_to_kids, repeats_yearly').eq('family_id', familyId),
+    supabase.from('events').select(EVENT_SELECT).eq('family_id', familyId),
     supabase.from('kid_focus').select('kid_id, family_id, mode, since, ends_at, return_mode, pending_mode, switch_at, pending_ends_at, pending_return_mode, pinned, updated_at').eq('family_id', familyId),
     supabase.from('feelings_checkins').select('kid_id, feeling, size, moment, created_at').eq('family_id', familyId).gte('created_at', since).order('created_at', { ascending: false }),
     supabase.from('usage_events').select('kid_id, module_key, action, created_at').eq('family_id', familyId).gte('created_at', new Date(Date.now() - 4 * 3600_000).toISOString()),
@@ -53,9 +55,9 @@ async function load(familyId: string, timezone: string) {
   return {
     today,
     kids: must(kids) as Kid[],
-    routines: must(routines) as Routine[],
+    routines: (must(routines) as Parameters<typeof toRoutine>[0][]).map(toRoutine),
     completions: must(completions) as Completion[],
-    events: must(events) as DeckEvent[],
+    events: (must(events) as Parameters<typeof toEvent>[0][]).map(toEvent),
     focus: must(focus) as KidFocus[],
     checkins: must(checkins) as Checkin[],
     usage: must(usage) as Usage[],
@@ -139,13 +141,13 @@ export function Today() {
       key: r.id,
       at: r.starts_at.slice(0, 5),
       title: r.name,
-      meta: r.kid_id ? (d.kids.find((k) => k.id === r.kid_id)?.nickname ?? '') : 'Everyone',
+      meta: r.kid_ids.length ? r.kid_ids.map((id) => d.kids.find((k) => k.id === id)?.nickname ?? '').join(', ') : 'Everyone',
       icon: r.steps[0]?.icon ?? 'star',
       routine: r,
     })),
     ...d.events
       .filter((e) => (e.repeats_yearly ? e.on_date.slice(5) === d.today.slice(5) : e.on_date === d.today))
-      .map((e) => ({ key: e.id, at: '', title: e.title, meta: e.visible_to_kids ? 'Tour Dates' : 'Parents only', icon: e.icon, routine: null as Routine | null })),
+      .map((e) => ({ key: e.id, at: '', title: e.title, meta: e.kids_see ? 'Tour Dates' : 'Parents only', icon: e.icon, routine: null as Routine | null })),
   ].sort((a, b) => (a.at || '99').localeCompare(b.at || '99'));
   // NOW: the routine that started most recently, for up to 3 hours.
   const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));

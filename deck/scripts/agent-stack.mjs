@@ -15,7 +15,7 @@
 // Agents: build (the builder), rls (rls-auditor, pgTAP only), kidux (kid-ux-tester),
 // parentux (parent-ux-tester). Everything lives in .agents/ (gitignored).
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const ROOT = process.cwd();
@@ -78,9 +78,15 @@ function scaffold(name) {
     rmSync(link, { force: true, recursive: false });
     symlinkSync(relative(supa, target), link);
   }
+  // Kong bind-mounts each template file. A copy that makes a new inode orphans the mount (the
+  // templates then 404 and no sign-in code is sent), so write in place, and only on change.
   for (const c of COPIES) {
-    rmSync(join(supa, c), { force: true, recursive: true });
-    cpSync(join(SUPA, c), join(supa, c), { recursive: true });
+    mkdirSync(join(supa, c), { recursive: true });
+    for (const f of readdirSync(join(SUPA, c))) {
+      const body = readFileSync(join(SUPA, c, f));
+      const dest = join(supa, c, f);
+      if (!existsSync(dest) || !readFileSync(dest).equals(body)) writeFileSync(dest, body);
+    }
   }
 }
 

@@ -30,10 +30,10 @@ export function nextOccurrence(today: string, month: number, day: number): strin
 export function upcomingCountdowns(events: DeckEvent[], kids: Kid[], today: string): Countdown[] {
   const out: Countdown[] = [];
   for (const e of events) {
-    if (!e.visible_to_kids) continue;
+    if (!e.kids_see || !e.countdown) continue;
     const date = e.repeats_yearly ? nextOccurrence(today, Number(e.on_date.slice(5, 7)), Number(e.on_date.slice(8, 10))) : e.on_date;
     if (date < today) continue;
-    out.push({ key: e.id, title: e.title, icon: e.icon, date, sleeps: sleepsBetween(today, date), kind: e.kind });
+    out.push({ key: e.id, title: e.kid_title ?? e.title, icon: e.kid_icon ?? e.icon, date, sleeps: sleepsBetween(today, date), kind: e.kind });
   }
   for (const k of kids) {
     if (!k.birthday_month || !k.birthday_day) continue;

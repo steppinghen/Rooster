@@ -589,7 +589,7 @@ Every default above is taken, except:
 | A59 | **Show and speak Mara and Costa in 1.5.** Dog names are stored in `families.settings` (defaults Mara and Costa), editable by a parent later. The rooster and turtle stay unnamed until Phase 2 (X5). |
 | A36, A37, A39, A40, A41, A43 | **Approved**, plus the dog-names key in `families.settings` (A59). |
 | A14 | **The display's per-calendar mode decides** (Title, Busy or Not here). **Any event hidden from kids shows as Busy** on a locked display, even when its calendar is Title. Filtered in the database. (A15 follows: hidden is Busy, not "Private".) |
-| A48 | Costa's rider sticker will be drawn on the canvas and sent as an updated frame. Until then the Mara rider is used for both dogs, and the export check keeps flagging it. |
+| A48 | ~~Costa's rider sticker will be drawn on the canvas and sent as an updated frame.~~ **Resolved:** `design/canvas/R6DogRider.dc.html` has both riders, "Sticker — Dog rider" (Mara) and "Sticker — Dog rider (Costa)". The export (slice 3) maps both labels, so the missing-art flag is cleared. |
 | Gate 2 | `supabase functions deploy` and `supabase secrets set` are **added to the deny list now**; the parent runs them at Gate 2. |
 
 ### Coop TV view (A4): plan and what blocks the later move
@@ -718,3 +718,110 @@ Needs changes to the Coop TV app (outside `rooster/deck`, not built):
 |---|---|---|
 | A62 | **Bug (Phase 1): a failed `whoami` at launch showed "Not set up".** A paired iPad that couldn't reach the server at launch (offline, or a network blip during an iOS reload) landed on the No access screen. This is the cold-launch-offline case (X7). | **Fixed** in `src/lib/session.tsx`: a paired iPad opens from its offline snapshot (routing only; RLS still applies), anything else keeps loading, and both retry with backoff until the server answers. e2e `session-offline.spec.ts`. It was the real cause of the `focus-modes.spec.ts` first-test failure |
 | A63 | `design/canvas/canvas.json` | It came with the frames (the plan says `.dc.html` only). It's the board index (page and title per frame) and has no personal data | Keep it: it maps each frame to its canvas page |
+
+## 1.5-1. Review these first (Phase 1.5)
+
+### P1. Schema 1.5 (slice 1): `…20261002000000_phase15_enums.sql` to `…000500_phase15_export_signals.sql`
+
+**What it adds.** Everything listed in the data model for 1.5, plus the approved schema items (A36, A37, A39, A40, A41, A43, A59).
+- **Families:** a validated `families.settings` (`private.valid_family_settings`). It holds the holidays, winter dates, dog pin and names (default Mara and Costa), tip temperatures, home location (stored already rounded to 2 decimals) and units.
+- **Kids:** `can_change_look`, and `dock_picks`. A trigger allows only built dock modules: up to 3 for readers, 1 for pre-readers.
+- **Parents:** `initial`, `color` and `unlock_pin_hash`. The hash isn't granted to any API role; `has_unlock_pin` is generated.
+- **Devices:** job, start view, unlock, re-lock time, sound, read-aloud and dim at Lights out.
+- **Kid lists are join tables** (A40), each with composite `(kid_id, family_id)` foreign keys. No rows means everyone.
+  - `routine_kids`: Phase 1's `routines.kid_id` moved into it and the column was dropped.
+  - `device_kids`.
+  - `event_kids`.
+- **Routines:**
+  - Days, finish by with Bus or Car, and "Earns a sticker".
+  - Up to 8 steps, each with a `kind` (task or Wave Check) and a `who`.
+  - `who` can only name the family's own kids (a definer trigger).
+  - `save_routine(...)` writes a routine and its kids in one call. It's an invoker RPC, so RLS and the column grants apply.
+- **Check-ins:**
+  - `checkin_moments`: at most 3 per kid, under an advisory lock.
+  - `feelings_notes`: parents only. The server sets the author, the author alone can delete a note, and notes cascade with the 30-day purge.
+- **Calendars:**
+  - `calendars` gets two built-in calendars per family, Holidays and "Added in The Deck".
+  - **Feed URLs live in `private.calendar_feeds`**: RLS on, no grants, outside the exposed schema.
+  - `last_error` is checked so it can never hold a link.
+  - `device_calendars`, and `parent_calendar_prefs` (each parent's own rows only).
+- **Events:** `calendar_id`, the feed fields and the kid layer.
+  - Phase 1 events moved into "Added in The Deck" (A43), with `visible_to_kids` mapped to `kid_visibility` and `countdown`.
+  - `private.event_guard` keeps synced events read-only apart from their kid layer.
+  - API inserts and deletes are allowed only in "Added in The Deck".
+  - Nothing moves between calendars.
+  - Guards apply to direct writes only (`pg_trigger_depth() = 1`), so cascades from Delete family go through.
+- **Who sees an event** (`private.event_kid_visible`): Holidays always; a "never" calendar (work) never, whatever the event says; then the event's override; then the calendar's default. Devices read only events that pass.
+- **Snack Shack:** `meals` and `dinner_plan` are **parents only**. Devices, the kitchen hub included, read dinners through an RPC in slice 12 that leaves out the options (A13). `weather_cache` is read-only for members.
+- **Stickers:**
+  - `kid_decks` and `sticker_awards` have no API writes at all.
+  - A trigger enforces **4 a day per kid**, the kid's own deck, a pick from the offered keys only, a fixed offer, and "placed never moves".
+  - It also enforces 86–96 px, a tilt of ±5–12°, and weeks starting on Monday.
+- **Display unlock:**
+  - `display_unlocks` has no API writes, and parents can read it. Its devices row must be in the parent's family, and it's capped at 30 minutes from the unlock.
+  - `display_unlock_attempts` has no grants.
+- **Export v2** is driven by `private.deck_tables()`, the one list that the cleanup guard and the tests also use.
+  - It strips `kids.pin_hash`, `parents.unlock_pin_hash` and `pairing_codes.code_hash`.
+  - It lists feed links and lockout rows under "omitted".
+- **Delete family:** unchanged. Every 1.5 table cascades from `families`, and the feed URLs cascade from their calendars.
+- **Realtime:** payload-free signals for every kid-visible 1.5 table. Feelings notes, parents' calendar toggles and events kids can't see go to the `parents:` topic only.
+
+**Tests.**
+- `009_phase15_rls.sql` (222 assertions): every table and rule from each role, with probes that always roll back.
+- `010_phase15_export_delete.sql` (85): no feed link or hash anywhere in the export; every 1.5 row of family 1 gone after Delete family; family 2 unchanged.
+- The Phase 1 suites were updated where the behaviour changed on purpose:
+  - routines.kid_id is now `routine_kids`;
+  - `visible_to_kids` is now `kid_visibility`;
+  - family 1 has more events and devices;
+  - the grants snapshot and the device sweep's allowed reads cover the new tables.
+- Each of those edits is called out in the file it touches.
+
+**Trade-offs.**
+- **Home location on iPads.** It sits in `families.settings`, as approved (A36). Parents and iPads share the `authenticated` role, so a column grant can't hide one key from the iPads, and they can read the rounded location. The weather is computed on the server, so the iPads don't need it. The alternative is a parents-only column or table. That would be a schema change, so it needs your OK.
+- **Dog names** (A59) are data, not code: column default `{"dog":{"names":{"mara":"Mara","costa":"Costa"}}}`.
+- **"Everyone" is no rows** in `routine_kids` / `event_kids`, so a kid added later is included automatically, as in Phase 1.
+- **The Phase 1 screens** (Tour Dates editor, Back Office routine editor, Today) were adapted minimally and still edit one kid per routine. Slices 6, 10 and 14 replace them.
+- **Offline snapshot.** The key went to `deck.snapshot.v3`. The old v2 key is never read, and it's removed on load and on unpair (it holds kid data).
+
+### P1b. Slice 1 security review (rls-auditor)
+
+**Blocking, fixed:** a locked Family display could read the full titles of events whose calendar it shows as **Busy** or **Not here**, which broke A14. `events_select` and `event_kids_select` checked only whether kids may see the event.
+- **Fix:** a display now reads event rows only for calendars it shows as **Title**. That's `private.my_display_mode(calendar)`: the device's `device_calendars` mode; built-in calendars default to Title and feeds to Not here.
+- Busy blocks and hidden events reach a display only through the redacting RPC in slice 10.
+- Kid iPads are unchanged.
+- Tests: `audit_phase15_display_calendar.sql`.
+
+**Hardening taken in the same pass** (the auditor's `todo` tests, now plain assertions):
+- A display lists only the calendars it shows, never one set to Not here.
+- `device_calendars` rows are allowed for Family displays only (`private.check_device_calendar`). Before this, a parent-written row could list the work calendar on a kid iPad, though never its events.
+- `calendars.last_error` is a fixed code (`unreachable`, `not_found`, `forbidden`, `not_a_calendar`, `too_large`, `timeout`, `unreadable`). Free text could have quoted a link's secret path.
+- Sticker awards: the award date must fall in its deck's week, and the three offered stickers must differ.
+- Display unlocks: only for an unrevoked Family display with Parent unlock on, Lock is final (an ended unlock can't be revived or extended), and an unlock can't be moved to another device or parent.
+- Changes to a calendar no iPad can list (never for kids, and no display shows it) signal the parents topic only.
+- A note whose author has left the family can be deleted by either parent.
+
+**Left for the slices that add the write paths** (from the auditor's list; each slice's REVIEW entry will show it):
+- **Slice 8:** the award RPC checks the source is a sticker routine of this family that serves the kid. This is still a `todo` test; chores have no table yet. The server also computes the day, the deck, the offer and the placement.
+- **Slice 10:**
+  - The feed setter never returns the URL.
+  - The sync reads feeds through a service-role-only function.
+  - Delete family also purges pg_net responses.
+- **Slice 13:** the look RPC is definer and volatile, refuses GET, checks the family through the device, checks `can_change_look`, checks the avatar pool, and writes only `avatar` and `accent`. **Its rate limit needs somewhere to store attempts, which the data model doesn't have: see A65.**
+- **Slice 15:**
+  - The PIN check refuses GET, records the attempt first, and locks per device then per family.
+  - "Unlocked" means an unexpired, unended unlock on the caller's own unrevoked display.
+  - Phone-only RPCs keep `is_parent_of`.
+  - An unlocked display can update only its own devices row.
+  - A note written on the display is authored by the unlocking parent.
+  - The display leaves the `parents:` topic on Lock.
+
+**Accepted (non-blocking):**
+- A kid iPad can read an event whose kid layer names only a sibling. Same family, shared iPads, and each kid's screen filters it.
+- Devices can read `calendars.owner_user_id`, a parent's user id. Parents and devices share the `authenticated` role, so a column grant can't split them.
+
+**The auditor's tests:** `audit_phase15_display_calendar`, `_kid_ipad`, `_unlock_guards`, `_stickers`, `_feeds`, `_delete_family` and `_cross_family`. The suite is now **4,659 assertions**, all passing apart from the one slice 8 `todo`.
+
+| # | Question | Default |
+|---|---|---|
+| A65 | **(schema) The kid-side look RPC's rate limit (slice 13) needs a table** for attempts, like `pin_attempts`. The data model doesn't list one, so per the plan this is a stop. | **Ask at the smoke check, before slice 13.** Default: `look_attempts (family_id, device_user_id, kid_id, attempted_at)` with RLS on and no grants, purged nightly, covered by Delete family; at most 10 look saves per kid per device per hour |
+| A66 | Home location on iPads (P1 trade-off) | Default: keep it in `families.settings` as approved; iPads can read the rounded location. Say if you want it moved to a parents-only place (a schema change) |

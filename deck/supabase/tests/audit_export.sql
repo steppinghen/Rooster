@@ -127,7 +127,7 @@ select is_empty($$
   select t.key, a.attname from ex, jsonb_each(doc -> 'tables') t
   join pg_attribute a on a.attrelid = ('public.' || t.key)::regclass and a.attnum > 0 and not a.attisdropped
   cross join lateral jsonb_array_elements(t.value) r
-  where (t.key, a.attname) not in (('kids', 'pin_hash'), ('pairing_codes', 'code_hash'))
+  where (t.key, a.attname) not in (('kids', 'pin_hash'), ('pairing_codes', 'code_hash'), ('parents', 'unlock_pin_hash'))
     and not r ? a.attname
 $$, 'export: every non-secret column is present in every row');
 select is_empty($$

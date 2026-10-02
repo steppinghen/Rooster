@@ -389,3 +389,21 @@ Session handoff for `PHASE15_PLAN.md`. On a new session or after compaction, rea
 - Brief audit (step 3): REVIEW.md "1.5-0", items A1–A63. Three reader agents compared the frames with the brief; the builder checked the art labels for the export. **Stopped for the parent's answers before slice 1.**
 - **Audit answered (parent, 2026-10-02):** every default taken except A4 (Coop TV is a `/tv` view inside the Deck), A59 (Mara and Costa shown and spoken, names in `families.settings`), A14 (display mode decides; hidden-from-kids is Busy on a locked display), A48 (Mara rider for both until Costa's is drawn). Schema A36, A37, A39, A40, A41, A43 and the dog-names key are approved. `supabase functions deploy` and `supabase secrets set` are in the deny list. REVIEW.md "Parent's answers" and "Coop TV view".
 - New open question **A64** (default taken, ask at the smoke check): Coop TV's page loads third-party scripts that would run on the Deck's origin. Coop TV view is built in slice 14; the device test list (slice 16) gets "open Coop TV from the dock under Guided Access and come back".
+
+## Slice 1: Schema 1.5 (done)
+
+- Migrations `20261002000000`–`000500` (enums; core; calendar; food and weather; stickers and unlock; export and signals). Every 1.5 table from the data model has RLS, with policies in the same migration. REVIEW.md P1 has the details.
+- Kid lists are join tables (`routine_kids`, `device_kids`, `event_kids`; A40). `routines.kid_id` was migrated and dropped. Phase 1 events moved into "Added in The Deck" (A43), and `visible_to_kids` became `kid_visibility` + `countdown`.
+- No client write path yet on decks, sticker awards, unlocks, weather, calendars (insert) or feed URLs. Their RPCs come in slices 8, 15, 11 and 10.
+- `save_routine` RPC (invoker): routine plus kids in one call. The Phase 1 routine editor and the e2e `addRoutine` fixture use it.
+- Fixtures: `tests.make_two_families()` now ends with `tests.add_phase15_rows()` (1.5 rows in both families). `tests.make_phase15()` adds Kid C to family 1.
+- App: `src/lib/routines.ts` (`kid_ids`, `servesKid`) and `src/lib/events.ts` (`kids_see`, mirroring `private.event_kid_visible`, with a unit test). Countdowns come from kid-visible events marked `countdown`, with the kid title and icon. The offline snapshot is now `deck.snapshot.v3`; the v2 key is removed on load and on unpair.
+- Gotchas met:
+  - The CLI's statement splitter cut a plpgsql function at an inline `case … end then`.
+  - PL/pgSQL resolves `new.<col>` for every table a shared trigger runs on, so the signal function reads through `to_jsonb(new)`.
+  - A CTE's or function's writes aren't visible to the rest of the same statement (for test probes).
+  - `agent-stack reset` was deleting the templates folder that Kong bind-mounts, so no sign-in mail was sent. Now it overwrites in place.
+- pgTAP on `deck-build`: 25 files PASS (Phase 1 suites updated where behaviour changed on purpose; see REVIEW.md P1).
+- **rls-auditor:** 1 blocking finding, fixed. A locked display could read titles from calendars it shows as Busy or Not here; display reads now need Title (`private.my_display_mode`). Hardening taken: display-only `device_calendars`, a fixed-code `last_error`, sticker week and distinct offer, unlock rules (display only, Lock final), parents-only signals for unlistable calendars, notes of a departed author. REVIEW.md P1b. Its 7 `audit_phase15_*` files were added; their fixed todos were promoted to plain assertions. One `todo` remains for slice 8 (award source).
+- New questions for the smoke check: **A65** (schema: a table for the look RPC's rate limit, needed by slice 13) and **A66** (home location readable by iPads).
+- pgTAP on `deck-build`: 32 files, **4,659 assertions PASS** (1 expected todo). e2e: the full run after the schema passed (207 + export-delete fixed and rerun 3/3).

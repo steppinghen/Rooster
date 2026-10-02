@@ -41,7 +41,7 @@ export const TEMPLATES: { slot: RoutineSlot; name: string; starts_at: string; st
   },
 ];
 
-export const SLOT_LABEL: Record<RoutineSlot, string> = { morning: 'Morning', after_school: 'After school', bedtime: 'Bedtime' };
+export const SLOT_LABEL: Record<RoutineSlot, string> = { morning: 'Morning', after_school: 'After school', bedtime: 'Bedtime', other: 'Other' };
 
 export function newStepId(existing: string[], text: string): string {
   const base = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'step';

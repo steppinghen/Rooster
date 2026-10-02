@@ -120,7 +120,7 @@ select ok(exists (select 1 from public.families where id = '00000000-0000-4000-8
 create temp table others_before as
   select (select count(*) from auth.users where id not in (
             '00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000000a2',
-            '00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000d9')) as users,
+            '00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000d9', '00000000-0000-4000-8000-0000000000d3')) as users,
          (select count(*) from public.parent_allowlist where family_id is distinct from '00000000-0000-4000-8000-0000000000f1'
             and not (family_id is null and email = 'fx-parent-a2@example.test')) as allow;
 
@@ -129,7 +129,7 @@ select lives_ok($$select public.delete_family(U&'Caf\00E9 One')$$, 'delete: an e
 reset role;
 
 select is_empty($$select 1 from auth.users where id in ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-0000000000a2',
-  '00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000d9')$$, 'delete: both parents and every iPad (incl. revoked) are gone');
+  '00000000-0000-4000-8000-0000000000d1', '00000000-0000-4000-8000-0000000000d9', '00000000-0000-4000-8000-0000000000d3')$$, 'delete: both parents and every iPad (incl. revoked) are gone');
 select is_empty($$select 1 from auth.sessions where user_id = '00000000-0000-4000-8000-0000000000a2'$$, 'delete: the second parent''s sessions are gone');
 select is_empty($$select 1 from auth.refresh_tokens where token = 'audit-a2-refresh'$$, 'delete: the second parent''s refresh token is gone (no new access tokens)');
 select is_empty($$select 1 from auth.mfa_factors where user_id = '00000000-0000-4000-8000-0000000000a2'$$, 'delete: the second parent''s TOTP factor is gone');

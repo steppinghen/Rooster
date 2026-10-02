@@ -4,7 +4,9 @@ import { useSession } from '../lib/session';
 import { supabase } from '../lib/supabase';
 import { KID_COLUMNS, type DeckEvent, type Kid, type KidFocus, type Routine } from '../lib/types';
 import { must } from '../lib/useAsync';
-import { familyDate, OUTBOX_KEY, SNAPSHOT_KEY } from './cache';
+import { familyDate, LEGACY_SNAPSHOT_KEYS, OUTBOX_KEY, SNAPSHOT_KEY } from './cache';
+import { ROUTINE_SELECT, toRoutine } from '../lib/routines';
+import { EVENT_SELECT, toEvent } from '../lib/events';
 
 /**
  * Everything a paired iPad needs to run the kid screens, cached on the device.
@@ -16,7 +18,7 @@ import { familyDate, OUTBOX_KEY, SNAPSHOT_KEY } from './cache';
 export type Completion = { routine_id: string; kid_id: string; on_date: string; completed_steps: string[]; completed_at: string | null };
 
 export type Snapshot = {
-  version: 2;
+  version: 3;
   fetchedAt: string;
   serverOffsetMs: number; // server clock minus device clock
   family: { id: string; name: string; timezone: string };
@@ -65,8 +67,8 @@ async function fetchSnapshot(familyId: string, device: Snapshot['device']): Prom
     supabase.rpc('server_now'),
     supabase.from('families').select('id, name, timezone').eq('id', familyId).single(),
     supabase.from('kids').select(KID_COLUMNS).eq('family_id', familyId).order('sort_order').order('created_at'),
-    supabase.from('routines').select('id, family_id, kid_id, slot, name, starts_at, steps, sort_order').eq('family_id', familyId).order('starts_at'),
-    supabase.from('events').select('id, family_id, title, icon, on_date, kind, visible_to_kids, repeats_yearly').eq('family_id', familyId).order('on_date'),
+    supabase.from('routines').select(ROUTINE_SELECT).eq('family_id', familyId).order('starts_at'),
+    supabase.from('events').select(EVENT_SELECT).eq('family_id', familyId).order('on_date'),
     supabase.from('kid_focus').select('kid_id, family_id, mode, since, ends_at, return_mode, pending_mode, switch_at, pending_ends_at, pending_return_mode, pinned, updated_at').eq('family_id', familyId),
     loadModules(familyId),
     supabase.from('devices').select('id, label, ground').eq('id', device.id).maybeSingle(),
@@ -90,15 +92,15 @@ async function fetchSnapshot(familyId: string, device: Snapshot['device']): Prom
   ) as Completion[];
   const serverNow = new Date(must(now) as string).getTime();
   return {
-    version: 2,
+    version: 3,
     fetchedAt: new Date().toISOString(),
     serverOffsetMs: serverNow - (t0 + (Date.now() - t0) / 2),
     family: fam,
     // The device's own row, fresh: a parent may have changed its ground since pairing.
     device: (must(me) as Snapshot['device'] | null) ?? device,
     kids: kidRows,
-    routines: must(routines) as Routine[],
-    events: must(events) as DeckEvent[],
+    routines: (must(routines) as Parameters<typeof toRoutine>[0][]).map(toRoutine),
+    events: (must(events) as Parameters<typeof toEvent>[0][]).map(toEvent),
     modules,
     focus: must(focus) as KidFocus[],
     completions,
@@ -155,7 +157,14 @@ const Ctx = createContext<KidStore | null>(null);
 export function KidStoreProvider({ children }: { children: ReactNode }) {
   const { who } = useSession();
   const device = who.role === 'device' ? who : null;
-  const [snapshot, setSnapshot] = useState<Snapshot | null>(() => read<Snapshot>(SNAPSHOT_KEY));
+  const [snapshot, setSnapshot] = useState<Snapshot | null>(() => {
+    try {
+      for (const k of LEGACY_SNAPSHOT_KEYS) localStorage.removeItem(k);
+    } catch {
+      /* storage unavailable: nothing to clear */
+    }
+    return read<Snapshot>(SNAPSHOT_KEY);
+  });
   const [online, setOnline] = useState(true);
   const outbox = useRef<OutboxItem[]>(read<OutboxItem[]>(OUTBOX_KEY) ?? []);
   const flushing = useRef(false);

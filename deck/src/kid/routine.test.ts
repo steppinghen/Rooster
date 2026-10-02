@@ -5,7 +5,11 @@ import { routineNow, routinesForKid } from './routine';
 const r = (id: string, slot: Routine['slot'], starts_at: string, kid_id: string | null = null): Routine => ({
   id,
   family_id: 'f',
-  kid_id,
+  kid_ids: kid_id ? [kid_id] : [],
+  days: [1, 2, 3, 4, 5, 6, 7],
+  finish_by: null,
+  finish_label: null,
+  earns_sticker: false,
   slot,
   name: id,
   starts_at,

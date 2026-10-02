@@ -7,15 +7,16 @@ import { PressButton } from '../../../ui/PressButton';
 import { Panel } from '../../../ui/surfaces';
 import { RoutineEditor } from './RoutineEditor';
 import { SLOT_LABEL, TEMPLATES } from './routineTemplates';
+import { ROUTINE_SELECT, toRoutine } from '../../../lib/routines';
 
 /** Dawn Patrol, After School, Last Run: picture-step routines the kids follow on the iPad. */
 export function RoutinesSection({ familyId }: { familyId: string }) {
   const data = useAsync(async () => {
     const [r, k] = await Promise.all([
-      supabase.from('routines').select('id, family_id, kid_id, slot, name, starts_at, steps, sort_order').eq('family_id', familyId).order('starts_at'),
+      supabase.from('routines').select(ROUTINE_SELECT).eq('family_id', familyId).order('starts_at'),
       supabase.from('kids').select(KID_COLUMNS).eq('family_id', familyId).order('sort_order'),
     ]);
-    return { routines: must(r) as Routine[], kids: must(k) as Kid[] };
+    return { routines: (must(r) as Parameters<typeof toRoutine>[0][]).map(toRoutine), kids: must(k) as Kid[] };
   }, [familyId]);
   const [editing, setEditing] = useState<{ routine: Routine | null; template: (typeof TEMPLATES)[number] } | null>(null);
   const routines = data.data?.routines ?? [];
@@ -30,7 +31,7 @@ export function RoutinesSection({ familyId }: { familyId: string }) {
           <div className="p-row__main">
             <span className="p-row__title">{r.name}</span>
             <span className="p-row__meta">
-              {SLOT_LABEL[r.slot]} · {formatTime(r.starts_at)} · {nick(r.kid_id)} · {r.steps.length} steps
+              {SLOT_LABEL[r.slot]} · {formatTime(r.starts_at)} · {r.kid_ids.length ? r.kid_ids.map(nick).join(', ') : nick(null)} · {r.steps.length} steps
             </span>
           </div>
           <PressButton small onClick={() => setEditing({ routine: r, template: TEMPLATES[0]! })}>
@@ -46,7 +47,7 @@ export function RoutinesSection({ familyId }: { familyId: string }) {
           routine={editing.routine}
           draft={
             editing.routine
-              ? { name: editing.routine.name, slot: editing.routine.slot, starts_at: editing.routine.starts_at, kid_id: editing.routine.kid_id, steps: editing.routine.steps }
+              ? { name: editing.routine.name, slot: editing.routine.slot, starts_at: editing.routine.starts_at, kid_id: editing.routine.kid_ids[0] ?? null, steps: editing.routine.steps }
               : { name: editing.template.name, slot: editing.template.slot, starts_at: editing.template.starts_at, kid_id: null, steps: editing.template.steps }
           }
           onDone={(changed) => {

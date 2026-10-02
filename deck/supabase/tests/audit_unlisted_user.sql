@@ -144,11 +144,15 @@ select is_empty($$select r::text from audit.relations() r where audit.tenancy_co
 -- harness were broken, this would fail instead of the zero-access checks silently passing.
 select tests.authenticate('00000000-0000-4000-8000-0000000000a1');
 select ok(result like 'READ %', format('control, parent A reads own family: %s -> %s', tbl, result))
-  from audit.sweep('00000000-0000-4000-8000-0000000000f1') where op = 'select';
+  from audit.sweep('00000000-0000-4000-8000-0000000000f1') where op = 'select'
+    -- Lockout rows (Phase 1.5) are reachable by no API role, parents included.
+    and tbl <> 'public.display_unlock_attempts';
 select is(audit.probe('public.events', 'insert', '00000000-0000-4000-8000-0000000000f1'), 'WROTE 1', 'control: parent A insert probe writes');
 select is(audit.probe('public.kids', 'update', '00000000-0000-4000-8000-0000000000f1'), 'WROTE 2', 'control: parent A update probe writes');
-select is(audit.probe('public.events', 'delete', '00000000-0000-4000-8000-0000000000f1'), 'WROTE 2', 'control: parent A delete probe writes');
-select results_eq('select count(*)::int from public.events', 'values (2)', 'control: probes roll themselves back');
+-- (Not events: since Phase 1.5 most of a family's events are synced and can't be deleted here.)
+select is(audit.probe('public.checkin_moments', 'delete', '00000000-0000-4000-8000-0000000000f1'), 'WROTE 2', 'control: parent A delete probe writes');
+select results_eq('select count(*)::int from public.events', 'values (7)', 'control: probes roll themselves back');
+select results_eq('select count(*)::int from public.checkin_moments', 'values (2)', 'control: the delete probe rolled back too');
 reset role;
 
 -- 1. Signed-in user, email on no allowlist, in no family, MFA passed (aal2).

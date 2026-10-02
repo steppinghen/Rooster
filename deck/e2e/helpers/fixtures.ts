@@ -90,12 +90,51 @@ export const MORNING_STEPS = [
   { id: 'breakfast', text: 'Breakfast', icon: 'breakfast' },
 ];
 
-export async function addRoutine(p: ParentFixture, r: { name: string; slot: 'morning' | 'after_school' | 'bedtime'; starts_at: string; steps: { id: string; text: string; icon: string }[]; kid_id?: string | null }) {
-  return (ok(await p.db.from('routines').insert({ family_id: p.familyId, kid_id: r.kid_id ?? null, ...r }).select('id').single()) as { id: string }).id;
+export type RoutineSpec = {
+  name: string;
+  slot: 'morning' | 'after_school' | 'bedtime' | 'other';
+  starts_at: string;
+  steps: { id: string; text: string; icon: string; kind?: 'task' | 'wave_check'; who?: 'all' | string[] }[];
+  /** One kid (Phase 1 specs) or several; none means everyone. */
+  kid_id?: string | null;
+  kid_ids?: string[];
+  days?: number[];
+  finish_by?: string | null;
+  finish_label?: 'bus' | 'car' | null;
+  earns_sticker?: boolean;
+};
+
+/** A routine and the kids it serves, through save_routine (the app's own write path). */
+export async function addRoutine(p: ParentFixture, r: RoutineSpec) {
+  return ok(
+    await p.db.rpc('save_routine', {
+      p_id: null,
+      p_family_id: p.familyId,
+      p_name: r.name,
+      p_slot: r.slot,
+      p_starts_at: r.starts_at,
+      p_steps: r.steps,
+      p_kid_ids: r.kid_ids ?? (r.kid_id ? [r.kid_id] : []),
+      p_days: r.days ?? [1, 2, 3, 4, 5, 6, 7],
+      p_finish_by: r.finish_by ?? null,
+      p_finish_label: r.finish_label ?? null,
+      p_earns_sticker: r.earns_sticker ?? false,
+    }),
+  ) as string;
 }
 
+/** An event typed into The Deck ("Added in The Deck"). visible_to_kids: false keeps it parents-only. */
 export async function addEvent(p: ParentFixture, e: { title: string; icon: string; on_date: string; kind?: string; visible_to_kids?: boolean; repeats_yearly?: boolean }) {
-  return (ok(await p.db.from('events').insert({ family_id: p.familyId, kind: 'other', visible_to_kids: true, repeats_yearly: false, ...e }).select('id').single()) as { id: string }).id;
+  const { visible_to_kids = true, ...rest } = e;
+  return (
+    ok(
+      await p.db
+        .from('events')
+        .insert({ family_id: p.familyId, kind: 'other', repeats_yearly: false, kid_visibility: visible_to_kids ? 'inherit' : 'hidden', countdown: visible_to_kids, ...rest })
+        .select('id')
+        .single(),
+    ) as { id: string }
+  ).id;
 }
 
 /** Pin the app's clock: the browser's and the server_now RPC the app corrects against. */

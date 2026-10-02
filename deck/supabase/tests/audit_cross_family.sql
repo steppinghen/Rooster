@@ -177,7 +177,10 @@ grant select on retarget_tables to authenticated;
 
 select set_eq('select audit.qn(t) from retarget_tables',
   array['public.feelings_checkins', 'public.kid_focus', 'public.reset_plans', 'public.routine_completions',
-        'public.routines', 'public.usage_events', 'public.usage_monthly'],
+        'public.usage_events', 'public.usage_monthly',
+        -- Phase 1.5 (routines.kid_id moved to routine_kids)
+        'public.routine_kids', 'public.device_kids', 'public.checkin_moments', 'public.event_kids', 'public.events',
+        'public.kid_decks', 'public.sticker_awards'],
   'composite (id, family_id) FKs exist on every kid- or routine-linked table');
 
 select tests.authenticate('00000000-0000-4000-8000-0000000000a1');
@@ -193,7 +196,7 @@ reset role;
 
 -- Parent edits can't move a family 1 routine onto family 2's kid.
 select tests.authenticate('00000000-0000-4000-8000-0000000000a1');
-select throws_ok($$update public.routines set kid_id = '00000000-0000-4000-8000-0000000000cc' where id = '00000000-0000-4000-8000-000000000101'$$,
+select throws_ok($$insert into public.routine_kids (family_id, routine_id, kid_id) values ('00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-000000000101', '00000000-0000-4000-8000-0000000000cc')$$,
   '23503', null, 'parent A cannot assign a family 1 routine to family 2''s kid');
 reset role;
 

@@ -71,12 +71,10 @@ select throws_ok($$select public.save_routine_progress('00000000-0000-4000-8000-
   '42501', null, 'progress: a revoked iPad cannot write');
 reset role;
 
--- A routine for one kid can't be completed for the other.
-insert into public.routines (id, family_id, kid_id, slot, name, starts_at, steps) values
-  ('00000000-0000-4000-8000-000000000102', '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-0000000000ca', 'bedtime', 'Last Run', '19:30',
-   '[{"id":"pjs","text":"Pajamas","icon":"shirt"}]');
+-- A routine for one kid can't be completed for the other (the fixture's After School, 102, is
+-- Kid A's only, through routine_kids).
 select tests.authenticate('00000000-0000-4000-8000-0000000000d1', 'aal1', true);
-select throws_ok($$select public.save_routine_progress('00000000-0000-4000-8000-000000000102', '00000000-0000-4000-8000-0000000000cb', current_date, '{pjs}')$$,
+select throws_ok($$select public.save_routine_progress('00000000-0000-4000-8000-000000000102', '00000000-0000-4000-8000-0000000000cb', current_date, '{snack}')$$,
   '23514', null, 'progress: not on a routine assigned to the sibling');
 
 -- ----- save_reset_plan -----

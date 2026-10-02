@@ -21,6 +21,7 @@ import { useNow } from './useNow';
 import { useReducedMotion } from './useReducedMotion';
 import { useStepDone } from './useStepDone';
 import './routines.css';
+import { servesKid } from '../lib/routines';
 
 /** One routine, one step at a time: a big picture, the words, read-aloud, and "I did it!". */
 export function RoutineRun({ kid }: { kid: Kid }) {
@@ -31,7 +32,7 @@ export function RoutineRun({ kid }: { kid: Kid }) {
   const reduced = useReducedMotion();
   const stepDone = useStepDone(kid.id);
   const [celebrate, setCelebrate] = useState(false);
-  const routine = snapshot!.routines.find((r) => r.id === routineId && (r.kid_id === null || r.kid_id === kid.id));
+  const routine = snapshot!.routines.find((r) => r.id === routineId && servesKid(r, kid.id));
 
   useEffect(() => {
     if (!celebrate) return;

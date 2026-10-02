@@ -44,8 +44,20 @@ export function RoutineEditor({ familyId, kids, routine, draft, onDone }: { fami
     if (!d.steps.length) return setError('Add at least one step.');
     setBusy(true);
     setError(null);
-    const row = { name: d.name.trim(), slot: d.slot, starts_at: d.starts_at, kid_id: d.kid_id, steps: d.steps.map((s) => ({ ...s, text: s.text.trim() })) };
-    const { error } = routine ? await supabase.from('routines').update(row).eq('id', routine.id) : await supabase.from('routines').insert({ ...row, family_id: familyId });
+    // One call writes the routine and the kids it serves (routine_kids), keeping its 1.5 fields.
+    const { error } = await supabase.rpc('save_routine', {
+      p_id: routine?.id ?? null,
+      p_family_id: familyId,
+      p_name: d.name.trim(),
+      p_slot: d.slot,
+      p_starts_at: d.starts_at,
+      p_steps: d.steps.map((s) => ({ ...s, text: s.text.trim() })),
+      p_kid_ids: d.kid_id ? [d.kid_id] : [],
+      p_days: routine?.days ?? [1, 2, 3, 4, 5, 6, 7],
+      p_finish_by: routine?.finish_by ?? null,
+      p_finish_label: routine?.finish_label ?? null,
+      p_earns_sticker: routine?.earns_sticker ?? false,
+    });
     setBusy(false);
     if (error) return setError(error.message);
     onDone(true);

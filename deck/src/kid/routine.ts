@@ -1,5 +1,6 @@
 import type { Routine, RoutineStep } from '../lib/types';
 import type { Completion } from './store';
+import { servesKid } from '../lib/routines';
 
 const minutes = (hhmm: string) => {
   const [h, m] = hhmm.split(':').map(Number);
@@ -8,7 +9,7 @@ const minutes = (hhmm: string) => {
 
 /** Routines that apply to this kid (their own plus "everyone"), in time order. */
 export function routinesForKid(routines: Routine[], kidId: string): Routine[] {
-  return routines.filter((r) => r.kid_id === null || r.kid_id === kidId).sort((a, b) => minutes(a.starts_at) - minutes(b.starts_at) || a.sort_order - b.sort_order);
+  return routines.filter((r) => servesKid(r, kidId)).sort((a, b) => minutes(a.starts_at) - minutes(b.starts_at) || a.sort_order - b.sort_order);
 }
 
 export type RoutineNow =

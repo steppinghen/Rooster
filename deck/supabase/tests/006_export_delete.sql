@@ -18,11 +18,13 @@ select is_empty($$
   select c.table_name from information_schema.columns c
   join information_schema.tables t on t.table_schema = c.table_schema and t.table_name = c.table_name and t.table_type = 'BASE TABLE'
   where c.table_schema = 'public' and c.column_name = 'family_id' and c.table_name <> 'families'
+    and c.table_name <> 'display_unlock_attempts' -- operational lockout rows, listed under "omitted"
     and not ((select doc from ex) -> 'tables') ? c.table_name
 $$, 'export: includes every family table');
+select ok((select doc -> 'omitted' ? 'display_unlock_attempts' from ex), 'export: lists the unlock lockout rows as omitted');
 
 select is((select jsonb_array_length(doc -> 'tables' -> 'kids') from ex), 2, 'export: both kids');
-select is((select jsonb_array_length(doc -> 'tables' -> 'events') from ex), 2, 'export: parents-only events too');
+select is((select jsonb_array_length(doc -> 'tables' -> 'events') from ex), 7, 'export: parents-only events too (typed-in and synced)');
 select is((select jsonb_array_length(doc -> 'tables' -> 'feelings_checkins') from ex), 1, 'export: check-ins');
 select ok((select not (doc::text ~ '00000000-0000-4000-8000-0000000000f2') from ex), 'export: nothing from family 2');
 select ok((select not (doc::text like '%$2a$%' or doc::text like '%$2b$%') from ex), 'export: no bcrypt hashes anywhere');
