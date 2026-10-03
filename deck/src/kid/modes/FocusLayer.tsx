@@ -1,26 +1,21 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Kid } from '../../lib/types';
-import { ThemeScope } from '../../theme/ThemeScope';
+import { ThemeScope, useTheme } from '../../theme/ThemeScope';
 import { celebrationVolume, effectiveVolume } from '../../theme/volume';
-import { Burst } from '../../ui/Burst';
 import { Icon } from '../../ui/Icon';
-import { PressButton } from '../../ui/PressButton';
-import { Sticker } from '../../ui/Sticker';
+import { Celebration } from '../../scenes/Celebration';
+import { mmss } from '../../scenes/clock';
+import { HeadsUp } from '../../scenes/HeadsUp';
+import { nextCelebration } from '../../scenes/timeline';
 import { effectiveFocus, MODE_LABEL, MODE_SPOKEN, modeVolume, timeLeft } from '../focus';
-import { speak } from '../speech';
+import { speak, speechUnlocked } from '../speech';
 import { useKidStore } from '../store';
 import { useNow } from '../useNow';
 import { useReducedMotion } from '../useReducedMotion';
 import './modes.css';
 
-const HEADS_UP_MS = 120_000;
 const CELEBRATE_WITHIN_MS = 10 * 60_000;
-
-const mmss = (ms: number) => {
-  const s = Math.max(0, Math.round(ms / 1000));
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-};
 
 const celebratedKey = (kidId: string, at: number) => `deck.celebrated.${kidId}.${at}`;
 
@@ -44,6 +39,8 @@ export function FocusLayer({ kid }: { kid: Kid }) {
   const nav = useNavigate();
   const { pathname } = useLocation();
   const [, rerender] = useState(0);
+  // Celebrations follow the device's ground (only Last Run and Lights out stay night).
+  const { ground } = useTheme();
   const focus = effectiveFocus(snapshot!.focus.find((f) => f.kid_id === kid.id), now);
 
   const screen = pathname.split('/')[3] ?? '';
@@ -57,7 +54,6 @@ export function FocusLayer({ kid }: { kid: Kid }) {
   // Reserve room at the bottom of the screen for the banner or chip, so it never covers a
   // tile (Wave Check included).
   const reserve = focus.headsUp ? 'headsup' : showLeft ? 'chip' : '';
-  const endedAt = celebrating && ended ? ended.at : null;
   useEffect(() => {
     const el = document.documentElement;
     if (reserve) el.dataset.focusReserve = reserve;
@@ -66,21 +62,6 @@ export function FocusLayer({ kid }: { kid: Kid }) {
       delete el.dataset.focusReserve;
     };
   }, [reserve]);
-
-  // Keep the payoff brief: it goes by itself after a few seconds.
-  useEffect(() => {
-    if (endedAt === null) return;
-    const t = setTimeout(() => {
-      try {
-        localStorage.setItem(celebratedKey(kid.id, endedAt), '1');
-      } catch {
-        /* ignore */
-      }
-      rerender((n) => n + 1);
-      if (!window.location.pathname.endsWith(kid.id)) nav(`/kid/${kid.id}`);
-    }, 6000);
-    return () => clearTimeout(t);
-  }, [endedAt, kid.id, nav]);
 
   if (celebrating && ended) {
     const done = () => {
@@ -92,41 +73,32 @@ export function FocusLayer({ kid }: { kid: Kid }) {
       rerender((n) => n + 1);
       if (!pathname.endsWith(kid.id)) nav(`/kid/${kid.id}`);
     };
-    // The payoff after a focus mode is loud: normal styling, unless reduced motion is on.
+    // The payoff after a focus mode is loud: normal styling, unless reduced motion is on. It ends
+    // by itself after the animation; a tap skips it.
     return (
-      <ThemeScope ground="night" volume={celebrationVolume(effectiveVolume(kid.default_volume, modeVolume(focus.mode)), reduced)} className="home__celebrate" role="status" data-testid="session-celebrate" data-audience="kid" data-age={kid.age_band}>
-        {reduced ? <Sticker art="sparkles" size={160} decorative /> : <Burst word="SHRED!" size={360} />}
-        <p className="dk-title home__celebrate-text">{MODE_LABEL[ended.mode]} done!</p>
-        <PressButton variant="yellow" className="focus-celebrate__btn" onClick={done}>
-          Back to Grom Zone
-        </PressButton>
+      <ThemeScope ground={ground} volume={celebrationVolume(effectiveVolume(kid.default_volume, modeVolume(focus.mode)), reduced)} className="home__celebrate" role="status" data-testid="session-celebrate" data-audience="kid" data-age={kid.age_band}>
+        <BagCelebration key={ended.at} kidId={kid.id} endedAt={ended.at} title={`${MODE_LABEL[ended.mode]} done!`} reduced={reduced} onDone={done} />
       </ThemeScope>
     );
   }
 
+  const headsUpLine = focus.headsUp ? `Two more minutes, then it's ${MODE_SPOKEN[focus.headsUp.mode]} time.` : '';
+  const sayHeadsUp = () => speak(headsUpLine);
   return (
     <>
       {focus.headsUp && (
-        <aside className="dk-card focus-headsup" role="status" data-testid="heads-up" data-audience="kid" style={{ '--accent': `var(--${kid.accent})` } as CSSProperties}>
-          <span className="focus-headsup__who">
-            <Sticker art="rooster" size={72} decorative />
-            <span className="focus-headsup__timer" aria-hidden="true">
-              <Icon name="timer" size={30} />
-            </span>
-          </span>
-          <span className="focus-headsup__text">
-            <span className="dk-title">Two more minutes, then it's {MODE_SPOKEN[focus.headsUp.mode]} time.</span>
-            <span className="focus-headsup__bar" aria-hidden="true">
-              <span style={{ '--left': Math.max(0, Math.min(1, (focus.headsUp.at - now) / HEADS_UP_MS)) } as CSSProperties} />
-            </span>
-            <span className="focus-headsup__left" data-testid="heads-up-left" aria-live="off">
-              {mmss(focus.headsUp.at - now)}
-            </span>
-          </span>
-          <PressButton round aria-label="Read it to me" className="focus-headsup__speak" onClick={() => speak(`Two more minutes, then it's ${MODE_SPOKEN[focus.headsUp!.mode]} time.`)}>
-            <Icon name="speaker" size={30} />
-          </PressButton>
-        </aside>
+        <div className="focus-headsup" style={{ '--accent': `var(--${kid.accent})` } as CSSProperties}>
+          <HeadsUp
+            key={focus.headsUp.at}
+            line={headsUpLine}
+            switchAt={focus.headsUp.at}
+            now={now}
+            reduced={reduced}
+            autoSpeak={kid.age_band === 'prereader' && speechUnlocked()}
+            onSpeak={sayHeadsUp}
+            kidColor={`var(--${kid.accent})`}
+          />
+        </div>
       )}
       {showLeft && focus.endsAt && (
         <div className="focus-left" role="timer" data-testid="time-left" data-audience="kid">
@@ -135,4 +107,10 @@ export function FocusLayer({ kid }: { kid: Kid }) {
       )}
     </>
   );
+}
+
+/** One celebration from the kid's bag, drawn once per ending (the key). */
+function BagCelebration({ kidId, endedAt, title, reduced, onDone }: { kidId: string; endedAt: number; title: string; reduced: boolean; onDone: () => void }) {
+  const [kind] = useState(() => nextCelebration(kidId, `session@${endedAt}`));
+  return <Celebration kind={kind} title={title} reduced={reduced} onDone={onDone} holdAfter={2.5} />;
 }

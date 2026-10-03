@@ -10,6 +10,30 @@ function pickVoice(): SpeechSynthesisVoice | null {
   return voice;
 }
 
+// iOS lets a page speak only after a tap, and forgets on every reload (it reloads the app on
+// app switch). The first tap after a load unlocks it; spoken-by-itself lines wait for that.
+let unlocked = false;
+if (typeof document !== 'undefined') {
+  // Safari counts pointerup / touchend (not pointerdown) as the activation, and wants a speak()
+  // inside it: an empty utterance primes the engine without making a sound.
+  const unlock = () => {
+    if (unlocked) return;
+    unlocked = true;
+    try {
+      if ('speechSynthesis' in window) speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+    } catch {
+      /* speech is a bonus */
+    }
+    for (const t of ['pointerup', 'touchend'] as const) document.removeEventListener(t, unlock, true);
+  };
+  for (const t of ['pointerup', 'touchend'] as const) document.addEventListener(t, unlock, true);
+}
+
+/** True once a tap in this page load has unlocked speech. */
+export function speechUnlocked(): boolean {
+  return unlocked;
+}
+
 export function canSpeak(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;
 }

@@ -24,14 +24,15 @@ test.beforeAll(async ({}, info) => {
   f = await family([
     { nickname: 'Kid A', age_band: 'reader', accent: 'magenta', avatar: 'rooster' },
     { nickname: 'Kid B', age_band: 'prereader', accent: 'cyan', avatar: 'turtle' },
-  ]);
+  ], { live: true });
 });
 
 test.beforeEach(({}, info) => {
   if (info.project.name === 'ipad' && f) resetFamily(f);
 });
 
-const barWidth = (page: Page) => page.locator('.focus-headsup__bar span').evaluate((e) => e.getBoundingClientRect().width / (e.parentElement!.getBoundingClientRect().width || 1));
+// Phase 1.5 (slice 4): the bar is now eight chunks that drain one every 15 s (R3HeadsUp).
+const chunks = async (page: Page) => Number(await page.getByTestId('heads-up-chunks').getAttribute('data-left'));
 const leftSecs = async (page: Page) => {
   const [m, s] = (await page.getByTestId('heads-up-left').innerText()).split(':').map(Number);
   return m! * 60 + s!;
@@ -55,24 +56,23 @@ test('heads-up: rooster + sand timer, same words for every mode, draining bar, t
       const hu = page.getByTestId('heads-up');
       await expect(hu, `${where}: arrives live`).toBeVisible({ timeout: 8000 });
       await expect(hu).toContainText(words.session!);
-      // The rooster with a sand timer.
-      await expect(hu.locator('.focus-headsup__who img, .focus-headsup__who [class*=sticker]').first()).toBeVisible();
-      const roosterSrc = await hu.locator('.focus-headsup__who img').first().getAttribute('src');
+      // The rooster (the exported heads-up pose, holding the sand timer) and the chunk timer.
+      await expect(hu.locator('.sc-headsup__who img').first()).toBeVisible();
+      const roosterSrc = await hu.locator('.sc-headsup__who img').first().getAttribute('src');
       expect.soft(roosterSrc ?? '', `${where}: the heads-up mascot is the rooster`).toMatch(/rooster/i);
-      await expect(hu.locator('.focus-headsup__timer')).toBeVisible();
+      await expect(hu.getByTestId('heads-up-chunks')).toBeVisible();
       await expect(page.getByTestId('heads-up-left')).toHaveText(/^(2:00|1:5\d)$/);
       // Still in Everything while the heads-up runs: normal volume, routines still there.
       await expect(page.locator('html')).toHaveAttribute('data-volume', 'normal');
       await expect(page.getByTestId('tile-routines')).toBeVisible();
-      // Draining bar + countdown move without a reload.
-      const w0 = await barWidth(page);
+      // Chunks + countdown move without a reload; the chunks always match the clock.
+      const c0 = await chunks(page);
       const s0 = await leftSecs(page);
       await page.waitForTimeout(3200);
-      const w1 = await barWidth(page);
       const s1 = await leftSecs(page);
       expect.soft(s1, `${where}: time left counts down`).toBeLessThan(s0);
-      expect.soft(w1, `${where}: bar drains`).toBeLessThan(w0);
-      expect.soft(w0, `${where}: bar starts nearly full`).toBeGreaterThan(0.9);
+      expect.soft(c0, `${where}: starts with all eight chunks`).toBe(8);
+      expect.soft(await chunks(page), `${where}: chunks match the time left`).toBe(Math.ceil(s1 / 15));
       // Read-aloud says exactly what is on screen.
       await hu.getByRole('button', { name: 'Read it to me' }).click();
       expect.soft(await spoken(page), `${where}: read-aloud`).toContain(words.session);
@@ -232,7 +232,7 @@ test('Session: the time-left chip counts down and the chip text has AA contrast 
 /* End-of-session celebration                                          */
 /* ------------------------------------------------------------------ */
 
-test('celebration when a timed Session ends: normal styling, burst; reduced motion: no burst; once per ending (slice 10)', async ({ browser }) => {
+test('celebration when a timed Session ends: normal styling, a celebration from the bag; reduced motion: its still; once per ending (slice 10, 1.5 slice 4)', async ({ browser }) => {
   test.setTimeout(120_000);
   for (const reduced of [false, true]) {
     resetFamily(f);
@@ -244,19 +244,23 @@ test('celebration when a timed Session ends: normal styling, burst; reduced moti
     await expect(cel).toContainText('Session done!');
     // Kid B's default is normal and the session returns to Everything, so normal either way.
     await expect(cel).toHaveAttribute('data-volume', 'normal');
+    // Phase 1.5: one of the seven celebrations (scene system). Reduce Motion shows its still.
+    const scene = cel.getByTestId('celebration');
+    await expect(scene).toBeVisible();
     if (reduced) {
-      expect.soft(await cel.locator('.dk-burst').count(), 'reduced motion: no burst').toBe(0);
+      const kind = await scene.getAttribute('data-kind');
+      const last = { pop: '3', confetti: '3', 'rooster-cheer': '3', 'shell-spin': '4', kickflip: '3', stoked: '3', squad: '4' }[kind!];
+      await expect(scene, 'reduced motion: the still at once').toHaveAttribute('data-beat', last!);
       const m = await stillUnderReducedMotion(page);
       expect.soft(m.out, 'reduced motion: nothing moves on the celebration').toEqual([]);
     } else {
-      await expect(cel.locator('.dk-burst')).toBeVisible();
-      expect.soft(await cel.locator('.dk-burst svg').evaluate((e) => getComputedStyle(e).animationName), 'burst animates').not.toBe('none');
+      await expect.poll(async () => Number(await scene.getAttribute('data-beat')), { message: 'the celebration steps through its beats', timeout: 3000 }).toBeGreaterThan(0);
     }
     {
       const a = await audit(page, MIN.prereader);
       expect.soft(a.smallTargets, `session celebration reduced=${reduced}: targets under 80pt`).toEqual([]);
       expect.soft(a.selectable, `session celebration reduced=${reduced}: selectable text`).toEqual([]);
-      expect.soft(a.contrast.filter((c) => !c.includes('dk-burst__word')), `session celebration reduced=${reduced}: contrast`).toEqual([]);
+      expect.soft(a.contrast.filter((c) => !c.includes('dk-burst__word') && !c.includes('sc-burst__word')), `session celebration reduced=${reduced}: contrast`).toEqual([]);
       expect.soft(a.scrollsY).toBe(false);
     }
     // Read-aloud for the pre-reader?
@@ -297,7 +301,7 @@ test('a timed Lights out ending: no loud SHRED! burst at bedtime (slice 10)', as
   await page.waitForTimeout(6000);
   const cel = page.getByTestId('session-celebrate');
   if (await cel.isVisible()) await snap(page, 'ipad-lightsout-ended-celebrate');
-  expect.soft(await cel.isVisible() && (await cel.locator('.dk-burst').count()) > 0, 'a timed Lights out ends with a "SHRED! Lights out done!" burst').toBe(false);
+  expect.soft(await cel.isVisible() && (await cel.locator('.dk-burst, .sc-burst').count()) > 0, 'a timed Lights out ends with a "SHRED! Lights out done!" burst').toBe(false);
   await ctx.close();
 });
 
@@ -308,7 +312,7 @@ test.describe('a kid whose default volume is focus', () => {
     ff = await family([
       { nickname: 'Kid A', age_band: 'reader', accent: 'magenta' },
       { nickname: 'Kid B', age_band: 'prereader', accent: 'cyan', default_volume: 'focus' },
-    ], { events: false });
+    ], { events: false, live: true });
   });
 
   test('stays focus in Everything with a heads-up; Session ending still gets the normal celebration (slice 10)', async ({ browser }) => {
@@ -332,9 +336,10 @@ test.describe('a kid whose default volume is focus', () => {
     const cel = page.getByTestId('session-celebrate');
     await expect(cel).toBeVisible({ timeout: 12_000 });
     await expect(cel, 'focus-default kid: celebration is still normal styling').toHaveAttribute('data-volume', 'normal');
-    await expect(cel.locator('.dk-burst')).toBeVisible();
+    await expect(cel.getByTestId('celebration')).toBeVisible();
     await snap(page, 'ipad-focuskid-session-celebrate');
-    await cel.getByRole('button', { name: 'Back to Grom Zone' }).click();
+    // Phase 1.5: a tap skips the celebration (no "Back to Grom Zone" button).
+    await cel.getByTestId('celebration').click();
     await expect(page.locator('html')).toHaveAttribute('data-volume', 'focus');
     await ctx.close();
   });
@@ -356,7 +361,10 @@ test('Lights out: always night (Day, Auto, Follow-device light), low brightness,
       await expect(page.locator('html')).toHaveAttribute('data-volume', 'focus');
       await expect(page.getByRole('button')).toHaveCount(1);
       await expect(page.getByRole('button', { name: 'I need to breathe' })).toBeVisible();
-      await expect(page.getByText(`Time for bed, ${k.kid}.`)).toBeVisible();
+      // 1.5 (slice 4): the line shows until the scene's 4.5 s frame, which keeps "I need to
+      // breathe" only (art spec); a reload or second visit starts on that frame.
+      await expect(page.getByText(`Time for bed, ${k.kid}.`)).toBeAttached();
+      await expect(page.getByRole('button', { name: 'I need to breathe' })).toBeVisible();
       // Low brightness: the brightest visible pixel region should be dim. Check the computed filter and bg.
       const dim = await page.evaluate(() => {
         const m = document.querySelector('.lightsout')!;
@@ -519,7 +527,7 @@ test('Session ends while the kid is on home: the Session card goes away at once 
   const { ctx, page } = await liveKidPage(browser, f, 'Kid A', { ground: 'day', reduced: true });
   await expect(page.getByTestId('session-home')).toBeVisible();
   await expect(page.getByTestId('session-celebrate')).toBeVisible({ timeout: 12_000 });
-  await page.getByRole('button', { name: 'Back to Grom Zone' }).click();
+  await page.getByTestId('celebration').click(); // a tap skips it (1.5 scene system)
   const t0 = Date.now();
   await snap(page, 'ipad-after-celebrate-home-reader-day');
   const stale = await page.getByTestId('session-home').count();

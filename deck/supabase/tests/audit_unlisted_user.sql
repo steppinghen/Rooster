@@ -147,7 +147,10 @@ select ok(result like 'READ %', format('control, parent A reads own family: %s -
   from audit.sweep('00000000-0000-4000-8000-0000000000f1') where op = 'select'
     -- Lockout rows (Phase 1.5) are reachable by no API role, parents included.
     and tbl <> 'public.display_unlock_attempts';
-select is(audit.probe('public.events', 'insert', '00000000-0000-4000-8000-0000000000f1'), 'WROTE 1', 'control: parent A insert probe writes');
+-- (Builder, slice 4: the insert probe copies an arbitrary family 1 row. Since 1.5 most events
+-- are synced, and copying one into a synced calendar is refused by design, which made this
+-- control flaky. Check-in moments: any copy is a valid insert (Kid A has 2 of 3).)
+select is(audit.probe('public.checkin_moments', 'insert', '00000000-0000-4000-8000-0000000000f1'), 'WROTE 1', 'control: parent A insert probe writes');
 select is(audit.probe('public.kids', 'update', '00000000-0000-4000-8000-0000000000f1'), 'WROTE 2', 'control: parent A update probe writes');
 -- (Not events: since Phase 1.5 most of a family's events are synced and can't be deleted here.)
 select is(audit.probe('public.checkin_moments', 'delete', '00000000-0000-4000-8000-0000000000f1'), 'WROTE 2', 'control: parent A delete probe writes');

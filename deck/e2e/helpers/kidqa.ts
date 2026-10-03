@@ -31,8 +31,12 @@ export const ACCENT_RGB: Record<string, string> = {
 export type Fam = { parent: ParentFixture; ids: Record<string, string>; device: Awaited<ReturnType<typeof pairDevice>>; routines: Record<string, string>; ground?: string };
 
 /** A fresh family with the three routines, a few countdowns, and a paired iPad. */
-export async function family(kids: KidSpec[], opts: { events?: boolean } = {}): Promise<Fam> {
+export async function family(kids: KidSpec[], opts: { events?: boolean; live?: boolean } = {}): Promise<Fam> {
   const parent = await makeParent({ familyName: `Family QA ${Date.now() % 100000}` });
+  // Real-clock suites (focus modes run on server time) get a time zone where it's late morning
+  // now (09:00-13:59), between Dawn Patrol and After School, so they test the same screen
+  // whatever hour the suite runs. (At 22:00 New York the family was in Last Run: night, focus.)
+  if (opts.live) sql(`update public.families set timezone = ${lit(liveZone())} where id = ${lit(parent.familyId)}`);
   const ids = await addKids(parent, kids);
   const routines = {
     morning: await addRoutine(parent, { name: 'Dawn Patrol', slot: 'morning', starts_at: '06:30', steps: MORNING_STEPS }),
@@ -49,6 +53,16 @@ export async function family(kids: KidSpec[], opts: { events?: boolean } = {}): 
   }
   const device = await pairDevice(parent);
   return { parent, ids, device, routines };
+}
+
+/** A zone where it is 09:00-13:59 right now. */
+export function liveZone(): string {
+  for (let off = -12; off <= 14; off++) {
+    const zone = off === 0 ? 'Etc/GMT' : `Etc/GMT${off > 0 ? '-' : '+'}${Math.abs(off)}`;
+    const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: zone, hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
+    if (h >= 9 && h <= 13) return zone;
+  }
+  throw new Error('no late-morning zone');
 }
 
 export function resetFamily(f: Fam) {

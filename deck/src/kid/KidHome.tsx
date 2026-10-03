@@ -1,11 +1,8 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ART, isArtKey, type ArtKey } from '../art/art';
 import { kidVisibleModules } from '../lib/moduleRules';
-import { accentVar, type Kid } from '../lib/types';
-import { ThemeScope } from '../theme/ThemeScope';
-import { celebrationVolume } from '../theme/volume';
-import { Burst } from '../ui/Burst';
+import { accentVar, type Kid, type Routine } from '../lib/types';
 import { DaySun } from '../ui/DaySun';
 import { Icon, type IconName } from '../ui/Icon';
 import { KidAvatar } from '../ui/KidAvatar';
@@ -27,6 +24,7 @@ import { useNow } from './useNow';
 import { localMinutes } from '../theme/ground';
 import { useReducedMotion } from './useReducedMotion';
 import { useStepDone, useStepUndo } from './useStepDone';
+import { RoutineCelebration } from './RoutineCelebration';
 import './kid.css';
 import './home.css';
 
@@ -51,7 +49,8 @@ export function KidHome({ kid }: { kid: Kid }) {
   const log = useLogUsage(kid.id);
   const now = useNow(1000);
   const reduced = useReducedMotion();
-  const [celebrate, setCelebrate] = useState<string | null>(null);
+  const [celebrate, setCelebrate] = useState<Routine | null>(null);
+  const clearCelebrate = useCallback(() => setCelebrate(null), []);
   const [undo, setUndo] = useState<{ routineId: string; done: string[] } | null>(null);
   const s = snapshot!;
   const tz = s.family.timezone;
@@ -66,16 +65,10 @@ export function KidHome({ kid }: { kid: Kid }) {
   const rn = routineNow(s.routines, s.completions, kid.id, today, minutes);
   const countdowns = upcomingCountdowns(s.events, s.kids, today);
 
-  useEffect(() => {
-    if (!celebrate) return;
-    const t = setTimeout(() => setCelebrate(null), 2600);
-    return () => clearTimeout(t);
-  }, [celebrate]);
-
   function didIt() {
     if (rn.kind !== 'active') return;
     setUndo({ routineId: rn.routine.id, done: rn.done });
-    if (stepDone(rn.routine, rn.done, rn.next.id)) setCelebrate(rn.routine.name);
+    if (stepDone(rn.routine, rn.done, rn.next.id)) setCelebrate(rn.routine);
   }
 
   // "Oops, not yet": put the last step back (for a few seconds after a tap).
@@ -249,10 +242,7 @@ export function KidHome({ kid }: { kid: Kid }) {
         </nav>
 
         {celebrate && (
-          <ThemeScope ground="night" volume={celebrationVolume(kid.default_volume === 'focus' || focus.mode !== 'everything' ? 'focus' : 'normal', reduced)} className="home__celebrate" role="status">
-            {reduced ? <Sticker art="sparkles" size={160} decorative /> : <Burst word="SHRED!" size={360} />}
-            <p className="dk-title home__celebrate-text">{celebrate} done!</p>
-          </ThemeScope>
+          <RoutineCelebration key={celebrate.id} kid={kid} routine={celebrate} today={today} effective={kid.default_volume === 'focus' || focus.mode !== 'everything' ? 'focus' : 'normal'} reduced={reduced} onDone={clearCelebrate} />
         )}
       </main>
     </KidTheme>

@@ -18,6 +18,8 @@ import { Picker } from './Picker';
 import { RoutineRun } from './RoutineRun';
 import { Routines } from './Routines';
 import { KidStoreProvider, useKidStore } from './store';
+import { FamilySettingsContext } from '../scenes/SceneContext';
+import '../scenes/scenes.css';
 
 function FirstLoad() {
   const { firstLoadFailed, refresh } = useKidStore();
@@ -92,10 +94,12 @@ function KidRoutes() {
   // Only the very first launch, before anything is cached, waits on the network.
   if (!snapshot) return <FirstLoad />;
   return (
-    <Routes>
-      <Route index element={<Picker />} />
-      <Route path=":kidId/*" element={<KidScope />} />
-    </Routes>
+    <FamilySettingsContext.Provider value={snapshot.family.settings ?? {}}>
+      <Routes>
+        <Route index element={<Picker />} />
+        <Route path=":kidId/*" element={<KidScope />} />
+      </Routes>
+    </FamilySettingsContext.Provider>
   );
 }
 

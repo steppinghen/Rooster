@@ -17,7 +17,7 @@ test.beforeAll(async ({}, info) => {
   f = await family([
     { nickname: 'Kid A', age_band: 'reader', accent: 'magenta' },
     { nickname: 'Kid B', age_band: 'prereader', accent: 'cyan' },
-  ], { events: false });
+  ], { events: false, live: true });
 });
 
 async function within(l: Locator, label: string, budget = 5000) {

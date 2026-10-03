@@ -235,16 +235,20 @@ test('home: celebration at normal volume; reduced motion keeps it at the kid vol
     await expect(cel).toHaveAttribute('data-volume', 'normal');
     await expect(cel).toContainText('Dawn Patrol done!');
     expect.soft(await cel.evaluate((e) => getComputedStyle(e).backgroundColor), 'celebration has its own ground (not see-through)').not.toBe('rgba(0, 0, 0, 0)');
+    // Phase 1.5 (slice 4): one of seven celebrations; Reduce Motion shows its still (the art
+    // spec's stills keep the settled burst and its word), and nothing moves.
+    const scene = cel.getByTestId('celebration');
+    await expect(scene).toBeVisible();
     if (reduced) {
-      // CLAUDE.md: reduced motion turns bursts off entirely (not just their animation).
-      expect.soft(await page.locator('.dk-burst').count(), 'reduced motion: no burst').toBe(0);
       const m = await stillUnderReducedMotion(page);
       expect.soft(m.out, 'reduced motion: nothing moves on the celebration').toEqual([]);
-    } else
-      expect.soft(await page.locator('.dk-burst svg').evaluate((e) => getComputedStyle(e).animationName), 'celebration burst animates without reduced motion').not.toBe('none');
+    } else {
+      await page.clock.runFor(450);
+      expect.soft(Number(await scene.getAttribute('data-beat')), 'the celebration steps through its beats').toBeGreaterThan(0);
+    }
     const shot = await shoot(page, `ipad-celebrate-prereader${reduced ? '-reduced' : ''}`);
     await sideBySide(page, shot, 'Shred', `${SHOTS}/compare/ipad-celebrate${reduced ? '-reduced' : ''}-vs-Shred.png`, `Celebration${reduced ? ' (reduced motion)' : ''}`);
-    await page.clock.runFor(3000);
+    await page.clock.runFor(4500); // the longest celebration (2.0 s) plus its short hold
     await expect(page.getByText('All done!')).toBeVisible();
     await ctx.close();
   }
@@ -314,16 +318,20 @@ test.describe('a kid whose default volume is focus', () => {
       await expect(cel).toBeVisible();
       await expect(cel, `home celebration volume (reduced=${reduced})`).toHaveAttribute('data-volume', reduced ? 'focus' : 'normal');
       if (!reduced) {
-        const shadow = await page.locator('.dk-burst__word').evaluate((e) => getComputedStyle(e).textShadow);
-        expect.soft(shadow, 'normal celebration: burst word has the offset treatment').not.toBe('none');
+        await page.clock.runFor(2100); // to the shout word (every celebration but confetti has one)
+        const word = page.locator('.sc-burst__word');
+        if (await word.count()) expect.soft(await word.first().evaluate((e) => getComputedStyle(e).textShadow), 'normal celebration: burst word has the offset treatment').not.toBe('none');
       } else {
-        // CLAUDE.md: "Reduced motion forces the stepped animations and bursts off in both levels."
-        expect.soft(await page.locator('.dk-burst').count(), 'reduced motion: the burst should be off, and a focus-volume screen must not carry a halftone burst').toBe(0);
+        // Reduce Motion: the still, nothing moving, and no halftone at the kid's focus volume.
+        const m = await stillUnderReducedMotion(page);
+        expect.soft(m.out, 'reduced motion: nothing moves on the celebration').toEqual([]);
         const v = await page.evaluate(() => document.querySelectorAll('.home__celebrate pattern').length);
         expect.soft(v, 'reduced motion + focus kid: halftone pattern in the celebration').toBe(0);
+        const burstDots = await page.locator('.home__celebrate .sc-burst__face').evaluateAll((els) => els.map((e) => getComputedStyle(e).backgroundImage));
+        expect.soft(burstDots.every((b) => b === 'none'), 'reduced motion + focus kid: halftone on the burst').toBe(true);
       }
       await shoot(page, `ipad-focuskid-celebrate-home${reduced ? '-reduced' : ''}`);
-      await page.clock.runFor(3000);
+      await page.clock.runFor(4500);
       await ctx.close();
 
       // Same from the step-by-step routine screen.
@@ -332,9 +340,12 @@ test.describe('a kid whose default volume is focus', () => {
       for (let i = 0; i < 2; i++) await r.page.getByRole('button', { name: 'I did it!' }).click();
       const rc = r.page.locator('.home__celebrate');
       await expect(rc).toBeVisible();
-      await expect(rc, `routine celebration volume (reduced=${reduced})`).toHaveAttribute('data-volume', reduced ? 'focus' : 'normal');
+      // The end of Last Run is the quiet version, always: focus styling, no burst, no shout word.
+      await expect(rc, `Last Run celebration volume (reduced=${reduced})`).toHaveAttribute('data-volume', 'focus');
+      await expect(rc.locator('.sc-burst')).toHaveCount(0);
+      await expect(rc).toContainText('All done.');
       await shoot(r.page, `ipad-focuskid-celebrate-lastrun${reduced ? '-reduced' : ''}`);
-      await r.page.clock.runFor(3000);
+      await r.page.clock.runFor(3500);
       await expect(r.page).toHaveURL(new RegExp(`/kid/${ff.ids['Kid B']}$`));
       await r.ctx.close();
     }

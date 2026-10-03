@@ -21,7 +21,9 @@
     "agent": "node scripts/agent-stack.mjs",
     "art:export": "node scripts/export-art.mjs",
     "art:check": "node scripts/export-art.mjs --check",
-    "art:sprite": ".venv/bin/python scripts/build-sprite.py"
+    "art:sprite": ".venv/bin/python scripts/build-sprite.py",
+    "test:e2e:phase1": "DECK_E2E_PART=phase1 playwright test",
+    "test:e2e:phase15": "DECK_E2E_PART=phase15 playwright test"
   },
   "dependencies": {
     "@fontsource/archivo": "^5.3.0",

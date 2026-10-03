@@ -5,7 +5,10 @@ import { dogNames, winterRange, type DogPin, type FamilySettings } from '../lib/
 
 export type Dog = 'mara' | 'costa';
 export type Mascot = 'rooster' | 'turtle' | 'dog';
-export type Pose = 'board' | 'hello' | 'celebrate' | 'calm' | 'headsup' | 'breathing' | 'bedtime' | 'winter' | 'winter-board' | 'slap' | 'float' | 'tucked';
+export type Pose =
+  | 'board' | 'hello' | 'celebrate' | 'calm' | 'headsup' | 'breathing' | 'bedtime' | 'winter' | 'winter-board' | 'slap' | 'float' | 'tucked'
+  // Animation frames (R3Idle, R3LightsOut)
+  | 'idle' | 'idle-blink' | 'idle-tail' | 'lights-calm' | 'yawn' | 'lights-tucked' | 'roost';
 
 /** Mara in Jan–Mar and Jul–Sep, Costa in Apr–Jun and Oct–Dec, unless a parent pinned one. */
 export function seasonDog(date: Date, pin: DogPin = 'season'): Dog {

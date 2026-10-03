@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { RoutineCelebration } from './RoutineCelebration';
+import { MascotArt } from '../scenes/MascotArt';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { isArtKey } from '../art/art';
 import type { Kid } from '../lib/types';
-import { ThemeScope } from '../theme/ThemeScope';
-import { celebrationVolume, effectiveVolume } from '../theme/volume';
-import { Burst } from '../ui/Burst';
+import { effectiveVolume } from '../theme/volume';
 import { Icon } from '../ui/Icon';
 import { PressButton } from '../ui/PressButton';
 import { ProgressDots } from '../ui/ProgressDots';
@@ -34,11 +34,7 @@ export function RoutineRun({ kid }: { kid: Kid }) {
   const [celebrate, setCelebrate] = useState(false);
   const routine = snapshot!.routines.find((r) => r.id === routineId && servesKid(r, kid.id));
 
-  useEffect(() => {
-    if (!celebrate) return;
-    const t = setTimeout(() => nav(`/kid/${kid.id}`), 2800);
-    return () => clearTimeout(t);
-  }, [celebrate, nav, kid.id]);
+  const goHome = useCallback(() => nav(`/kid/${kid.id}`), [nav, kid.id]);
 
   if (!routine) return <Navigate to={`/kid/${kid.id}/routines`} replace />;
   const today = familyDate(snapshot!.family.timezone, new Date(now));
@@ -77,7 +73,7 @@ export function RoutineRun({ kid }: { kid: Kid }) {
         ) : (
           <TaskCard className="rt-run__card">
             <span className="rt-run__art">
-              <Sticker art={routine.slot === 'bedtime' ? 'turtle' : 'rooster'} size={180} />
+              <MascotArt who={routine.slot === 'bedtime' ? 'turtle' : 'rooster'} pose={routine.slot === 'bedtime' ? 'calm' : 'celebrate'} px={180} />
             </span>
             <p className="dk-title rt-run__text">All done!</p>
             <PressButton variant="ink" onClick={() => nav(`/kid/${kid.id}`)}>
@@ -85,12 +81,7 @@ export function RoutineRun({ kid }: { kid: Kid }) {
             </PressButton>
           </TaskCard>
         )}
-        {celebrate && (
-          <ThemeScope ground="night" volume={celebrationVolume(effectiveVolume(kid.default_volume, modeVolume(focus.mode)), reduced)} className="home__celebrate" role="status">
-            {reduced ? <Sticker art="sparkles" size={160} decorative /> : <Burst word="SHRED!" size={360} />}
-            <p className="dk-title home__celebrate-text">{routine.name} done!</p>
-          </ThemeScope>
-        )}
+        {celebrate && <RoutineCelebration kid={kid} routine={routine} today={today} effective={effectiveVolume(kid.default_volume, modeVolume(focus.mode))} reduced={reduced} onDone={goHome} />}
       </KidFrame>
     </KidTheme>
   );

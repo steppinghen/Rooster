@@ -12,7 +12,7 @@
 // under 48 sm. A class the canvas doesn't draw is derived from the next one up by removing the
 // halftone (programmatic, flagged on the contact sheet). Stickers lose their built-in cut: the
 // app's DieCut applies the one cut every sticker gets.
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { optimize } from 'svgo';
 
@@ -45,6 +45,23 @@ add('mascots/dog-mara', 'slap', 'R6StickerSlap', { label: 'Mara slaps the sticke
 add('mascots/dog-costa', 'slap', 'R6StickerSlap', { label: 'Costa slaps the sticker on' }, ['lg']);
 add('mascots/turtle', 'float', 'R4WaveExtras', { label: 'Turtle floating on its shell' }, ['lg', 'md']);
 add('mascots/turtle', 'tucked', 'R5Celebrations', { label: 'Turtle tucked in its shell' }, ['lg', 'md']);
+
+// Idle and Lights out frames are unlabelled: they're taken by their position in the frame, which
+// lists each animation's steps in order (R3Idle: rooster open/closed, Mara down/up, Costa
+// down/up, turtle open/closed; R3LightsOut: turtle calm, rooster calm, turtle yawn, turtle
+// tucked, rooster roosting). Both frames of each pair ship, so an idle move swaps matched art.
+for (const [who, key, nth] of [
+  ['rooster', 'idle', 0], ['rooster', 'idle-blink', 1],
+  ['dog-mara', 'idle', 7], ['dog-mara', 'idle-tail', 8],
+  ['dog-costa', 'idle', 14], ['dog-costa', 'idle-tail', 15],
+  ['turtle', 'idle', 21], ['turtle', 'idle-blink', 22],
+]) add(`mascots/${who}`, key, 'R3Idle', { nth }, ['lg', 'md'], { single: true });
+for (const [who, key, nth] of [['turtle', 'lights-calm', 0], ['rooster', 'lights-calm', 1], ['turtle', 'yawn', 2], ['turtle', 'lights-tucked', 4], ['rooster', 'roost', 5]])
+  add(`mascots/${who}`, key, 'R3LightsOut', { nth }, ['lg', 'md'], { single: true });
+
+// Scene props (R3Celebrations, R5Celebrations, R6StickerSlap), unlabelled, by position.
+for (const [key, frameName, nth] of [['sparkle', 'R3Celebrations', 10], ['spin-lines', 'R5Celebrations', 5], ['wave-strip', 'R5Celebrations', 37], ['impact-lines', 'R6StickerSlap', 12]])
+  add('props', key, frameName, { nth }, ['lg'], { single: true });
 
 const WEATHER = ['sunny', 'cloudy', 'rain', 'storm', 'snow', 'windy', 'hot', 'cold'];
 const SNOW_WORD = { sunny: 'Bluebird', cloudy: 'Flat light', rain: 'Slush', storm: 'Blizzard', snow: 'Powder day', windy: 'Gusty', hot: 'Spring snow', cold: 'Deep freeze' };
@@ -133,6 +150,7 @@ const norm = (svg) =>
 function candidates(a, cls) {
   const svgs = allSvgs(frame(a.frame));
   const sel = a.sel;
+  if (sel.nth !== undefined) return svgs.slice(sel.nth, sel.nth + 1);
   if (sel.id || sel.idPrefix) {
     return svgs.filter((s) => (sel.id ? new RegExp(`\\bid="${sel.id}"`).test(s.text) : new RegExp(`\\bid="${sel.idPrefix}\\d*"`).test(s.text)));
   }
@@ -297,10 +315,18 @@ for (const w of warnings) console.log(`  warn: ${w}`);
 for (const p of problems) console.log(`  FAIL: ${p}`);
 
 if (!CHECK_ONLY) {
-  rmSync(OUT, { recursive: true, force: true });
+  // Write in place and remove only files the export no longer makes. (The repo can live in a
+  // synced folder, where deleting and recreating a folder leaves "name 2.svg" conflict copies.)
+  const wanted = new Set(files.map((f) => f.path));
+  for (const old of existsSync(OUT) ? readdirSync(OUT, { recursive: true }) : []) {
+    const rel = String(old);
+    if (rel.endsWith('.svg') && !wanted.has(rel)) rmSync(join(OUT, rel), { force: true });
+  }
   for (const f of files) {
     mkdirSync(dirname(join(OUT, f.path)), { recursive: true });
-    writeFileSync(join(OUT, f.path), f.svg + '\n');
+    const dest = join(OUT, f.path);
+    const body = f.svg + '\n';
+    if (!existsSync(dest) || readFileSync(dest, 'utf8') !== body) writeFileSync(dest, body);
   }
   const manifest = Object.fromEntries(files.map((f) => [f.path, { group: f.group, key: f.key, class: f.cls, derived: f.derived || undefined }]));
   writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');

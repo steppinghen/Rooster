@@ -11,13 +11,25 @@ if (!onTailscaleOrigin()) throw new Error(`Tests run on the Tailscale origin, no
 const port = AGENT_ENV.DECK_VITE_PORT;
 export default defineConfig({
   testDir: './e2e',
+  // DECK_E2E_PART=phase1 | phase15 runs one half of the suite (the slice15-* specs are 1.5's).
+  testIgnore: process.env.DECK_E2E_PART === 'phase1' ? /slice15-/ : undefined,
+  testMatch: process.env.DECK_E2E_PART === 'phase15' ? /slice15-.*\.spec\.ts$/ : undefined,
   globalSetup: './e2e/global-setup.ts',
   outputDir: `./test-results/${AGENT}`,
   fullyParallel: false,
   workers: 1,
   reporter: [['list']],
+  // Nothing may wait forever (a run once hung for over an hour). A test gets 60 s unless it
+  // asks for more with test.setTimeout; a single click or wait gets 15 s, a page load 20 s, so a
+  // stuck step fails fast and names itself; and the whole run stops at 40 minutes
+  // (DECK_E2E_RUN_MIN to change it). Long suites run in halves: npm run test:e2e:phase1 / :phase15.
+  timeout: 60_000,
+  globalTimeout: Number(process.env.DECK_E2E_RUN_MIN ?? 40) * 60_000,
+  expect: { timeout: 10_000 },
   use: {
     baseURL: ORIGIN,
+    actionTimeout: 15_000,
+    navigationTimeout: 20_000,
     trace: 'retain-on-failure',
   },
   projects: [

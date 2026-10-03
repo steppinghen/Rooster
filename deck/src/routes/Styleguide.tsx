@@ -16,6 +16,8 @@ import { Sticker } from '../ui/Sticker';
 import { AccentBlock, Panel, TaskCard } from '../ui/surfaces';
 import { Tile } from '../ui/Tile';
 import { Headline, Marker } from '../ui/type';
+import { useReducedMotion } from '../kid/useReducedMotion';
+import { SceneGallery } from './SceneGallery';
 import './styleguide.css';
 
 const COMBOS: { ground: Ground; volume: Volume }[] = [
@@ -182,6 +184,7 @@ function ArtGrid() {
 export function Styleguide() {
   const [ground, setGround] = useState<Ground>('night');
   const [volume, setVolume] = useState<Volume>('normal');
+  const reduced = useReducedMotion();
 
   return (
     <RootTheme ground={ground} volume={volume}>
@@ -264,6 +267,14 @@ export function Styleguide() {
               )),
             )}
           </div>
+        </section>
+
+        <section aria-labelledby="sg-scenes-h">
+          <h2 id="sg-scenes-h" className="sg-h2">
+            Scenes (stepped flipbooks)
+          </h2>
+          <p className="sg-note">Play each one. With Reduce Motion on, each shows its still and its words.</p>
+          <SceneGallery reduced={reduced} />
         </section>
 
         <section aria-labelledby="sg-parent">

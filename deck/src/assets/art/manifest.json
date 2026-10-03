@@ -474,6 +474,169 @@
     "class": "md",
     "derived": "md from lg"
   },
+  "mascots/rooster/idle.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "idle",
+    "class": "lg"
+  },
+  "mascots/rooster/idle.md.svg": {
+    "group": "mascots/rooster",
+    "key": "idle",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/rooster/idle-blink.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "idle-blink",
+    "class": "lg"
+  },
+  "mascots/rooster/idle-blink.md.svg": {
+    "group": "mascots/rooster",
+    "key": "idle-blink",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/idle.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "idle",
+    "class": "lg"
+  },
+  "mascots/dog-mara/idle.md.svg": {
+    "group": "mascots/dog-mara",
+    "key": "idle",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-mara/idle-tail.lg.svg": {
+    "group": "mascots/dog-mara",
+    "key": "idle-tail",
+    "class": "lg"
+  },
+  "mascots/dog-mara/idle-tail.md.svg": {
+    "group": "mascots/dog-mara",
+    "key": "idle-tail",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-costa/idle.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "idle",
+    "class": "lg"
+  },
+  "mascots/dog-costa/idle.md.svg": {
+    "group": "mascots/dog-costa",
+    "key": "idle",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/dog-costa/idle-tail.lg.svg": {
+    "group": "mascots/dog-costa",
+    "key": "idle-tail",
+    "class": "lg"
+  },
+  "mascots/dog-costa/idle-tail.md.svg": {
+    "group": "mascots/dog-costa",
+    "key": "idle-tail",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/idle.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "idle",
+    "class": "lg"
+  },
+  "mascots/turtle/idle.md.svg": {
+    "group": "mascots/turtle",
+    "key": "idle",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/idle-blink.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "idle-blink",
+    "class": "lg"
+  },
+  "mascots/turtle/idle-blink.md.svg": {
+    "group": "mascots/turtle",
+    "key": "idle-blink",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/lights-calm.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "lights-calm",
+    "class": "lg"
+  },
+  "mascots/turtle/lights-calm.md.svg": {
+    "group": "mascots/turtle",
+    "key": "lights-calm",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/rooster/lights-calm.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "lights-calm",
+    "class": "lg"
+  },
+  "mascots/rooster/lights-calm.md.svg": {
+    "group": "mascots/rooster",
+    "key": "lights-calm",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/yawn.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "yawn",
+    "class": "lg"
+  },
+  "mascots/turtle/yawn.md.svg": {
+    "group": "mascots/turtle",
+    "key": "yawn",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/turtle/lights-tucked.lg.svg": {
+    "group": "mascots/turtle",
+    "key": "lights-tucked",
+    "class": "lg"
+  },
+  "mascots/turtle/lights-tucked.md.svg": {
+    "group": "mascots/turtle",
+    "key": "lights-tucked",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "mascots/rooster/roost.lg.svg": {
+    "group": "mascots/rooster",
+    "key": "roost",
+    "class": "lg"
+  },
+  "mascots/rooster/roost.md.svg": {
+    "group": "mascots/rooster",
+    "key": "roost",
+    "class": "md",
+    "derived": "md from lg"
+  },
+  "props/sparkle.lg.svg": {
+    "group": "props",
+    "key": "sparkle",
+    "class": "lg"
+  },
+  "props/spin-lines.lg.svg": {
+    "group": "props",
+    "key": "spin-lines",
+    "class": "lg"
+  },
+  "props/wave-strip.lg.svg": {
+    "group": "props",
+    "key": "wave-strip",
+    "class": "lg"
+  },
+  "props/impact-lines.lg.svg": {
+    "group": "props",
+    "key": "impact-lines",
+    "class": "lg"
+  },
   "weather/surf/sunny.lg.svg": {
     "group": "weather/surf",
     "key": "sunny",

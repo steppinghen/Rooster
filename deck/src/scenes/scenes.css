@@ -1,0 +1,448 @@
+/* Scene system (Phase 1.5 slice 4). Beats swap poses or set transforms with no transitions:
+   the motion is deliberately stepped. Reduce Motion is handled in the components (the still). */
+
+.sc-mascot {
+  display: block;
+  pointer-events: none;
+  /* Scene art keeps its size even inside a zero-size anchor (the paw slap's spot). */
+  max-width: none;
+}
+.sc-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* ---------- Celebration ---------- */
+.sc-celebrate {
+  appearance: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: var(--ground);
+  background-image: var(--ground-image);
+  background-size: var(--ground-image-size);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.sc-celebrate__stage {
+  position: relative;
+  width: min(80vw, 520px);
+  height: min(50vh, 380px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* The shout word sits beside the mascot, never over its face. */
+.sc-celebrate__stage > .sc-burst {
+  position: absolute;
+  right: -70px;
+  top: -40px;
+}
+.sc-celebrate__stage > .sc-burst:only-child {
+  position: relative;
+  right: auto;
+  top: auto;
+}
+.sc-celebrate__title {
+  font-size: 40px;
+  margin: 0;
+}
+
+/* The POP burst, as the canvas draws it: an ink shadow and a yellow star with magenta halftone. */
+.sc-burst {
+  --star: polygon(50% 0%, 59% 22%, 82% 6%, 76% 31%, 100% 30%, 82% 48%, 98% 68%, 73% 66%, 78% 94%, 57% 76%, 46% 100%, 39% 75%, 15% 90%, 22% 64%, 0% 60%, 18% 44%, 3% 22%, 28% 26%, 24% 2%, 42% 20%);
+  position: relative;
+  display: block;
+  width: var(--burst, 260px);
+  height: calc(var(--burst, 260px) * 0.83);
+  flex-shrink: 0;
+}
+.sc-burst__shadow,
+.sc-burst__face {
+  position: absolute;
+  inset: 0;
+  clip-path: var(--star);
+}
+.sc-burst__shadow {
+  background: var(--ink);
+  transform: translate(5px, 5px);
+}
+.sc-burst__face {
+  background-color: var(--burst-fill, var(--yellow));
+  background-image: radial-gradient(var(--burst-dots, rgba(255, 62, 138, 0.35)) 1.6px, transparent 2px);
+  background-size: 7px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Focus volume: no halftone, anywhere (the still a focus-default kid sees under Reduce Motion). */
+[data-volume='focus'] .sc-burst__face {
+  background-image: none;
+}
+.sc-burst__word {
+  font-family: var(--font-display);
+  font-size: var(--word, calc(var(--burst, 260px) * 0.17));
+  color: var(--ink);
+  text-shadow: 3px 0 0 var(--magenta), -2px 0 0 var(--cyan);
+  transform: rotate(-4deg);
+  white-space: nowrap;
+}
+
+.sc-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.sc-confetti__bit {
+  position: absolute;
+  width: 16px;
+  height: 26px;
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+}
+.sc-prop {
+  position: absolute;
+  pointer-events: none;
+}
+.sc-wave {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  translate: -50% 0;
+}
+.sc-squad {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  min-height: 150px;
+}
+
+/* ---------- Heads-up ---------- */
+.sc-headsup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+}
+.sc-headsup__who {
+  flex-shrink: 0;
+}
+.sc-headsup__who--rising {
+  transform: translateY(40%);
+}
+.sc-headsup__text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sc-headsup__text .dk-title[data-shown='false'] {
+  visibility: hidden;
+}
+.sc-chunks {
+  display: flex;
+  gap: 6px;
+}
+.sc-chunk {
+  flex: 1 1 0;
+  height: 16px;
+  border: 3px solid var(--ink);
+  border-radius: 6px;
+  background: transparent;
+}
+.sc-chunk--on {
+  background: var(--kid, var(--accent));
+}
+/* The last chunk pulses from 1:45, stepped. */
+@keyframes sc-pulse {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.35; }
+}
+.sc-chunk--pulse {
+  animation: sc-pulse 1s steps(1, end) infinite;
+}
+.sc-headsup__left {
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+/* Landscape: a compact banner (a smaller rooster, one row) so it takes less of the height. */
+@media (orientation: landscape) {
+  .sc-headsup {
+    padding: 8px 14px;
+    gap: 12px;
+  }
+  .sc-headsup__who img {
+    width: 64px;
+    height: 64px;
+  }
+  .sc-headsup__text {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+  .sc-headsup__text .dk-title {
+    flex: 1 1 100%;
+    font-size: 22px;
+  }
+  .sc-chunks {
+    flex: 1 1 auto;
+  }
+}
+
+/* ---------- Lights out ---------- */
+/* The whole screen, both orientations: stars and the dim reach every edge. */
+.sc-lightsout {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.sc-lightsout::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+}
+.sc-lightsout[data-dim='dim']::after {
+  opacity: 0.35;
+}
+.sc-lightsout[data-dim='very']::after {
+  opacity: 0.55;
+}
+/* Low and large, as R3LightsOut draws it; the one control sits above. */
+.sc-lightsout__pair {
+  position: absolute;
+  left: 50%;
+  bottom: 6vh;
+  translate: -50% 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+/* 4.5 s: very dim, "I need to breathe" only. */
+.sc-lightsout[data-dim='very'] ~ .lightsout__text {
+  visibility: hidden;
+}
+.sc-star {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--cream);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+}
+.sc-snow__flake {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--cream);
+  opacity: 0.85;
+}
+
+/* ---------- Sticker earned ---------- */
+.sc-slap {
+  position: absolute;
+  width: 0;
+  height: 0;
+  z-index: 3;
+}
+.sc-slap__sticker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -50%;
+  display: flex;
+}
+.sc-slap__sticker > * {
+  width: 100%;
+  height: 100%;
+}
+.sc-slap__impact {
+  max-width: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -80%;
+}
+.sc-slap__dog {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% 0;
+  /* The near paw lands on the spot (fine-tuned against the real deck in slice 8). */
+  transform-origin: bottom center;
+}
+
+/* ---------- Quiet reveal ---------- */
+.sc-reveal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+}
+.sc-reveal::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: calc(var(--dim, 0) * 0.14);
+  pointer-events: none;
+}
+.sc-reveal__title {
+  margin: 0;
+  font-size: 34px;
+}
+.sc-reveal__card {
+  appearance: none;
+  position: relative;
+  width: 200px;
+  height: 200px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.sc-reveal__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sc-reveal__card[data-peeled='true'] .sc-reveal__face {
+  filter: drop-shadow(0 0 18px rgba(255, 210, 63, 0.7));
+}
+/* The backing peels up from the top-right corner in five steps. */
+.sc-reveal__back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  color: var(--text-on-card);
+  border: var(--outline) solid var(--ink);
+  border-radius: 28px;
+  font-family: var(--font-display);
+  font-size: 96px;
+  clip-path: polygon(0 0, calc(100% - var(--peel) * 20%) 0, 100% calc(var(--peel) * 20%), 100% 100%, 0 100%);
+}
+.sc-reveal__name {
+  margin: 0;
+  font-size: 32px;
+}
+.sc-reveal__dog--walk {
+  translate: 60px 0;
+}
+.sc-reveal__night {
+  margin: 0;
+  font-size: 30px;
+}
+
+/* ---------- Breathing wave ---------- */
+.sc-breathe {
+  position: relative;
+  width: min(80vw, 520px);
+  height: 300px;
+}
+.sc-breathe__tide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 120px;
+  background: var(--cyan);
+  border-top: var(--outline) solid var(--ink);
+  border-radius: 60px 60px 0 0;
+}
+.sc-breathe__rider {
+  position: absolute;
+  left: 50%;
+  bottom: 90px;
+  translate: -50% 0;
+  z-index: 1;
+  transition: transform 4s ease-in-out;
+}
+.sc-breathe[data-phase='in'] .sc-breathe__rider {
+  transform: translateY(-46px);
+}
+.sc-breathe[data-phase='out'] .sc-breathe__rider {
+  transform: translateY(0);
+}
+.sc-breathe--still .sc-breathe__rider {
+  transition: none;
+  transform: none;
+}
+.sc-breathe__word {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  text-align: center;
+  font-size: 34px;
+}
+
+.sc-idle,
+.sc-trim {
+  display: inline-block;
+}
+.sc-still {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Quiet end of Last Run: tap to skip; Wave Check and Breathe right there. */
+.quiet-done__skip {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.quiet-done__feelings {
+  display: flex;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+/* Narrow screens (a phone): the line gets the full width under the rooster and the speaker. */
+@media (max-width: 560px) {
+  .sc-headsup {
+    flex-wrap: wrap;
+  }
+  .sc-headsup__who img {
+    width: 64px;
+    height: 64px;
+  }
+  .sc-headsup__text {
+    order: 3;
+    flex: 1 1 100%;
+  }
+  .sc-headsup .focus-headsup__speak {
+    margin-left: auto;
+  }
+}

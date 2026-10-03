@@ -80,7 +80,8 @@ export async function installQa(target: Page | BrowserContext) {
     // Record read-aloud calls instead of speaking (WebKit headless has no voices).
     (window as any).__spoken = [] as string[];
     try {
-      const record = (u: { text: string }) => void (window as any).__spoken.push(u.text);
+      // An empty utterance is the app priming iOS speech inside a tap: silence, not speech.
+      const record = (u: { text: string }) => void (u.text && (window as any).__spoken.push(u.text));
       if ((window as any).SpeechSynthesis?.prototype) {
         // Patch the prototype: WebKit can hand out a fresh speechSynthesis object after load.
         (window as any).SpeechSynthesis.prototype.speak = function (u: { text: string }) {

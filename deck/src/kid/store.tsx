@@ -4,6 +4,7 @@ import { useSession } from '../lib/session';
 import { supabase } from '../lib/supabase';
 import { KID_COLUMNS, type DeckEvent, type Kid, type KidFocus, type Routine } from '../lib/types';
 import { must } from '../lib/useAsync';
+import type { FamilySettings } from '../lib/familySettings';
 import { familyDate, LEGACY_SNAPSHOT_KEYS, OUTBOX_KEY, SNAPSHOT_KEY } from './cache';
 import { ROUTINE_SELECT, toRoutine } from '../lib/routines';
 import { EVENT_SELECT, toEvent } from '../lib/events';
@@ -21,7 +22,7 @@ export type Snapshot = {
   version: 3;
   fetchedAt: string;
   serverOffsetMs: number; // server clock minus device clock
-  family: { id: string; name: string; timezone: string };
+  family: { id: string; name: string; timezone: string; settings?: FamilySettings };
   device: { id: string; label: string; ground: string };
   kids: Kid[];
   routines: Routine[];
@@ -65,7 +66,7 @@ async function fetchSnapshot(familyId: string, device: Snapshot['device']): Prom
   const t0 = Date.now();
   const [now, family, kids, routines, events, focus, modules, me, plans] = await Promise.all([
     supabase.rpc('server_now'),
-    supabase.from('families').select('id, name, timezone').eq('id', familyId).single(),
+    supabase.from('families').select('id, name, timezone, settings').eq('id', familyId).single(),
     supabase.from('kids').select(KID_COLUMNS).eq('family_id', familyId).order('sort_order').order('created_at'),
     supabase.from('routines').select(ROUTINE_SELECT).eq('family_id', familyId).order('starts_at'),
     supabase.from('events').select(EVENT_SELECT).eq('family_id', familyId).order('on_date'),

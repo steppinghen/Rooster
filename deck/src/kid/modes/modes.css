@@ -89,9 +89,16 @@
 /* Lights out: very low brightness, a few stars, the turtle tucked in. */
 .lightsout {
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  gap: 4vh;
+  /* The headline up top, the one control above the sleeping pair (R3LightsOut). */
+  padding-top: 10vh;
   text-align: center;
   background: #0b0a18;
+}
+.lightsout > :not(.sc-lightsout) {
+  position: relative;
+  z-index: 1;
 }
 
 .lightsout__sky {
