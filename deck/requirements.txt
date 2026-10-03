@@ -1,0 +1,3 @@
+# Python tools for scripts/build-sprite.py (npm run art:sprite). Rebuild the venv with:
+#   python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+pillow==12.3.0

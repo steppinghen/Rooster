@@ -9,6 +9,7 @@ How to rebuild the local environment from a clean checkout, or hand it off. Keep
 - Supabase CLI 2.118+ (`brew install supabase/tap/supabase`)
 - Netlify CLI (only for `netlify dev`; deploys happen only at Gate 2)
 - Tailscale, so the phone and iPad can reach the Mac
+- Python 3, only for `npm run art:sprite`: `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt` (`.venv` is gitignored, and its scripts hold absolute paths, so rebuild it after moving the repo)
 
 ## First run
 
