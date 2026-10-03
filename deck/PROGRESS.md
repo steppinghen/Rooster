@@ -660,6 +660,37 @@ The parent ran the list on the real iPad and phone: the flows work and nothing b
    - `smoke:seed` now picks the iPad by the later of "last seen" and "paired".
 6. **The dock feels too big.** Held for the sheet. Measured: the frame's dock is taller (133–135 px bar, 94–102 px pill) than the build's (127–129, 88–96); its pills are narrower only because it has six items.
 
+### Resume here after the repo move (2026-10-03)
+
+**Prepared before the move.**
+- Everything is committed on `deck/phase-1.5`, apart from the parent's `_shared/auth-overlay.*` (never staged). Nothing is pushed.
+- `requirements.txt` exists for `.venv`.
+- The 100 iCloud conflict copies are deleted, `.git/index 2` among them.
+- The dev, build, kid-ux and parent-ux stacks are stopped, with their data kept. The rls stack has no bind mounts and keeps running.
+
+**After the move, in this order:**
+1. **Git identity:** in `~/.gitconfig`, point `[includeIf "gitdir:…/rooster/"]` at the new path. Check that `git config user.email` prints the steppinghen noreply address.
+2. **Stacks:** run `supabase start` in `deck/`, then `npm run env:local`, then `npm run agent -- up build` (and `kidux`, `parentux` when their agents run). They come back with their data and mount the new path.
+3. **Python:** rebuild the venv, whose scripts hold absolute paths: `rm -rf .venv && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`.
+4. **Claude Code memory:** copy it to the new path (the commands are in the move message).
+5. **Check:** `npm run test:unit`, `npm run test:db`, and one e2e spec (`slice15-5-point`) on the build stack.
+
+**Then the approved work, before slice 6:**
+1. **The dock (smoke-check note 6, approved as a design change; the frames will be updated to match).** Record it as deviation V17.
+   - The bar is about 100 pt for readers and about 116 pt for pre-readers, the same in both orientations.
+   - Pills are drawn about 64 pt tall (reader) and 80 pt (pre-reader), with hit areas filling the bar.
+   - Pills have a fixed width and don't stretch with fewer items.
+   - Keep the slim task dock's own sizes consistent with this.
+   - Update `--dock-h` (the heads-up room) and the dock checks in the specs.
+   - Rebuild the frame-vs-build sheet (`slice15-5-sheet.spec.ts`) and republish it to the same page.
+2. **A68 (full answer, for slice 13):**
+   - My look gets "Not you? Switch rider".
+   - A kid iPad goes back to the rider picker after 10 minutes with no taps, **on browsing screens only**.
+   - It never fires during Lights out, a focus mode (Session included), a celebration, or a routine in progress.
+   - It doesn't apply on a single-kid iPad.
+3. **Smoke-check note 2 is dropped:** at iPad size with real data the build matches the frames.
+4. **Then wait for the parent's go before starting slice 6.**
+
 ### Slice 5 must-do (before the smoke check)
 
 - [x] **The landscape checks assert again.** `LANDSCAPE_HOME_FIXED = true` in `e2e/slice15-4-ux.spec.ts`: landscape heads-up never covers controls, the celebration and quiet-ending screens never scroll, kidRules (no scroll) on the heads-up test. The banner sits just above the dock and the screen's content gives up the room (`modes.css`).

@@ -837,7 +837,7 @@ Needs changes to the Coop TV app (outside `rooster/deck`, not built):
 | A65 | **Default taken**, with one addition: when a kid hits the look limit, My look says something gentle ("Try again later"), never a scolding message. The `look_attempts` table is approved for slice 13. |
 | A66 | **Default taken.** The rounded home location stays in `families.settings`. |
 | A67 | **Default taken.** Ship the derived art; missing trims are drawn on the canvas later. |
-| A68 | **Default taken**: My look gets "Not you? Switch rider". The rule for the 10-minute idle return to the picker arrived cut off ("…never fires"); asked again before slice 13. |
+| A68 | **Default taken**: My look gets "Not you? Switch rider", and a kid iPad goes back to the rider picker after 10 minutes with no taps. **The idle return happens on browsing screens only.** It never fires during Lights out, a focus mode (Session included), a celebration, or a routine in progress, and it doesn't apply on a single-kid iPad. |
 | A69 | **Default taken.** No "Start early" for now. |
 
 ## 1.5-3. Deviations (Phase 1.5)
