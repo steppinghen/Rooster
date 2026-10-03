@@ -22,7 +22,7 @@ import { KidHeader } from '../ui/KidHeader';
 import { PressButton } from '../ui/PressButton';
 import { familyDate } from './cache';
 import { setCurrentKid } from './currentKid';
-import { sleepsLabel, upcomingCountdowns } from './dates';
+import { countdownWord, sleepsLabel, upcomingCountdowns } from './dates';
 import { effectiveFocus } from './focus';
 import { kidDock } from './kidDock';
 import { KidTheme } from './KidTheme';
@@ -508,21 +508,27 @@ function InfoCards({ kid, countdown, datesOn, onDates }: { kid: Kid; countdown: 
       <InfoCard testid="card-weather" art={<Icon name="sun" size={46} />} title="Weather" line="Look outside" say="Look outside to see the weather." prereader={prereader} />
       <InfoCard testid="card-dinner" art={<Icon name="bowl" size={46} />} title={prereader ? 'Dinner' : 'Tonight'} line="Dinner later" say="Dinner later." prereader={prereader} />
       {datesOn && (
-      <InfoCard
-        testid="card-countdown"
-        art={countIcon ? <img src={artSrc(countIcon)} alt="" draggable={false} /> : <Icon name="calendar" size={46} />}
-        title={countdown ? sleepsLabel(countdown.sleeps) : 'Tour Dates'}
-        line={countdown ? (prereader ? countdown.title.split(' ')[0]! : countdown.title) : 'Countdowns'}
-        say={countdown ? `${sleepsLabel(countdown.sleeps)} until ${countdown.title}.` : 'Tour Dates.'}
-        prereader={prereader}
-        onOpen={onDates}
-      />
+        <InfoCard
+          testid="card-countdown"
+          art={countIcon ? <img src={artSrc(countIcon)} alt="" draggable={false} /> : <Icon name="calendar" size={46} />}
+          // The pre-reader's picture carries the count as a badge; the word is the event's kind.
+          badge={prereader && countdown && countdown.sleeps > 0 ? String(countdown.sleeps) : undefined}
+          title={countdown ? (prereader ? (countdown.sleeps > 0 ? countdownWord(countdown) : 'Today!') : sleepsLabel(countdown.sleeps)) : 'Tour Dates'}
+          line={countdown ? countdown.title : 'Countdowns'}
+          say={countdown ? (countdown.sleeps > 0 ? `${sleepsLabel(countdown.sleeps)} until ${countdown.title}.` : `${countdown.title} is today!`) : 'Tour Dates.'}
+          prereader={prereader}
+          onOpen={onDates}
+        />
       )}
     </div>
   );
 }
 
-function InfoCard({ testid, art, title, line, say, prereader, onOpen }: { testid: string; art: ReactNode; title: string; line: string; say: string; prereader: boolean; onOpen?: () => void }) {
+/**
+ * An info card. Readers get a picture and two lines; pre-readers a large picture card with one
+ * word (and an optional count badge on the picture), the whole line spoken on tap.
+ */
+function InfoCard({ testid, art, badge, title, line, say, prereader, onOpen }: { testid: string; art: ReactNode; badge?: string; title: string; line: string; say: string; prereader: boolean; onOpen?: () => void }) {
   const body = (
     <>
       {onOpen && (
@@ -530,9 +536,16 @@ function InfoCard({ testid, art, title, line, say, prereader, onOpen }: { testid
           <Icon name="chevron" size={20} strokeWidth={3} />
         </span>
       )}
-      <span className="pt-card__art">{art}</span>
+      <span className="pt-card__art">
+        {art}
+        {badge && (
+          <span className="pt-card__badge" aria-hidden="true">
+            {badge}
+          </span>
+        )}
+      </span>
       <span className="pt-card__title">{title}</span>
-      <span className="pt-card__line">{line}</span>
+      {!prereader && <span className="pt-card__line">{line}</span>}
     </>
   );
   if (!onOpen && !prereader) {
@@ -545,8 +558,9 @@ function InfoCard({ testid, art, title, line, say, prereader, onOpen }: { testid
   return (
     <button
       type="button"
-      className={`pt-card${onOpen ? '' : ' pt-card--rest'}`}
+      className={`pt-card${onOpen ? '' : ' pt-card--rest'}${prereader ? ' pt-card--pic' : ''}`}
       data-testid={testid}
+      aria-label={prereader ? say : undefined}
       onClick={() => {
         if (prereader) speak(say);
         onOpen?.();

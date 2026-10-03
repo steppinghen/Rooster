@@ -138,6 +138,13 @@ test('every variant fits with no scrolling: both bands, both orientations, day a
   }
 });
 
+test('opening The Point checks the iPad in: Back Office shows when it was last seen', async ({ browser }) => {
+  sql(`update public.devices set last_seen_at = null where family_id = ${lit(f.parent.familyId)}`);
+  const { ctx } = await open(browser, 'Kid A', AT.dawn);
+  await expect.poll(() => sql(`select count(*) from public.devices where family_id = ${lit(f.parent.familyId)} and last_seen_at is not null`)[0], { timeout: 10_000 }).not.toBe('0');
+  await ctx.close();
+});
+
 test('Right now: the routine with its bus chip; Keep going opens the checklist; Home on the dock comes back', async ({ browser }) => {
   doneSteps('Kid A', r.dawn, ['teeth']);
   const { ctx, page } = await open(browser, 'Kid A', AT.dawn);
@@ -279,6 +286,22 @@ test('My week: the card and the dock open it with My week lit; the deck keeps ev
   await ctx.close();
 });
 
+test('a birthday countdown reads Birthday on the pre-reader card, not the kid\'s name', async ({ browser }) => {
+  sql(`update public.kids set birthday_month = 10, birthday_day = 3 where id = ${lit(f.ids['Kid A']!)}`);
+  try {
+    const { ctx, page } = await open(browser, 'Kid B', AT.dawn, { viewport: LANDSCAPE });
+    const card = page.getByTestId('card-countdown');
+    await expect(card.locator('.pt-card__title')).toHaveText('Birthday');
+    await expect(card.locator('.pt-card__badge')).toHaveText('2');
+    await card.click();
+    const said = await page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken ?? []);
+    expect(said).toContain("2 sleeps until Kid A's birthday.");
+    await ctx.close();
+  } finally {
+    sql(`update public.kids set birthday_month = null, birthday_day = null where id = ${lit(f.ids['Kid A']!)}`);
+  }
+});
+
 test('info cards: three fixed slots; the countdown opens Tour Dates, weather and dinner rest until their slices; the pre-reader hears each one', async ({ browser }) => {
   const a = await open(browser, 'Kid A', AT.dawn);
   await expect(a.page.getByTestId('card-countdown')).toContainText('4 sleeps');
@@ -290,7 +313,11 @@ test('info cards: three fixed slots; the countdown opens Tour Dates, weather and
   await expect(a.page).toHaveURL(/\/dates$/);
   await a.ctx.close();
   const b = await open(browser, 'Kid B', AT.dawn, { viewport: LANDSCAPE });
-  await expect(b.page.getByTestId('card-countdown')).toContainText('Pumpkin');
+  // Pre-reader: large picture cards with one word each; the count is a badge on the picture.
+  await expect(b.page.getByTestId('card-countdown').locator('.pt-card__title')).toHaveText('Pumpkin');
+  await expect(b.page.getByTestId('card-countdown').locator('.pt-card__badge')).toHaveText('4');
+  await expect(b.page.getByTestId('card-dinner').locator('.pt-card__line')).toHaveCount(0);
+  await expect(b.page.getByTestId('card-weather').locator('.pt-card__title')).toHaveText('Weather');
   await b.page.getByTestId('card-dinner').click();
   await b.page.getByTestId('card-countdown').click();
   await expect(b.page).toHaveURL(/\/dates$/);

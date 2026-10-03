@@ -545,6 +545,37 @@ button.pt-card:active,
   width: 70%;
   height: 70%;
 }
+.pt-card__art {
+  position: relative;
+}
+/* The countdown's count, on the pre-reader's picture. */
+.pt-card__badge {
+  position: absolute;
+  top: -8px;
+  right: -14px;
+  min-width: 38px;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 6px;
+  border-radius: 19px;
+  background: var(--yellow);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1;
+}
+/* Pre-reader: a large picture card with one word. */
+.pt-card--pic .pt-card__art {
+  width: 92px;
+  height: 92px;
+}
+.pt-card--pic .pt-card__title {
+  font-size: 26px;
+}
 .pt-card__title {
   font-family: var(--font-display);
   font-size: 21px;
@@ -574,8 +605,7 @@ button.pt-card:active,
   min-height: 104px;
   max-height: 176px;
 }
-.pt--land .pt-card__art,
-.pt--pre .pt-card__art {
+.pt--land .pt-card__art {
   width: 70px;
   height: 70px;
 }

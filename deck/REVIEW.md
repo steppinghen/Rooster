@@ -829,6 +829,17 @@ Needs changes to the Coop TV app (outside `rooster/deck`, not built):
 | A68 | **Switching riders on a shared kid iPad once the avatar opens My look (slice 13).** B2 gives The Point no other way back to the picker. | Default: My look gets a "Not you? Switch rider" button under the avatar, and a kid iPad goes back to the picker after 10 minutes with no taps (a display already has "go back to it" after 5) |
 | A69 | **Starting a routine early.** The Point (B2) has no Routines tile, so the Phase 1 Routines list has no way in. A kid can start the running routine (Keep going) and any sticker routine (its slot), but not a non-sticker routine before its time. | Default: leave it. A routine that matters early can earn a sticker, and slice 6's checklist is where a "Start early" belongs if you want one |
 
+### Parent's answers at the smoke check (2026-10-03)
+
+| # | Answer |
+|---|---|
+| A64 | **Default taken.** The Coop TV view is built in slice 14, but Coop TV stays unpickable ("Coming soon") until it runs no third-party script on its page. |
+| A65 | **Default taken**, with one addition: when a kid hits the look limit, My look says something gentle ("Try again later"), never a scolding message. The `look_attempts` table is approved for slice 13. |
+| A66 | **Default taken.** The rounded home location stays in `families.settings`. |
+| A67 | **Default taken.** Ship the derived art; missing trims are drawn on the canvas later. |
+| A68 | **Default taken**: My look gets "Not you? Switch rider". The rule for the 10-minute idle return to the picker arrived cut off ("…never fires"); asked again before slice 13. |
+| A69 | **Default taken.** No "Start early" for now. |
+
 ## 1.5-3. Deviations (Phase 1.5)
 
 | # | Deviation | From | Why |

@@ -43,6 +43,16 @@ export function upcomingCountdowns(events: DeckEvent[], kids: Kid[], today: stri
   return out.sort((a, b) => a.sleeps - b.sleeps || a.title.localeCompare(b.title));
 }
 
+const KIND_WORD: Partial<Record<Countdown['kind'], string>> = { birthday: 'Birthday', trip: 'Trip', holiday: 'Holiday', school: 'School' };
+
+/**
+ * The pre-reader's one word for a countdown: its kind ("Birthday", "Trip"…), not the first word
+ * of its title ("Kid C's birthday" read "Kid"). Other events use the first word of the title.
+ */
+export function countdownWord(c: Pick<Countdown, 'kind' | 'title'>): string {
+  return KIND_WORD[c.kind] ?? (c.title.trim().split(/\s+/)[0] || 'Soon');
+}
+
 export function sleepsLabel(n: number): string {
   if (n <= 0) return 'Today!';
   if (n === 1) return '1 sleep';

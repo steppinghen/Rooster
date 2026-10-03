@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Smoke-check helper (Phase 1.5 slice 5). The phone can't make sticker routines, decks or
 // check-in moments until slices 6, 8 and 14, so The Point has nothing to show in those slots.
-// This fills them in on a LOCAL stack, for the family of the most recently seen paired device
+// This fills them in on a LOCAL stack, for the family of the most recently used paired iPad
 // (your iPad), with placeholder stickers only:
 //   - every routine that family has earns a sticker;
 //   - each kid gets this week's Sunset Stripes deck with up to six stickers already placed;
@@ -17,9 +17,11 @@ const container = agent === 'dev' ? 'supabase_db_deck' : `supabase_db_deck-${age
 
 const psql = (sql) => execFileSync('docker', ['exec', '-i', container, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At'], { input: sql, encoding: 'utf8' }).trim();
 
-const family = psql(`select family_id from public.devices where revoked_at is null and last_seen_at is not null order by last_seen_at desc limit 1;`);
+// The iPad you used last: seen most recently, or paired most recently (before slice 5's fix,
+// "last seen" was never recorded).
+const family = psql(`select family_id from public.devices where revoked_at is null order by greatest(last_seen_at, paired_at) desc nulls last limit 1;`);
 if (!family) {
-  console.error(`No paired device has been seen on the ${agent} stack. Open the app on the iPad first.`);
+  console.error(`No paired iPad on the ${agent} stack. Pair one first.`);
   process.exit(1);
 }
 const name = psql(`select name from public.families where id = '${family}';`);

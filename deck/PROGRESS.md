@@ -642,6 +642,24 @@ About 10 minutes, on the real iPad and phone over Tailscale. App: `http://100.68
 
 Reply with notes, or "continue".
 
+### Smoke check results (2026-10-03)
+
+The parent ran the list on the real iPad and phone: the flows work and nothing broke. Their notes:
+1. **A frame-vs-build sheet** for The Point. Built by `e2e/slice15-5-sheet.spec.ts`:
+   - 16 built variants beside their nearest B2 frame, with measured sizes.
+   - Images and `sheet.json` in `review/screenshots/phase15-slice5-sheet/`.
+   - Published as a private page: https://claude.ai/artifact/FKLUgCJws8DNiWdMYUuND6
+2. **Landscape doesn't fill the height; the deck floats in My week.** Held for the parent's review of the sheet. Measured: the frames have the same proportions (reader landscape gap 86 px in the frame, 79 built; My week 330 px around a 120 px deck in both).
+3. **Pre-reader info cards are large picture cards with one word**, the whole line spoken on tap (`aria-label` too). **Fixed.**
+   - "Weather" and "Dinner".
+   - The countdown shows its count as a badge on the picture and its kind as the word.
+4. **A birthday's word read "Kid".** The countdown word is now the event's kind: Birthday, Trip, Holiday, School; other events use the first word of the title (`countdownWord()`, unit-tested). **Fixed**, plus an e2e test.
+5. **Today's stickers didn't show.** Not a bug in The Point: the family's three routines don't earn stickers, and it has no decks, awards or check-in moments, so the seed never ran. The sticker pick doesn't exist before slice 8.
+   - The seed couldn't have found the family anyway: no device on any stack had a "last seen" time. **Bug (Phase 1), fixed:** `store.tsx` called `supabase.rpc('device_checkin')` without awaiting it, and supabase-js sends a query only when it's awaited or then'd, so the check-in never left the iPad.
+   - New e2e: opening The Point sets "last seen".
+   - `smoke:seed` now picks the iPad by the later of "last seen" and "paired".
+6. **The dock feels too big.** Held for the sheet. Measured: the frame's dock is taller (133–135 px bar, 94–102 px pill) than the build's (127–129, 88–96); its pills are narrower only because it has six items.
+
 ### Slice 5 must-do (before the smoke check)
 
 - [x] **The landscape checks assert again.** `LANDSCAPE_HOME_FIXED = true` in `e2e/slice15-4-ux.spec.ts`: landscape heads-up never covers controls, the celebration and quiet-ending screens never scroll, kidRules (no scroll) on the heads-up test. The banner sits just above the dock and the screen's content gives up the room (`modes.css`).

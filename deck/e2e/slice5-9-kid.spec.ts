@@ -68,8 +68,13 @@ test('home: what\'s next first, no scroll, kid rules, both ages, both grounds (s
       await kidRules(page, where, k.min, ground);
       await volumeRules(page, where, 'normal', undefined, { marker: true });
       // The countdown card shows the soonest kid-visible countdown, never the parents-only one.
-      await expect(page.getByTestId('card-countdown')).toContainText('4 sleeps');
-      await expect(page.getByTestId('card-countdown')).toContainText(k.age === 'prereader' ? 'Pumpkin' : 'Pumpkin patch');
+      if (k.age === 'prereader') {
+        await expect(page.getByTestId('card-countdown').locator('.pt-card__badge')).toHaveText('4');
+        await expect(page.getByTestId('card-countdown').locator('.pt-card__title')).toHaveText('Pumpkin');
+      } else {
+        await expect(page.getByTestId('card-countdown')).toContainText('4 sleeps');
+        await expect(page.getByTestId('card-countdown')).toContainText('Pumpkin patch');
+      }
       await expect(page.getByText('Parents dinner')).toHaveCount(0);
       // (The B2 frame comparisons live in slice15-5-point.spec.ts.)
       await shoot(page, `ipad-home-${k.age}-${ground}`);

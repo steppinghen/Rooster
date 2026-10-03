@@ -37,8 +37,10 @@ test('The Point answers "what\'s next" and runs a routine (slice 5; B2 since Pha
   await expect(page.locator('html')).toHaveAttribute('data-ground', 'day'); // Auto: after Dawn Patrol starts
   // Wave Check on the dock; the countdown on its card.
   await expect(page.getByTestId('dock-wave_check')).toBeVisible();
-  await expect(page.getByTestId('card-countdown')).toContainText('12 sleeps');
-  await expect(page.getByTestId('card-countdown')).toContainText('Beach');
+  // The pre-reader's card: the picture with a 12 badge, and one word, the event's kind.
+  await expect(page.getByTestId('card-countdown').locator('.pt-card__badge')).toHaveText('12');
+  await expect(page.getByTestId('card-countdown').locator('.pt-card__title')).toHaveText('Trip');
+  await expect(page.getByTestId('card-countdown')).toHaveAttribute('aria-label', '12 sleeps until Beach trip.');
   await noScroll(page);
   // Pre-reader tap targets: at least 80 pt.
   for (const el of [hero.getByRole('button', { name: /Keep going/ }), hero.getByRole('button', { name: 'Read it to me' }), page.getByTestId('dock-wave_check'), page.getByRole('button', { name: /Tap to switch riders/ })]) {

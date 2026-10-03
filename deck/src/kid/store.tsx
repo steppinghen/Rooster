@@ -270,7 +270,9 @@ export function KidStoreProvider({ children }: { children: ReactNode }) {
     // refresh() is async: state changes only after the network answers.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void refresh();
-    void supabase.rpc('device_checkin');
+    // supabase-js sends a query only when it's awaited or then'd: a bare call never reached
+    // the server, so "last seen" stayed empty (found at the slice 5 smoke check).
+    void supabase.rpc('device_checkin').then(() => undefined);
     const onVisible = () => document.visibilityState === 'visible' && void refresh();
     const onOnline = () => void refresh();
     const onOffline = () => setOnline(false);

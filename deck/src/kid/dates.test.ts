@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DeckEvent, Kid } from '../lib/types';
-import { nextOccurrence, sleepsBetween, upcomingCountdowns } from './dates';
+import { countdownWord, nextOccurrence, sleepsBetween, upcomingCountdowns } from './dates';
 
 const ev = (over: Partial<DeckEvent>): DeckEvent => ({ id: 'e', family_id: 'f', title: 'Beach trip', icon: 'beach', on_date: '2026-10-13', kind: 'trip', calendar_id: 'c', kid_visibility: 'inherit', kids_see: true, countdown: true, kid_title: null, kid_icon: null, builtin_key: 'deck', repeats_yearly: false, ...over });
 const kid = (over: Partial<Kid>): Kid => ({ id: 'k', family_id: 'f', nickname: 'Kid A', avatar: 'turtle', accent: 'magenta', age_band: 'reader', default_volume: 'normal', has_pin: false, birthday_month: null, birthday_day: null, sort_order: 0, created_at: '', can_change_look: true, dock_picks: [], ...over });
@@ -18,6 +18,16 @@ describe('sleeps', () => {
     expect(nextOccurrence('2026-10-01', 10, 1)).toBe('2026-10-01');
     expect(nextOccurrence('2026-10-01', 2, 29)).toBe('2027-02-28');
     expect(nextOccurrence('2027-10-01', 2, 29)).toBe('2028-02-29');
+  });
+});
+
+describe('countdownWord', () => {
+  it("is the event's kind, so a birthday reads Birthday, not the kid's name", () => {
+    expect(countdownWord({ kind: 'birthday', title: "Kid C's birthday" })).toBe('Birthday');
+    expect(countdownWord({ kind: 'trip', title: 'Visit Grandma' })).toBe('Trip');
+    expect(countdownWord({ kind: 'holiday', title: 'Halloween' })).toBe('Holiday');
+    expect(countdownWord({ kind: 'school', title: 'First day' })).toBe('School');
+    expect(countdownWord({ kind: 'other', title: 'Pumpkin patch' })).toBe('Pumpkin');
   });
 });
 
