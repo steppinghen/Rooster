@@ -9,7 +9,8 @@ import { RootTheme } from '../theme/ThemeScope';
 import { PressButton } from '../ui/PressButton';
 import { Headline } from '../ui/type';
 import { getCurrentKid } from './currentKid';
-import { KidHome } from './KidHome';
+import { MyWeek } from './MyWeek';
+import { ThePoint } from './ThePoint';
 import { TourDates } from './TourDates';
 import { Breathe } from './wave/Breathe';
 import { ResetPlan } from './wave/ResetPlan';
@@ -56,6 +57,8 @@ function KidScope() {
   const screen = pathname.split('/')[3] ?? '';
   const visible = new Set(kidVisibleModules(snapshot!.modules, focus.mode).map((m) => m.key));
   if (screen && SCREEN_MODULE[screen] && !visible.has(SCREEN_MODULE[screen]!)) return <Navigate to={`/kid/${kid.id}`} replace />;
+  // My week isn't a module, but Session mode trims the dock to Home, Session and Wave Check.
+  if (screen === 'week' && focus.mode === 'session') return <Navigate to={`/kid/${kid.id}`} replace />;
   // Lights out: the bedtime screen and nothing else, except breathing (Wave Check is never locked out).
   if (focus.mode === 'lights_out' && !['breathe', 'wave', 'reset'].includes(screen)) {
     return (
@@ -76,7 +79,8 @@ function KidScope() {
 function KidRoutesFor({ kid, lightsOut }: { kid: import('../lib/types').Kid; lightsOut: boolean }) {
   return (
     <Routes>
-      <Route index element={<KidHome kid={kid} />} />
+      <Route index element={<ThePoint kid={kid} />} />
+      <Route path="week" element={<MyWeek kid={kid} />} />
       <Route path="routines" element={<Routines kid={kid} />} />
       <Route path="dates" element={<TourDates kid={kid} />} />
       <Route path="wave" element={<WaveCheck kid={kid} />} />

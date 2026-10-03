@@ -523,13 +523,131 @@ Session handoff for `PHASE15_PLAN.md`. On a new session or after compaction, rea
   - **The repo moves out of iCloud at the smoke-check stop,** after slice 5 is committed. `.git/index 2` gets deleted after the slice 4 commit. Nothing in the repo hardcodes `~/Documents` (scripts and configs use relative paths). Four things outside it do; see "Moving the repo" below.
   - **Parent-ux stack:** reset to the current migrations (14). parent-ux-tester hasn't run on any 1.5 slice yet (its first is slice 6), so there are no reviews to rerun.
   - **Dev stack:** `supabase migration up` applied the six 1.5 migrations in place (14 now). Its 236 families got their built-in calendars, and every event has a calendar; no data was wiped. Its `tests.*` seed helpers are still the Phase 1 versions (the seed isn't re-run on migrate); nothing the parent does uses them.
+- **Phase 1 half after the crash:** 7 failures, none a regression.
+  - **Time of day:** the real-clock focus suites failed at 22:00 because their family's Last Run starts at 19:30 New York time, so home was night and focus. The shared fixture now takes `family(kids, { live: true })`, which gives the family a time zone where it's 09:00–13:59 now (`liveZone()` in `e2e/helpers/kidqa.ts`). The real-clock suites (`slice10-11-kid`, `slice10-11-live`) use it, so they test the same screen at any hour. Suites that pin the clock keep New York time.
+  - **Speech priming:** the iOS priming utterance is empty, and the speech fake now treats it as silence.
+  - **Lights out:** the Phase 1 check expected "Time for bed" visible; since slice 4 it hides at the 4.5 s "I need to breathe only" frame (art spec), so the check is that it's on the page and the control is visible.
+  - **iPhone:** the heads-up wraps on narrow screens (the line under the rooster and the speaker).
+- **Flaky pgTAP control (found at the slice 4 gate):** `audit_unlisted_user`'s "parent A insert probe writes" copied an arbitrary family 1 event. Since slice 1 most of those are synced, and copying one into a synced calendar is refused by design, so it failed about 1 run in 3. The control now probes `checkin_moments` (any copy is valid). 5 of 5 runs pass.
+- **Slice 4 gate:** lint clean; unit 55; pgTAP 4,659 PASS (5/5); e2e phase15 73 passed, phase1 208 passed, 0 failed.
+
+## Slice 5: The Point, layout B2 (done; stopped for the smoke check)
+
+- **The Point** (`src/kid/ThePoint.tsx`, `point.css`) replaces the Phase 1 home (`KidHome.tsx` and `home.css` are gone).
+  - **Reader portrait:** the frame's order. Header, Right now, Today's stickers, My week with the deck, three info cards, ink dock.
+  - **Landscape, both bands:** two columns. Right now and the cards on the left; My week on the right, plus Today's stickers for readers.
+  - **Pre-reader portrait:** the two landscape columns stacked (V9).
+  - Every variant fits with no scrolling: both bands, both orientations, day and night, normal and focus, two and three kids.
+- **The logic is pure and unit-tested** (`src/kid/point.ts`, 16 tests): today's routines by weekday, the open check-in moment, the sticker slots, this week's deck, the bus chip, the season.
+- **Right now** (in priority order):
+  1. Assigned Session (Session mode).
+  2. The running routine, with "Next: …", the bus/car chip within 90 minutes, and Keep going, which opens the checklist.
+  3. The Wave Check invite (lilac, the calm turtle, Wave Check and Not now).
+  4. What's next.
+  5. All done, or "Hi".
+  - Between an open moment and a running routine, whichever started last leads (V13).
+  - "Not now" rests the invite until the next moment, remembered on that iPad only (`useCheckinMoment.ts`).
+  - Pre-readers get a speaker button (V10).
+- **Today's stickers:** one slot per sticker routine today (at most four), as `earned` / `pick` / `done` / `next` ("?") / `later`. A skipped routine reads like a later one.
+  - Readers' slots are buttons that open their routine (V11).
+  - Pre-readers get circles under the deck, also buttons, with 80 pt hit areas.
+- **My week:** the parametric Sunset Stripes deck (`DeckBoard.tsx`, `src/art/decks.ts`), with stickers at their saved x, y, size and tilt, scaled 0.74 on The Point.
+  - Sticker keys resolve to the original art first, then Fluent (`src/art/stickers.ts`).
+  - A first-cut My week screen (`MyWeek.tsx`, V16) gives the dock item somewhere to go.
+- **Info cards:**
+  - Weather and dinner rest until slices 11 and 12 (V12).
+  - The countdown opens Tour Dates.
+  - A card never leads to a hidden module: in Session mode, or with Tour Dates off, the countdown card isn't there, and in Session mode neither is My week.
+- **The dock** (`kidDock.ts`):
+  - Home, My week and Wave Check, plus the kid's picks (none are pickable in 1.5 yet). Session mode trims it to Home, Session, Wave Check.
+  - The Check in tag shows while a moment is open, popping once per moment per day.
+  - Readers in landscape get 96 px items (B2Land). A short dock keeps the frame's item width, centred.
+  - The heads-up banner and time-left chip sit just above the dock, and the content gives up the room.
+- **Scenes on The Point:**
+  - The hero rooster says hello, then settles and idles (one mascot, every 8–15 s; never in focus or with Reduce Motion).
+  - Morning, Session starts and Last Run play as their stills inside Right now, once a day, 2.5 s, tap to skip (V14).
+- **Snapshot:** now also carries check-in moments, this week's decks and sticker awards (optional fields; older cached snapshots still load).
+- **Tests:**
+  - `e2e/slice15-5-point.spec.ts`: 12 tests, including every variant, the invite and Not now, the real-clock check-in, sticker slots, My week, cards, Session mode, stills, idle, and the frame side-by-sides in `review/screenshots/phase15-slice5/compare/`.
+  - Phase 1 specs moved from the Grom Zone tiles to The Point: `doSteps()` (Keep going, then "I did it!"), dock and card test ids. X4's "Wave Check after a routine" is now a check-in moment anchored to the routine.
+  - `kidPage` and `liveKidPage` wait for the once-a-day still.
+  - The score-words check no longer trips on "The Point".
+  - `DECK_E2E_OUT` lets a one-off run sit beside a long one: each run wipes its output folder, and that broke a gate run once tonight.
+- **Phase 1 e2e accounting (the parent asked, 2026-10-03):**
+  - **All 381 tests are still collected, 0 removed. 208 run, 173 are skipped, and every skip is a project gate.** Each test is collected once per project (iPad portrait, iPad landscape, iPhone) and skips itself on the projects it doesn't target: kid specs run on the iPad project and set their own viewports, parent specs run on iPhone.
+
+    | Project | Ran | Skipped |
+    |---|---|---|
+    | iPad portrait | 97 | 30 |
+    | iPad landscape | 46 | 81 |
+    | iPhone | 65 | 62 |
+
+    No `fixme`, `only` or unconditional skip exists in a Phase 1 spec. The slice 4 gate ran the same 208.
+  - **Checks retired with the Grom Zone** (inside tests that still run):
+    - **The side-by-sides against the Phase 1 mockups:** `iPadDawnPatrolDay`, `iPadGromZone`, `iPadGromZoneFocus` (home, Session home, focus-default kid's home) and `GromZone` (phone). The B2 frames replace them for The Point (`slice15-5-point` and the tester's specs). Session mode, the focus-default home and the phone have no B2 frame, so for those only the rule checks remain.
+    - **The home's step-by-step "I did it!", "Oops, not yet" and "3 more to go!":** steps are done in the routine checklist now (Keep going); the tests go through `doSteps()`.
+    - **"Pre-reader tiles have pictures":** replaced by "pre-reader cards speak on tap".
+    - **The offline test's "Routines list shows 3 routines":** it checks that My week opens offline instead.
+    - **X4's "Wave Check prompt after any routine":** it now needs a check-in moment anchored to the routine (`gate1-fixes`).
+  - **What that leaves unreachable:** the Phase 1 Routines list (`/routines`) has no way in from The Point any more. It still works by address, and the heads-up tests use it. A kid reaches the running routine through Keep going and any sticker routine through its slot. A routine that earns no sticker and isn't running can't be started early. Asked as A69.
+- **`npm run smoke:seed`** (`scripts/smoke-seed.mjs`): fills in what the phone can't make yet, on a local stack only, for the family of the most recently seen iPad.
+  - Routines earn stickers, each kid gets this week's deck with up to six stickers on earlier days, and an "After school" 3:00 moment.
+  - `-- --undo` removes it (routines stay sticker routines).
+- **kid-ux-tester (kidux):**
+  - **Blocking, all fixed:**
+    1. The landscape heads-up banner covered 12–19 px (the room is 136 px now).
+    2. Hidden modules showed as resting cards.
+    3. The My week card was a dead tap in Session mode.
+    4. Phase 1's rider picker scrolled with three kids in landscape (one row of three now).
+  - **Non-blocking, fixed:** the tag popped on every visit; pre-readers couldn't start a later routine; the pre-reader's invite buttons wrapped; the "?" was 50 px in pre-reader landscape; a finished slot looked empty.
+  - **Non-blocking, left:**
+    - Slot times say "3:30 pm" (the frame says "3:30").
+    - The pre-reader countdown shows the title's first word.
+    - The dock icons differ slightly from the frame's.
+  - The tester's specs (`slice15-5-kidux-fit`, `slice15-5-kidux-flows`, `helpers/pointqa.ts`) stay in the suite.
+- **rls-auditor:** not run. Slice 5 changes no tables, policies, RPCs or write paths: the iPad only reads `checkin_moments`, `kid_decks` and `sticker_awards`, which slice 1's RLS tests cover.
+- **Slice 5 gate (2026-10-03):**
+  - Lint and typecheck clean; unit 71; pgTAP 4,659 PASS.
+  - e2e Phase 1 half: 208 passed (173 project-gated skips, 381 collected).
+  - e2e Phase 1.5 half: 105 passed (165 project-gated skips), including the tester's two specs.
+  - 0 failed.
+  - `slice15-4-ux` asserts in landscape again (`LANDSCAPE_HOME_FIXED = true`), and its "baseline" test now asserts that The Point never scrolls in landscape instead of reporting it.
+
+### Smoke check (🟡 stop here)
+
+About 10 minutes, on the real iPad and phone over Tailscale. App: `http://100.68.253.7:8894` (your `netlify dev`, your dev stack).
+
+0. **Optional, so the sticker slots, deck and invite have something to show:** `npm run smoke:seed` in `deck/`. It touches only the local dev stack, for the family of the iPad you used most recently. Undo: `npm run smoke:seed -- dev --undo`.
+1. **Both kids' The Point, on the iPad, in both orientations.**
+   - Nothing scrolls.
+   - Right now shows what's next.
+   - The dock shows Home, My week and Wave Check, with Home lit.
+   - The countdown card opens Tour Dates; Home comes back.
+   - Tap My week, then Home.
+2. **A routine through to the celebration.**
+   - Keep going → "I did it!" for each step → the celebration from the bag → back on The Point, with the routine done.
+   - With smoke:seed: the slot shows "All done" (stickers are picked in slice 8).
+3. **Day and night.**
+   - On the phone: Back Office → Devices → the iPad's ground → Day, then Night. The iPad restyles live.
+   - After Last Run starts, The Point is night and focus whatever the setting.
+4. **A focus mode from the phone.**
+   - Phone, Today: the kid's card → Change mode… → Session → Switch in 2 minutes. On the iPad:
+     - the heads-up banner sits above the dock and covers nothing;
+     - then Session: the "Session time!" still, Right now = Start Session, and a dock of Home, Session, Wave Check.
+   - Switch them back to Everything.
+5. **The check-in invite (with smoke:seed, after 3:00 pm).**
+   - The lilac "How's your wave?" card and the blue Check in tag on the dock.
+   - Not now hides both until the next moment.
+6. **Reduce Motion on the iPad** (Settings → Accessibility → Motion): the rooster stays still and the morning still has no motion.
+
+Reply with notes, or "continue".
 
 ### Slice 5 must-do (before the smoke check)
 
-- [ ] **Switch the landscape checks back to asserting.** In `e2e/slice15-4-ux.spec.ts`, set `LANDSCAPE_HOME_FIXED = true` once The Point (B2) replaces the Phase 1 home. These checks are reported only until then: landscape heads-up never covers controls, the celebration and quiet-ending screens never scroll, and kidRules (no scroll) on the heads-up test. All of them must pass before the smoke-check stop. The B2 layout keeps the heads-up banner's height inside the viewport.
-- [ ] A shared check that the dock's bottom stays on screen (kid-ux-tester, slice 2).
-- [ ] The reader-landscape dock size (the frame gives readers 96 px items in landscape).
-- [ ] Idle and the scene stills on The Point.
+- [x] **The landscape checks assert again.** `LANDSCAPE_HOME_FIXED = true` in `e2e/slice15-4-ux.spec.ts`: landscape heads-up never covers controls, the celebration and quiet-ending screens never scroll, kidRules (no scroll) on the heads-up test. The banner sits just above the dock and the screen's content gives up the room (`modes.css`).
+- [x] A shared check that the dock's bottom stays on screen (`dockRules` in `e2e/slice15-5-point.spec.ts`, every variant).
+- [x] The reader-landscape dock: 96 px items, padded 60 px in from the edges (B2Land).
+- [x] Idle and the scene stills on The Point (the hero rooster; stills in the Right now slot).
 
 ### Moving the repo out of iCloud (at the smoke-check stop)
 
@@ -538,10 +656,3 @@ Paths that depend on where the repo lives:
 2. **Docker bind mounts:** every stack's Kong mounts `…/supabase/templates/otp.html` (`deck/supabase/` and `deck/.agents/*/supabase/`), and the dev stack's Studio mounts `deck/supabase/snippets`. After the move: `supabase stop` from the old path (or `docker rm` the containers; the volumes keep the data), then `supabase start` and `npm run agent -- up <agent>` from the new path.
 3. **Claude Code project memory** is keyed by path: `~/.claude/projects/-Users-steveayers-Documents-GitHub-rooster/` (and `…-rooster-deck`). Copy `memory/` into the new path's project folder.
 4. **Inside the repo:** only a sentence in PROGRESS.md. No script or config hardcodes the path.
-- **Phase 1 half after the crash:** 7 failures, none a regression.
-  - **Time of day:** the real-clock focus suites failed at 22:00 because their family's Last Run starts at 19:30 New York time, so home was night and focus. The shared fixture now takes `family(kids, { live: true })`, which gives the family a time zone where it's 09:00–13:59 now (`liveZone()` in `e2e/helpers/kidqa.ts`). The real-clock suites (`slice10-11-kid`, `slice10-11-live`) use it, so they test the same screen at any hour. Suites that pin the clock keep New York time.
-  - **Speech priming:** the iOS priming utterance is empty, and the speech fake now treats it as silence.
-  - **Lights out:** the Phase 1 check expected "Time for bed" visible; since slice 4 it hides at the 4.5 s "I need to breathe only" frame (art spec), so the check is that it's on the page and the control is visible.
-  - **iPhone:** the heads-up wraps on narrow screens (the line under the rooster and the speaker).
-- **Flaky pgTAP control (found at the slice 4 gate):** `audit_unlisted_user`'s "parent A insert probe writes" copied an arbitrary family 1 event. Since slice 1 most of those are synced, and copying one into a synced calendar is refused by design, so it failed about 1 run in 3. The control now probes `checkin_moments` (any copy is valid). 5 of 5 runs pass.
-- **Slice 4 gate:** lint clean; unit 55; pgTAP 4,659 PASS (5/5); e2e phase15 73 passed, phase1 208 passed, 0 failed.

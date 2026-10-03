@@ -15,7 +15,9 @@ export default defineConfig({
   testIgnore: process.env.DECK_E2E_PART === 'phase1' ? /slice15-/ : undefined,
   testMatch: process.env.DECK_E2E_PART === 'phase15' ? /slice15-.*\.spec\.ts$/ : undefined,
   globalSetup: './e2e/global-setup.ts',
-  outputDir: `./test-results/${AGENT}`,
+  // Each run wipes its output folder at start: a one-off run beside a long one on the same
+  // agent sets DECK_E2E_OUT (e.g. test-results/build-adhoc) so it doesn't break the long one.
+  outputDir: process.env.DECK_E2E_OUT ?? `./test-results/${AGENT}`,
   fullyParallel: false,
   workers: 1,
   reporter: [['list']],

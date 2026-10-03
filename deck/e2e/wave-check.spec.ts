@@ -26,7 +26,7 @@ test('Wave Check, reset plan and balloon breathing (slice 9)', async ({ browser 
   const { ids, ctx, page } = await setup(browser, AFTER_SCHOOL);
   const kidId = ids['Kid B']!;
   await page.goto(`/kid/${kidId}`);
-  await page.getByTestId('tile-wave_check').click();
+  await page.getByTestId('dock-wave_check').click();
 
   await expect(page.getByText("How's your wave?")).toBeVisible();
   // Each face carries its surf word AND the plain feeling word.

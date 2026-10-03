@@ -64,7 +64,7 @@ test('heads-up: rooster + sand timer, same words for every mode, draining bar, t
       await expect(page.getByTestId('heads-up-left')).toHaveText(/^(2:00|1:5\d)$/);
       // Still in Everything while the heads-up runs: normal volume, routines still there.
       await expect(page.locator('html')).toHaveAttribute('data-volume', 'normal');
-      await expect(page.getByTestId('tile-routines')).toBeVisible();
+      await expect(page.getByTestId('dock-my_week')).toBeVisible();
       // Chunks + countdown move without a reload; the chunks always match the clock.
       const c0 = await chunks(page);
       const s0 = await leftSecs(page);
@@ -82,7 +82,7 @@ test('heads-up: rooster + sand timer, same words for every mode, draining bar, t
       await kidRules(page, where, k.min, ground);
       await snap(page, `ipad-headsup-home-${k.age}-${ground}`);
       // It also shows on other screens (Wave Check), and doesn't cover the feelings there.
-      await page.getByTestId('tile-wave_check').click();
+      await page.getByTestId('dock-wave_check').click();
       await expect(page.getByTestId('feeling-choppy')).toBeVisible();
       await expect(hu).toBeVisible();
       expect.soft(await coveredControls(page), `${where} on Wave Check: controls covered by the heads-up`).toEqual([]);
@@ -117,8 +117,9 @@ test('heads-up: when it runs out the mode switches with no reload; Cancel from t
   await expect(page.getByTestId('heads-up')).toHaveCount(0, { timeout: 12_000 });
   const goneAt = Date.now();
   await snap(page, 'ipad-headsup-just-ended-prereader-day');
-  const stale = { home: await page.getByTestId('session-home').count(), routines: await page.getByTestId('tile-routines').count(), volume: await page.locator('html').getAttribute('data-volume') };
-  await expect(page.getByTestId('session-home')).toBeVisible({ timeout: 40_000 });
+  const stale = { home: await page.getByTestId('session-home').count(), routines: await page.getByTestId('dock-my_week').count(), volume: await page.locator('html').getAttribute('data-volume') };
+  // Since Phase 1.5 the switch shows first as the Session-starts still in Right now (V14).
+  await expect(page.getByTestId('session-home').or(page.locator('[data-testid="point-still"][data-kind="session"]'))).toBeVisible({ timeout: 40_000 });
   const lag = Date.now() - switchAt;
   console.log(`heads-up gone ${goneAt - switchAt} ms after switch_at; Session home appeared ${lag} ms after; right after the banner went: ${JSON.stringify(stale)}`);
   expect.soft(lag, `the home screen switches to Session ${lag} ms after the heads-up ends (KidHome re-reads the clock every 30 s); in between: ${JSON.stringify(stale)}`).toBeLessThan(3000);
@@ -132,7 +133,7 @@ test('heads-up: when it runs out the mode switches with no reload; Cancel from t
   const { error } = await f.parent.db.rpc('cancel_focus_switch', { p_kid_ids: [f.ids['Kid B']] });
   expect(error).toBeNull();
   await expect(page.getByTestId('heads-up')).toHaveCount(0, { timeout: 8000 });
-  await expect(page.getByTestId('session-home')).toBeVisible();
+  await expect(page.getByTestId('session-home')).toBeVisible({ timeout: 6000 });
   await ctx.close();
 });
 
@@ -160,32 +161,32 @@ test('Session: home card, time-left chip, focus styling, hidden modules absent a
       await expect(page.getByTestId('session-home')).toBeVisible();
       await expect(page.locator('html')).toHaveAttribute('data-volume', 'focus');
       await expect(page.locator('html')).toHaveAttribute('data-ground', ground);
-      // One clear task: Start Session sits above the tiles.
+      // One clear task: Start Session is Right now, above everything else.
       const order = await page.evaluate(() => {
         const top = (s: string) => document.querySelector(s)?.getBoundingClientRect().top ?? -1;
-        return { start: top('.home__session'), tiles: top('.home__tiles') };
+        return { start: top('[data-testid="session-home"]'), cards: top('[data-testid="card-weather"]') };
       });
-      expect.soft(order.start, `${where}: the Session card comes first`).toBeLessThan(order.tiles);
-      // Hidden, not greyed out.
-      await expect(page.getByTestId('tile-routines')).toHaveCount(0);
-      await expect(page.getByTestId('tile-tour_dates')).toHaveCount(0);
+      expect.soft(order.start, `${where}: the Session card comes first`).toBeLessThan(order.cards);
+      // My week is off the Session dock, so its card is off The Point too.
+      await expect(page.getByTestId('my-week-card')).toHaveCount(0);
+      // Hidden, not greyed out: the dock is Home, Session, Wave Check; the countdown opens nothing.
+      await expect(page.getByTestId('dock-my_week')).toHaveCount(0);
+      await expect(page.getByTestId('card-countdown').locator('.pt-card__arrow')).toHaveCount(0);
       await expect(page.getByTestId('up-next')).toHaveCount(0);
       expect(await page.locator('[aria-disabled="true"], .is-disabled, [disabled]').count()).toBe(0);
-      await expect(page.getByTestId('tile-wave_check')).toBeVisible();
+      await expect(page.getByTestId('dock-wave_check')).toBeVisible();
       // Time-left chip.
       const chip = page.getByTestId('time-left');
       await expect(chip).toContainText(/Session · (10:00|9:\d\d) left/);
       expect.soft(await overlapsOf(page, '[data-testid="time-left"]'), `${where}: what the time-left chip sits on`).toEqual([]);
       // Pre-reader: is there a way to hear the Session card? (No reading needed for "Start Session")
       if (k.age === 'prereader') {
-        const speakers = await page.locator('.home__session').getByRole('button', { name: 'Read it to me' }).count();
+        const speakers = await page.getByTestId('session-home').getByRole('button', { name: 'Read it to me' }).count();
         expect.soft(speakers, `${where}: the pre-reader's Session card has no read-aloud prompt (CLAUDE.md: spoken or pictured prompt)`).toBeGreaterThan(0);
       }
       await kidRules(page, where, k.min, ground);
       await volumeRules(page, where, 'focus', ACCENT_RGB[k.accent]);
-      const shot = await snap(page, `ipad-session-home-${k.age}-${ground}`);
-      if (k.age === 'reader' && ground === 'night') await sideBySide(page, shot, 'iPadGromZoneFocus', `${SHOTS}/compare/ipad-session-home-reader-night-vs-iPadGromZoneFocus.png`, 'Session home (reader, night)');
-      if (k.age === 'prereader' && ground === 'night') await sideBySide(page, shot, 'iPadGromZoneFocus', `${SHOTS}/compare/ipad-session-home-prereader-night-vs-iPadGromZoneFocus.png`, 'Session home (pre-reader, night)');
+      await snap(page, `ipad-session-home-${k.age}-${ground}`);
 
       // Start Session -> placeholder; Home and Wave Check one tap away.
       await page.getByRole('button', { name: 'Start Session' }).click();
@@ -271,7 +272,7 @@ test('celebration when a timed Session ends: normal styling, a celebration from 
     await expect(cel, 'celebration dismisses itself').toBeHidden({ timeout: 8000 });
     await expect(page).toHaveURL(new RegExp(`/kid/${f.ids['Kid B']}$`));
     await expect(page.locator('html')).toHaveAttribute('data-volume', 'normal');
-    await expect(page.getByTestId('tile-routines')).toBeVisible();
+    await expect(page.getByTestId('dock-my_week')).toBeVisible();
     // Once per ending: a reload doesn't replay it.
     await page.reload();
     await page.waitForTimeout(1500);
@@ -486,7 +487,7 @@ test('fail closed: offline keeps the last mode; a heads-up and a timed end still
   await snap(page, 'ipad-session-offline');
   await ctx.setOffline(false);
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
-  await expect(page.getByTestId('tile-routines')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId('dock-my_week')).toBeVisible({ timeout: 15_000 });
 
   // A heads-up received online keeps running offline and the switch happens offline.
   setFocus(f, 'Kid A', { mode: 'everything', pending: 'lights_out', switchIn: 8 });
@@ -516,7 +517,7 @@ test('Kid B stays in Everything while Kid A is in Session on the same iPad (per-
   await expect(page).toHaveURL(/\/kid$/);
   await snap(page, 'ipad-picker-kidA-in-session');
   await page.getByRole('button', { name: /Kid B/ }).first().click();
-  await expect(page.getByTestId('tile-routines')).toBeVisible();
+  await expect(page.getByTestId('dock-my_week')).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('data-volume', 'normal');
   await ctx.close();
 });

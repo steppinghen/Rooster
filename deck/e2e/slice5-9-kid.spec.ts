@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { lit, sql } from './helpers/db';
-import { ACCENT_RGB, constants, family, kidPage, kidRules, resetFamily, setGround, setMode, SCORE_WORDS, SHOTS, shoot, stillUnderReducedMotion, T, volumeRules, type Fam } from './helpers/kidqa';
+import { ACCENT_RGB, constants, doSteps, family, kidPage, kidRules, resetFamily, setGround, setMode, SCORE_WORDS, SHOTS, shoot, stillUnderReducedMotion, T, volumeRules, type Fam } from './helpers/kidqa';
 import { sideBySide, spoken } from './helpers/qa';
 
 /*
@@ -36,7 +36,7 @@ async function homeButton(page: Page) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Slice 5: Grom Zone home                                             */
+/* Slice 5: the kid home (The Point, B2, since Phase 1.5 slice 5)       */
 /* ------------------------------------------------------------------ */
 
 test('home: what\'s next first, no scroll, kid rules, both ages, both grounds (slice 5)', async ({ browser }) => {
@@ -47,29 +47,32 @@ test('home: what\'s next first, no scroll, kid rules, both ages, both grounds (s
       await expect(page.locator('html')).toHaveAttribute('data-ground', ground);
       await expect(page.locator('html')).toHaveAttribute('data-volume', 'normal');
       if (ground === 'day') {
-        // What's next is the first thing after the header: the routine and its next step.
+        // What's next is the first thing after the header: Right now, with the next step.
         await expect(page.getByTestId('up-next')).toHaveText('Brush teeth');
         const order = await page.evaluate(() => {
           const top = (s: string) => document.querySelector(s)?.getBoundingClientRect().top ?? -1;
-          return { hero: top('.home__hero'), upnext: top('[data-testid="up-next"]'), did: top('.home__did'), tiles: top('.home__tiles') };
+          return { hero: top('[data-testid="right-now"]'), week: top('[data-testid="my-week-card"]'), cards: top('[data-testid="card-countdown"]') };
         });
-        expect.soft(order.upnext, `${where}: Up next sits above the tiles`).toBeLessThan(order.tiles);
-        expect.soft(order.did, `${where}: "I did it!" sits above the tiles`).toBeLessThan(order.tiles);
-        await page.getByRole('button', { name: 'Read it to me' }).click();
-        expect.soft(await spoken(page), `${where}: read-aloud`).toContain('Up next: Brush teeth.');
+        expect.soft(order.hero, `${where}: Right now sits above My week`).toBeLessThan(order.week);
+        expect.soft(order.hero, `${where}: Right now sits above the cards`).toBeLessThan(order.cards);
+        if (k.age === 'prereader') {
+          await page.getByTestId('right-now').getByRole('button', { name: 'Read it to me' }).click();
+          expect.soft(await spoken(page), `${where}: read-aloud`).toContain('Dawn Patrol. Next: Brush teeth.');
+        }
       } else {
-        // Before Dawn Patrol: the home says when it starts (no task, nothing to tap but the menu).
-        await expect(page.getByText('Dawn Patrol at 6:30')).toBeVisible();
-        expect.soft(await page.getByRole('button', { name: /read it to me/i }).count(), `${where}: no read-aloud for the "what's next" line before a routine`).toBeGreaterThan(0);
+        // Before Dawn Patrol: Right now says when it starts.
+        await expect(page.getByTestId('right-now')).toContainText('Next: Dawn Patrol');
+        await expect(page.getByTestId('right-now')).toContainText('6:30 am');
+        if (k.age === 'prereader') expect.soft(await page.getByRole('button', { name: /read it to me/i }).count(), `${where}: no read-aloud for the "what's next" line before a routine`).toBeGreaterThan(0);
       }
       await kidRules(page, where, k.min, ground);
       await volumeRules(page, where, 'normal', undefined, { marker: true });
-      // Tour Dates tile shows the soonest kid-visible countdown, never the parents-only one.
-      await expect(page.getByTestId('tile-tour_dates')).toContainText('4 sleeps · Pumpkin patch');
+      // The countdown card shows the soonest kid-visible countdown, never the parents-only one.
+      await expect(page.getByTestId('card-countdown')).toContainText('4 sleeps');
+      await expect(page.getByTestId('card-countdown')).toContainText(k.age === 'prereader' ? 'Pumpkin' : 'Pumpkin patch');
       await expect(page.getByText('Parents dinner')).toHaveCount(0);
-      const shot = await shoot(page, `ipad-home-${k.age}-${ground}`);
-      const ref = ground === 'day' ? 'iPadDawnPatrolDay' : 'iPadGromZone';
-      await sideBySide(page, shot, ref, `${SHOTS}/compare/ipad-home-${k.age}-${ground}-vs-${ref}.png`, `Grom Zone ${k.age} ${ground}`);
+      // (The B2 frame comparisons live in slice15-5-point.spec.ts.)
+      await shoot(page, `ipad-home-${k.age}-${ground}`);
       await ctx.close();
     }
   }
@@ -96,7 +99,7 @@ test('home: Last Run is night even when the iPad is set to Day (slice 5/7)', asy
   setGround(f, 'day');
   for (const k of KIDS) {
     const { ctx, page } = await kidPage(browser, f, k.kid, T.eight);
-    await expect(page.getByRole('heading', { name: 'Last Run' })).toBeVisible();
+    await expect(page.getByTestId('right-now')).toContainText('Last Run');
     await expect(page.locator('html')).toHaveAttribute('data-scene', 'lastrun');
     const bg = await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
     expect.soft(bg, `Last Run ${k.age}: page is the night Last Run ground`).toBe('rgb(20, 18, 40)');
@@ -109,33 +112,37 @@ test('home: Last Run is night even when the iPad is set to Day (slice 5/7)', asy
   }
 });
 
-test('home: every tile goes somewhere with a way back; no dead ends (slice 5)', async ({ browser }) => {
+test('home: everything tappable on The Point goes somewhere with a way back; no dead ends (slice 5)', async ({ browser }) => {
   for (const k of KIDS) {
     const { ctx, page } = await kidPage(browser, f, k.kid, T.seven);
-    const tiles = await page.locator('[data-testid^="tile-"]').evaluateAll((els) => els.map((e) => e.getAttribute('data-testid')!));
-    for (const t of tiles) {
+    for (const t of ['dock-my_week', 'dock-wave_check', 'my-week-card', 'card-countdown']) {
       await page.getByTestId(t).click();
-      if (k.age === 'prereader') expect.soft((await spoken(page)).length, `${k.age} ${t}: label spoken on tap`).toBeGreaterThan(0);
       await page.waitForTimeout(300);
       const path = new URL(page.url()).pathname;
-      expect.soft(path, `${k.age}: tile ${t} leads to its own screen, not back to home`).not.toBe(`/kid/${f.ids[k.kid]}`);
+      expect.soft(path, `${k.age}: ${t} leads to its own screen, not back to home`).not.toBe(`/kid/${f.ids[k.kid]}`);
       if (path !== `/kid/${f.ids[k.kid]}`) {
-        await (await homeButton(page)).click();
-        await expect(page.getByTestId(t)).toBeVisible();
+        await page.getByTestId('dock-home').or(page.getByRole('button', { name: 'Home' })).first().click();
+        await expect(page.getByTestId('the-point')).toBeVisible();
       }
     }
+    await page.getByTestId('right-now').getByRole('button', { name: /Keep going/ }).click();
+    await expect(page.getByTestId('step-text')).toBeVisible();
+    await (await homeButton(page)).click();
+    await expect(page.getByTestId('the-point')).toBeVisible();
     await ctx.close();
   }
 });
 
-test('home: the pre-reader tile labels are spoken, the reader sees more text (slice 5)', async ({ browser }) => {
+test('home: the pre-reader gets bigger dock items and hears the cards; the reader sees more text (slice 5)', async ({ browser }) => {
   const pre = await kidPage(browser, f, 'Kid B', T.seven);
   const reader = await kidPage(browser, f, 'Kid A', T.seven);
-  const tileSize = (p: Page) => p.getByTestId('tile-wave_check').boundingBox();
+  const tileSize = (p: Page) => p.getByTestId('dock-wave_check').boundingBox();
   const [a, b] = [(await tileSize(pre.page))!, (await tileSize(reader.page))!];
-  expect.soft(a.height, 'pre-reader tiles are bigger than reader tiles').toBeGreaterThan(b.height);
-  // Pre-reader tiles use pictures; the reader gets icons + status text.
-  expect.soft(await pre.page.locator('.home__tile img').count(), 'pre-reader tiles have pictures').toBeGreaterThan(0);
+  expect.soft(a.height, 'pre-reader dock items are bigger than reader ones').toBeGreaterThan(b.height);
+  await pre.page.getByTestId('card-dinner').click();
+  expect.soft(await spoken(pre.page), 'pre-reader cards speak on tap').toContain('Dinner later.');
+  await expect(reader.page.getByTestId('my-week-card')).toContainText('Sunset Stripes');
+  await expect(pre.page.getByTestId('my-week-card')).not.toContainText('Sunset Stripes');
   await pre.ctx.close();
   await reader.ctx.close();
 });
@@ -145,7 +152,8 @@ test('home: hidden modules are absent, Wave Check survives every mode (slice 5 r
   sql(`update public.family_modules set enabled = false where family_id = ${lit(f.parent.familyId)} and module_key = 'tour_dates'`);
   try {
     const { ctx, page } = await kidPage(browser, f, 'Kid A', T.seven);
-    await expect(page.getByTestId('tile-tour_dates')).toHaveCount(0);
+    // The countdown card is a fixed slot: it stays, but opens nothing.
+    await expect(page.getByTestId('card-countdown').locator('.pt-card__arrow')).toHaveCount(0);
     expect(await page.locator('[aria-disabled="true"], .is-disabled, [disabled]').count()).toBe(0);
     // Hidden means unreachable too: the URL should not open a switched-off module.
     await page.goto(`/kid/${f.ids['Kid A']}/dates`);
@@ -175,10 +183,10 @@ test('home: hidden modules are absent, Wave Check survives every mode (slice 5 r
       await ctx.close();
       continue;
     }
-    await expect(page.getByTestId('tile-wave_check'), `Wave Check tile in ${mode}`).toBeVisible();
+    await expect(page.getByTestId('dock-wave_check'), `Wave Check tile in ${mode}`).toBeVisible();
     if (mode !== 'everything') {
-      await expect(page.getByTestId('tile-routines'), `Routines hidden in ${mode}`).toHaveCount(0);
-      await expect(page.getByTestId('tile-tour_dates'), `Tour Dates hidden in ${mode}`).toHaveCount(0);
+      await expect(page.getByTestId('dock-my_week'), `the dock is trimmed in ${mode}`).toHaveCount(0);
+      await expect(page.getByTestId('card-countdown').locator('.pt-card__arrow'), `Tour Dates hidden in ${mode}`).toHaveCount(0);
       await expect(page.locator('html')).toHaveAttribute('data-volume', 'focus');
       await volumeRules(page, `home ${mode}`, 'focus', ACCENT_RGB.magenta);
       // A routine's "what's next" belongs to the Routine module: is it still offered here?
@@ -186,7 +194,7 @@ test('home: hidden modules are absent, Wave Check survives every mode (slice 5 r
     }
     await shoot(page, `ipad-home-reader-mode-${mode}`);
     // Wave Check opens from here in every mode.
-    await page.getByTestId('tile-wave_check').click();
+    await page.getByTestId('dock-wave_check').click();
     await expect(page.getByText(/How's your wave\?|How was your day\?/)).toBeVisible();
     await ctx.close();
   }
@@ -198,17 +206,19 @@ test('home: offline taps keep working; routine and check-in sync later (slice 5/
   await expect(page.getByTestId('up-next')).toHaveText('Brush teeth');
   await ctx.setOffline(true);
   await page.evaluate(() => window.dispatchEvent(new Event('offline')));
-  await page.getByRole('button', { name: 'I did it!' }).click();
+  await doSteps(page, 1);
+  await expect(page.getByTestId('step-text')).toHaveText('Get dressed');
+  await (await homeButton(page)).click();
   await expect(page.getByTestId('up-next')).toHaveText('Get dressed');
   await kidRules(page, 'home offline', MIN.prereader, 'day');
   await shoot(page, 'ipad-home-prereader-offline');
   // Other screens still open from cache.
-  await page.getByTestId('tile-tour_dates').click();
+  await page.getByTestId('card-countdown').click();
   await expect(page.getByTestId('countdown-hero')).toContainText('4 sleeps');
   await (await homeButton(page)).click();
-  await page.getByTestId('tile-routines').click();
-  await expect(page.getByTestId('routine-tile')).toHaveCount(3);
-  await page.getByRole('button', { name: 'Wave Check' }).click();
+  await page.getByTestId('dock-my_week').click();
+  await expect(page.getByTestId('my-week')).toBeVisible();
+  await page.getByTestId('dock-wave_check').click();
   await page.getByTestId('feeling-rolling').click();
   await page.getByTestId('size-1').click();
   await expect(page.getByTestId('wave-thanks')).toBeVisible();
@@ -229,7 +239,7 @@ test('home: celebration at normal volume; reduced motion keeps it at the kid vol
   for (const reduced of [false, true]) {
     resetFamily(f);
     const { ctx, page } = await kidPage(browser, f, 'Kid B', T.seven, { reduced });
-    for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'I did it!' }).click();
+    await doSteps(page, 3);
     const cel = page.locator('.home__celebrate');
     await expect(cel).toBeVisible();
     await expect(cel).toHaveAttribute('data-volume', 'normal');
@@ -249,16 +259,17 @@ test('home: celebration at normal volume; reduced motion keeps it at the kid vol
     const shot = await shoot(page, `ipad-celebrate-prereader${reduced ? '-reduced' : ''}`);
     await sideBySide(page, shot, 'Shred', `${SHOTS}/compare/ipad-celebrate${reduced ? '-reduced' : ''}-vs-Shred.png`, `Celebration${reduced ? ' (reduced motion)' : ''}`);
     await page.clock.runFor(4500); // the longest celebration (2.0 s) plus its short hold
-    await expect(page.getByText('All done!')).toBeVisible();
+    // Dawn Patrol is done; Right now moves on to what's next.
+    await expect(page.getByTestId('right-now')).toHaveAttribute('data-state', 'upcoming');
+    await expect(page.getByTestId('right-now')).toContainText('Next: After School');
     await ctx.close();
   }
 });
 
-test('home on an iPhone-sized screen vs GromZone (slice 5)', async ({ browser }) => {
+test('home on an iPhone-sized screen (slice 5)', async ({ browser }) => {
   const { ctx, page } = await kidPage(browser, f, 'Kid A', T.beforeDawn, { viewport: { width: 390, height: 844 } });
   await kidRules(page, 'home reader phone night', MIN.reader, 'night');
-  const shot = await shoot(page, 'iphone-home-reader-night');
-  await sideBySide(page, shot, 'GromZone', `${SHOTS}/compare/iphone-home-reader-night-vs-GromZone.png`, 'Grom Zone on a phone', 844);
+  await shoot(page, 'iphone-home-reader-night');
   await ctx.close();
 });
 
@@ -303,7 +314,7 @@ test.describe('a kid whose default volume is focus', () => {
         const name = `ipad-focuskid-${(path || '/home').split('/')[1]}-${ground}`;
         const shot = await shoot(page, name);
         if (path.startsWith('/routine/') && ground === 'day') await sideBySide(page, shot, 'iPadDawnPatrolDayFocus', `${SHOTS}/compare/${name}-vs-iPadDawnPatrolDayFocus.png`, 'Routine step, focus kid, day');
-        if (path === '' && ground === 'night') await sideBySide(page, shot, 'iPadGromZoneFocus', `${SHOTS}/compare/${name}-vs-iPadGromZoneFocus.png`, 'Home, focus kid, night');
+
         await ctx.close();
       }
     }
@@ -313,7 +324,7 @@ test.describe('a kid whose default volume is focus', () => {
     for (const reduced of [false, true]) {
       resetFamily(ff);
       const { ctx, page } = await kidPage(browser, ff, 'Kid B', T.seven, { reduced });
-      for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'I did it!' }).click();
+      await doSteps(page, 3);
       const cel = page.locator('.home__celebrate');
       await expect(cel).toBeVisible();
       await expect(cel, `home celebration volume (reduced=${reduced})`).toHaveAttribute('data-volume', reduced ? 'focus' : 'normal');
@@ -386,7 +397,7 @@ test('routines list and step-by-step run: kid rules, Home + Wave Check, read-alo
       await page.getByRole('button', { name: 'I did it!' }).click();
       await expect(page.getByTestId('step-text')).toHaveText('Get dressed');
       await (await homeButton(page)).click();
-      await expect(page.getByTestId('up-next').or(page.getByText('Dawn Patrol at 6:30'))).toBeVisible();
+      await expect(page.getByTestId('the-point')).toBeVisible();
       await ctx.close();
       resetFamily(f);
     }
@@ -598,7 +609,7 @@ test('reduced motion: kid home, routine run, Tour Dates and Wave Check have no m
   }
   // Without reduced motion, a tap gets instant feedback (press transition <= 150ms).
   const { ctx, page } = await kidPage(browser, f, 'Kid B', T.seven, { reduced: false });
-  const d = await page.getByTestId('tile-wave_check').evaluate((e) => getComputedStyle(e).transitionDuration);
+  const d = await page.getByTestId('dock-wave_check').evaluate((e) => getComputedStyle(e).transitionDuration);
   expect.soft(Math.max(...d.split(',').map(parseFloat)), 'tile press feedback is quick').toBeLessThanOrEqual(0.15);
   await ctx.close();
 });

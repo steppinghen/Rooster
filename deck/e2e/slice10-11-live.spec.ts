@@ -49,9 +49,10 @@ test('phone -> two iPads: per-kid switch, Everyone heads-up, Cancel, Switch now,
   await card('Kid A').getByRole('button', { name: 'Change mode…' }).click();
   await card('Kid A').getByRole('checkbox', { name: /Switch now/ }).check();
   await card('Kid A').getByRole('button', { name: 'Switch', exact: true }).click();
-  times.sessionNowA = await within(A.page.getByTestId('session-home'), 'Kid A iPad shows Session');
+  // The Session-starts still in Right now is the switch showing (Phase 1.5 V14).
+  times.sessionNowA = await within(A.page.getByTestId('session-home').or(A.page.locator('[data-testid="point-still"][data-kind="session"]')), 'Kid A iPad shows Session');
   await expect(A.page.getByTestId('time-left')).toContainText(/Session · (20:00|19:\d\d) left/);
-  await expect(B.page.getByTestId('tile-routines')).toBeVisible(); // Kid B untouched
+  await expect(B.page.getByTestId('dock-my_week')).toBeVisible(); // Kid B untouched
   await expect(card('Kid A').getByTestId('kid-mode')).toContainText(/Session · (20:00|19:\d\d) left/);
 
   // 2. Everyone -> Lights out with the heads-up: both iPads warn.
@@ -104,8 +105,8 @@ test('phone -> two iPads: per-kid switch, Everyone heads-up, Cancel, Switch now,
   await all.getByRole('radio', { name: 'Everything' }).click();
   await all.getByRole('checkbox', { name: /Switch now/ }).check();
   await all.getByRole('button', { name: 'Switch', exact: true }).click();
-  times.backA = await within(A.page.getByTestId('tile-routines'), 'Kid A iPad back to Everything');
-  times.backB = await within(reopened.getByTestId('tile-routines'), 'Kid B iPad back to Everything');
+  times.backA = await within(A.page.getByTestId('dock-my_week'), 'Kid A iPad back to Everything');
+  times.backB = await within(reopened.getByTestId('dock-my_week'), 'Kid B iPad back to Everything');
 
   expect(loads.A, 'Kid A iPad never reloaded').toBe(0);
   console.log('live push timings (ms):', JSON.stringify(times));

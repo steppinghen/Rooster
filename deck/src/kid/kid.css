@@ -66,6 +66,17 @@
   margin-top: clamp(8px, 4vh, 48px);
 }
 
+/* Three or more riders in landscape: one row of three (no scrolling to reach Grown-ups). */
+@media (orientation: landscape) {
+  .picker-grid--many {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: clamp(8px, 2vh, 24px);
+  }
+  .picker-grid--many .picker-kid {
+    min-height: clamp(180px, 26vh, 300px);
+  }
+}
+
 .picker-kid {
   appearance: none;
   position: relative;

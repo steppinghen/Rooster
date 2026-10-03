@@ -42,7 +42,7 @@ test('parent adds events on the month view; kid sees sleeps until (slice 8)', as
   const k = await ipad.newPage();
   await pinClock(k, SEVEN_AM);
   await k.goto(`/kid/${ids['Kid A']}`);
-  await k.getByTestId('tile-tour_dates').click();
+  await k.getByTestId('card-countdown').click();
   const hero = k.getByTestId('countdown-hero');
   await expect(hero).toContainText('12 sleeps');
   await expect(hero).toContainText('until Beach trip');

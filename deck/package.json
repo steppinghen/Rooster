@@ -22,6 +22,7 @@
     "art:export": "node scripts/export-art.mjs",
     "art:check": "node scripts/export-art.mjs --check",
     "art:sprite": ".venv/bin/python scripts/build-sprite.py",
+    "smoke:seed": "node scripts/smoke-seed.mjs",
     "test:e2e:phase1": "DECK_E2E_PART=phase1 playwright test",
     "test:e2e:phase15": "DECK_E2E_PART=phase15 playwright test"
   },

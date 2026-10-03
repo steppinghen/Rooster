@@ -26,6 +26,9 @@ const paths = {
   wave: ['M2.5 17c3.5 0 4.5-9 10-9 3.2 0 5 2.1 5 4.3 0 1.8-1.3 3.2-3 3.2-1.4 0-2.4-1-2.4-2.3', 'M2.5 20.5h19'],
   bookClosed: ['M6 3.5h12v14.5H7.5A1.5 1.5 0 0 0 6 19.5z', 'M6 19.5A1.5 1.5 0 0 0 7.5 21H18v-3', 'M9.5 7.5h5'],
   tv: ['M3.5 8h17v11h-17z', 'M8.5 3.5l3.5 4 3.5-4', 'M7 21h10'],
+  // The Point (B2 frames): an after-school bag for a later sticker slot, and the info card arrow.
+  bag: ['M5 7h14v14H5z', 'M9 7V5a3 3 0 0 1 6 0v2', 'M9 13h6'],
+  chevron: ['M9 5l7 7-7 7'],
   gear: ['M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z', 'M12 2.5v3', 'M12 18.5v3', 'M2.5 12h3', 'M18.5 12h3', 'M5.3 5.3l2.1 2.1', 'M16.6 16.6l2.1 2.1', 'M5.3 18.7l2.1-2.1', 'M16.6 7.4l2.1-2.1'],
 } as const;
 

@@ -89,7 +89,7 @@ export async function kidPage(
   f: Fam,
   kid: string,
   at: string,
-  opts: { path?: string; reduced?: boolean; viewport?: { width: number; height: number }; colorScheme?: 'light' | 'dark' } = {},
+  opts: { path?: string; reduced?: boolean; viewport?: { width: number; height: number }; colorScheme?: 'light' | 'dark'; keepStill?: boolean } = {},
 ) {
   const ctx = await browser.newContext({
     viewport: opts.viewport ?? { width: 820, height: 1180 },
@@ -109,6 +109,9 @@ export async function kidPage(
   await page.goto(`/kid/${f.ids[kid]}${opts.path ?? ''}`);
   // Let the first snapshot land (the cached one paints first).
   await page.locator('main[data-audience="kid"]').first().waitFor({ timeout: 15_000 });
+  // The Point plays the morning (or Session, or Last Run) still in Right now first, once a day:
+  // let it hand back unless the test is about it.
+  if (!opts.keepStill) await expect(page.getByTestId('point-still')).toHaveCount(0, { timeout: 6000 });
   await page.evaluate(() => document.fonts.ready);
   return { ctx, page };
 }
@@ -203,4 +206,17 @@ export async function stillUnderReducedMotion(page: Page) {
 }
 
 /** Text anywhere on the page that hints at scoring. */
-export const SCORE_WORDS = /\b(points?|score|scores|stars? earned|streak|reward|rewards|level up|xp|badge|sticker earned|\+\d+)\b/i;
+// "The Point" is the home screen's name, not a score.
+export const SCORE_WORDS = /(?<!\bthe )\bpoints?\b|\b(score|scores|stars? earned|streak|reward|rewards|level up|xp|badge|sticker earned)\b|\+\d+\b/i;
+
+/**
+ * Do `n` routine steps the way a kid does since The Point (Phase 1.5 slice 5): on The Point,
+ * "Keep going" opens the running routine's checklist; then "I did it!" once per step.
+ */
+export async function doSteps(page: Page, n: number) {
+  const keep = page.getByRole('button', { name: /Keep going/ });
+  const did = page.getByRole('button', { name: 'I did it!' });
+  await expect(keep.or(did).first()).toBeVisible({ timeout: 10_000 });
+  if (await keep.isVisible()) await keep.click();
+  for (let i = 0; i < n; i++) await did.click();
+}

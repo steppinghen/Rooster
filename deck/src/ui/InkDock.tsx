@@ -16,7 +16,7 @@ import { Icon, type IconName } from './Icon';
 export type DockTag = { kind: 'checkin' | 'todo'; text: string; pop?: boolean };
 export type DockItem = { key: string; label: string; icon: IconName | ReactNode; to?: string; onSelect?: () => void; tag?: DockTag };
 
-export function InkDock({ items, active, variant = 'full', kidColor }: { items: DockItem[]; active: string; variant?: 'full' | 'slim'; kidColor?: string }) {
+export function InkDock({ items, active, variant = 'full', kidColor, onNavigate }: { items: DockItem[]; active: string; variant?: 'full' | 'slim'; kidColor?: string; onNavigate?: (key: string) => void }) {
   const { volume } = useTheme();
   const shown = variant === 'slim' ? items.filter((i) => i.key === 'home' || i.key === 'wave_check') : items;
   if (import.meta.env.DEV) {
@@ -47,13 +47,21 @@ export function InkDock({ items, active, variant = 'full', kidColor }: { items: 
             <span className="dk-dock__label">{item.label}</span>
           </>
         );
-        const common = { className: 'dk-dock__item', 'aria-label': label, 'aria-current': isActive ? ('page' as const) : undefined, 'data-dock': item.key };
+        const common = { className: 'dk-dock__item', 'aria-label': label, 'aria-current': isActive ? ('page' as const) : undefined, 'data-dock': item.key, 'data-testid': `dock-${item.key}` };
         return item.to ? (
-          <Link key={item.key} to={item.to} {...common}>
+          <Link key={item.key} to={item.to} {...common} onClick={() => !isActive && onNavigate?.(item.key)}>
             {body}
           </Link>
         ) : (
-          <button key={item.key} type="button" onClick={item.onSelect} {...common}>
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => {
+              if (!isActive) onNavigate?.(item.key);
+              item.onSelect?.();
+            }}
+            {...common}
+          >
             {body}
           </button>
         );

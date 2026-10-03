@@ -166,6 +166,31 @@ html[data-focus-reserve='chip'] .kid {
   padding-bottom: calc(max(28px, env(safe-area-inset-bottom)) + 64px);
 }
 
+/* Screens with the ink dock (Phase 1.5): the banner and the chip sit just above the dock, and
+   the screen's content gives up that room, so neither covers a control or the dock. During
+   the heads-up the Right now mascot steps aside (the rooster is in the banner). */
+:root {
+  --dock-h: 132px;
+}
+html[data-focus-reserve]:has(.dk-dock) .focus-headsup,
+html[data-focus-reserve]:has(.dk-dock) .focus-left {
+  bottom: calc(var(--dock-h) + 10px);
+}
+html[data-focus-reserve='headsup'] .dk-kidscreen__body {
+  margin-bottom: var(--headsup-room, 150px);
+}
+html[data-focus-reserve='chip'] .dk-kidscreen__body {
+  margin-bottom: 52px;
+}
+html[data-focus-reserve='headsup'] .pt-hero__who {
+  display: none;
+}
+@media (orientation: landscape) {
+  :root {
+    --headsup-room: 136px;
+  }
+}
+
 .focus-celebrate__btn {
   min-height: 88px;
   font-size: 28px;

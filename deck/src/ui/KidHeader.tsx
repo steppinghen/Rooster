@@ -16,6 +16,7 @@ export function KidHeader({
   title,
   kid,
   onAvatar,
+  avatarLabel = 'My look',
   trim,
   corner,
 }: {
@@ -24,6 +25,8 @@ export function KidHeader({
   kid: { nickname: string; avatar: string; accent: Accent };
   /** Opens My look (The Point only). Without it the avatar is a plain picture. */
   onAvatar?: () => void;
+  /** The avatar button's name (My look; until slice 13 The Point uses it to switch riders). */
+  avatarLabel?: string;
   /** The holiday edge trim (art, at most 72 px tall). */
   trim?: ReactNode;
   /** The seasonal sun or holiday circle (400 px art). */
@@ -49,7 +52,7 @@ export function KidHeader({
           <h1 className="dk-headline dk-kidhead__title">{title}</h1>
         </div>
         {onAvatar ? (
-          <button type="button" className="dk-head-avatar" aria-label="My look" onClick={onAvatar}>
+          <button type="button" className="dk-head-avatar" aria-label={avatarLabel} onClick={onAvatar}>
             {avatar}
           </button>
         ) : (

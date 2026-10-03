@@ -410,6 +410,21 @@
   gap: 12px;
 }
 
+/* The full-screen layer every celebration plays in (routine done, Session done, quiet end). */
+.home__celebrate {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+.home__celebrate-text {
+  font-size: 40px;
+}
+
 /* Quiet end of Last Run: tap to skip; Wave Check and Breathe right there. */
 .quiet-done__skip {
   appearance: none;

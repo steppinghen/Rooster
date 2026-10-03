@@ -39,7 +39,7 @@ test('focus modes from the phone reach the iPad live; reload and offline cannot 
   const headsUp = k.getByTestId('heads-up');
   await expect(headsUp).toContainText("Two more minutes, then it's lights out time.", { timeout: 8000 });
   await expect(k.getByTestId('heads-up-left')).toHaveText(/^1:5\d|^2:00$/);
-  await expect(k.getByRole('button', { name: 'Wave Check' }).or(k.getByTestId('tile-wave_check'))).toBeVisible(); // heads-up never blocks feelings
+  await expect(k.getByRole('button', { name: 'Wave Check' }).or(k.getByTestId('dock-wave_check'))).toBeVisible(); // heads-up never blocks feelings
   await k.screenshot({ path: `${SHOTS}/ipad-heads-up.png` });
 
   // "Switch now" from the phone.
@@ -87,8 +87,8 @@ test('focus modes from the phone reach the iPad live; reload and offline cannot 
   // catches up on resubscribe or by its 60 s fallback. Real-device check on the test list.
   await expect(k.getByTestId('session-home')).toBeVisible({ timeout: 20_000 });
   await expect(k.getByTestId('time-left')).toContainText(/Session · (10:00|9:5\d) left/);
-  await expect(k.getByTestId('tile-routines')).toHaveCount(0); // hidden, not greyed out
-  await expect(k.getByTestId('tile-wave_check')).toBeVisible();
+  await expect(k.getByTestId('dock-my_week')).toHaveCount(0); // hidden, not greyed out
+  await expect(k.getByTestId('dock-wave_check')).toBeVisible();
   await k.screenshot({ path: `${SHOTS}/ipad-session.png` });
   await k.getByRole('button', { name: 'Start Session' }).click();
   await expect(k.getByTestId('session-placeholder')).toBeVisible();

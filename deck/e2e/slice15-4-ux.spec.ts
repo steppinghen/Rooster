@@ -3,7 +3,7 @@ import { mkdirSync } from 'node:fs';
 import { lit, sql } from './helpers/db';
 import { coveredControls, liveKidPage, overlapsOf, setFocus } from './helpers/focusqa';
 import { composite, loadFrame } from './helpers/frames';
-import { family, kidPage, kidRules, resetFamily, setGround, stillUnderReducedMotion, T, type Fam } from './helpers/kidqa';
+import { doSteps, family, kidPage, kidRules, resetFamily, setGround, stillUnderReducedMotion, T, type Fam } from './helpers/kidqa';
 import { audit, spoken, volumeAudit } from './helpers/qa';
 
 /*
@@ -19,10 +19,9 @@ mkdirSync(`${OUT}/compare`, { recursive: true });
 const MIN = { prereader: 80, reader: 64 } as const;
 const PORTRAIT = { width: 820, height: 1180 };
 const LANDSCAPE = { width: 1180, height: 820 };
-// (Builder) The Phase 1 home scrolls in landscape by itself, so a banner or overlay over it
-// can't fit; slice 5 replaces that home with the B2 layout. Until then these landscape
-// checks are reported, not asserted. SLICE 5 MUST SET THIS TO true (REVIEW.md / PROGRESS.md).
-const LANDSCAPE_HOME_FIXED = false;
+// (Builder) The Phase 1 home scrolled in landscape by itself, so these landscape checks were
+// reported only until slice 5 replaced it with The Point (B2). Asserted again since slice 5.
+const LANDSCAPE_HOME_FIXED = true;
 const landscapeOk = (vpName: string) => vpName !== 'landscape' || LANDSCAPE_HOME_FIXED;
 const KINDS = ['pop', 'confetti', 'rooster-cheer', 'shell-spin', 'kickflip', 'stoked', 'squad'] as const;
 const SHOUT: Record<string, string | null> = { pop: 'POP!', confetti: null, 'rooster-cheer': 'WOO-HOO!', 'shell-spin': 'WHEEE!', kickflip: 'SHRED!', stoked: 'STOKED!', squad: 'YEAH!' };
@@ -87,7 +86,7 @@ async function forceKind(page: Page, kidId: string, kind: string) {
 }
 
 async function finishDawnPatrol(page: Page) {
-  for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'I did it!' }).click();
+  await doSteps(page, 3);
 }
 
 /** What the screen shows during a celebration: dock, holiday art, red, counts, the ground. */
@@ -328,7 +327,7 @@ test.describe('quiet Last Run ending', () => {
           setGround(f, 'day'); // Last Run stays night whatever the ground setting
           const { ctx, page } = await kidPage(browser, f, kid, T.eight, { reduced, viewport: vp, colorScheme: 'light' });
           const where = `Last Run end ${kid} ${vpName} reduced=${reduced}`;
-          for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'I did it!' }).click();
+          await doSteps(page, 2);
           const q = page.getByTestId('quiet-done');
           await expect(q, where).toBeVisible();
           await page.clock.runFor(500);
@@ -403,7 +402,7 @@ test.describe('heads-up', () => {
       const s1 = (await spoken(page)).filter((s) => s === LINE).length;
       expect.soft(s1, 'pre-reader: after the first tap, the line is spoken once').toBe(1);
       await page.waitForTimeout(3000);
-      await page.getByTestId('tile-wave_check').click().catch(() => page.goto(`/kid/${f.ids['Kid B']}/wave`));
+      await page.getByTestId('dock-wave_check').click().catch(() => page.goto(`/kid/${f.ids['Kid B']}/wave`));
       await page.waitForTimeout(2000);
       expect.soft((await spoken(page)).filter((s) => s === LINE).length, 'pre-reader: not repeated every second or on moving to Wave Check').toBe(1);
       await page.reload();
@@ -508,15 +507,14 @@ test.describe('heads-up', () => {
             expect.soft(await coveredControls(page), `${where}: controls covered`).toEqual([]);
             expect.soft(await overlapsOf(page, '[data-testid="heads-up"]'), `${where}: content under the banner`).toEqual([]);
           } else test.info().annotations.push({ type: 'slice 5', description: `${where}: covered ${JSON.stringify(await coveredControls(page))}` });
-          const wave = page.getByTestId('tile-wave_check');
+          const wave = page.getByTestId('dock-wave_check');
           if (await wave.count()) {
             const b = (await wave.boundingBox())!;
             expect.soft(b.y + b.height, `${where}: Wave Check above the fold`).toBeLessThanOrEqual(vp.height);
-          } else expect.soft(false, `${where}: no Wave Check tile on home`).toBe(true);
+          } else expect.soft(false, `${where}: no Wave Check on the dock`).toBe(true);
           const hb = (await hu.boundingBox())!;
           expect.soft(hb.y + hb.height, `${where}: banner on screen`).toBeLessThanOrEqual(vp.height);
-          // (Builder) kidRules includes "no scroll", which the Phase 1 home fails in landscape by
-          // itself; asserted once slice 5's B2 layout lands (LANDSCAPE_HOME_FIXED).
+          // kidRules includes "no scroll": asserted in landscape too since slice 5 (The Point, B2).
           if (landscapeOk(vpName)) await kidRules(page, where, KID[kid].min); // live tests run on real time: in Last Run the ground is night whatever the setting
           await shot(page, `ipad-${vpName}-headsup-home-${KID[kid].age}-${ground}`);
           await ctx.close();
@@ -750,12 +748,13 @@ test.describe('frames', () => {
   }
 });
 test.describe('baseline', () => {
-  test('baseline: does the Phase 1 home under the celebration scroll at landscape by itself?', async ({ browser }) => {
+  // Was report-only while the Phase 1 home scrolled in landscape; asserted since slice 5.
+  test('baseline: the home under the celebration (The Point) never scrolls in landscape', async ({ browser }) => {
     for (const at of [T.seven, T.eight]) {
       for (const kid of ['Kid A', 'Kid B'] as KidName[]) {
         const { ctx, page } = await kidPage(browser, f, kid, at, { reduced: true, viewport: LANDSCAPE });
         const r = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: innerHeight }));
-        test.info().annotations.push({ type: 'home landscape scroll', description: `${kid} ${at}: scrollHeight ${r.sh} vs ${r.ih}` });
+        expect.soft(r.sh, `${kid} ${at}: The Point scrolls in landscape (${r.sh} vs ${r.ih})`).toBeLessThanOrEqual(r.ih + 1);
         await ctx.close();
       }
     }

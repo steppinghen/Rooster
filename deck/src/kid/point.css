@@ -1,0 +1,706 @@
+/* The Point (layout B2). Measurements from Phase15PointB2*.dc.html: portrait 820×1180, landscape
+   1180×820. Day, night, normal and focus come from the root tokens; nothing here is per-ground. */
+
+.pt {
+  color: var(--text);
+  /* Cards stay light on both grounds, so marker text and dashes on a card use the day marker. */
+  --marker-on-card: #b3124f;
+}
+.pt__body {
+  gap: 18px;
+}
+
+/* Two columns: landscape for both bands, and the pre-reader in portrait (stacked). */
+.pt__cols {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 22px;
+}
+.pt__col {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.pt__col--left {
+  flex: 1.15 1 0;
+  justify-content: space-between;
+}
+.pt__col--right {
+  flex: 1 1 0;
+}
+@media (orientation: portrait) {
+  .pt__cols {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .pt__col--left,
+  .pt__col--right {
+    flex: 0 1 auto;
+  }
+  .pt__col--right {
+    flex: 1 1 auto;
+  }
+}
+
+/* ---------- Right now ---------- */
+.pt-hero {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 22px;
+  background: var(--kid, var(--accent));
+  color: var(--ink);
+  border: 5px solid var(--ink);
+  border-radius: 30px;
+  box-shadow: 0 9px 0 var(--ink);
+  transform: rotate(calc(-0.5deg * var(--tilt-on)));
+  margin-bottom: 9px;
+}
+.pt-hero--invite {
+  background: var(--lilac);
+}
+.pt-hero__label {
+  position: absolute;
+  top: -15px;
+  left: 26px;
+  font-family: var(--font-marker-face);
+  font-size: 17px;
+  line-height: 1.3;
+  text-transform: uppercase;
+  background: var(--yellow);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  padding: 1px 12px;
+  transform: rotate(-3deg);
+}
+.pt-hero__top {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+.pt-hero__who {
+  flex-shrink: 0;
+  display: block;
+  line-height: 0;
+  transform: rotate(calc(-4deg * var(--tilt-on)));
+}
+.pt-hero__words {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pt-hero__title {
+  font-family: var(--font-display);
+  font-size: 38px;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+.pt-hero__line {
+  font-size: 21px;
+  font-weight: 800;
+}
+.pt-hero__dots {
+  display: none;
+  gap: 8px;
+  margin-top: 4px;
+}
+.pt-hero__dots > span {
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 3px dashed var(--slot);
+}
+.pt-hero__dots > span.is-done {
+  background: var(--kid, var(--accent));
+  border: 3px solid var(--ink);
+}
+.pt-hero__chip {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  line-height: 1;
+}
+.pt-hero__chip-label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.pt-hero__chip-value {
+  font-family: var(--font-display);
+  font-size: 30px;
+  margin-top: 3px;
+}
+.pt-hero__speak {
+  flex-shrink: 0;
+}
+.pt-hero__row {
+  display: flex;
+  gap: 14px;
+}
+.pt-hero .dk-btn {
+  margin-bottom: 7px;
+}
+.pt-hero__go {
+  height: 80px;
+  min-height: 80px;
+  gap: 14px;
+  border-radius: 22px;
+  box-shadow: 0 7px 0 var(--ink);
+  font-size: 30px;
+}
+.pt-hero__row > .pt-hero__go {
+  flex: 1 1 auto;
+}
+.pt-hero__row > .pt-hero__speak {
+  align-self: center;
+}
+.pt-hero__go,
+.pt-hero__later {
+  white-space: nowrap;
+}
+.pt-hero__later {
+  flex: 0 0 150px;
+  height: 80px;
+  border-radius: 22px;
+  box-shadow: 0 7px 0 var(--ink);
+  font-size: 22px;
+  --btn-bg: var(--paper);
+  --btn-fg: var(--night-text);
+}
+
+/* Focus: cream card for every state, RIGHT NOW as a plain caps label inside it, no tilt; the
+   kid's color only in the progress dots. */
+[data-volume='focus'] .pt-hero,
+[data-volume='focus'] .pt-hero--invite {
+  background: var(--card);
+  color: var(--text-on-card);
+}
+[data-volume='focus'] .pt-hero__label {
+  position: static;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  line-height: 1;
+  color: var(--text-muted-on-card);
+  background: none;
+  border: 0;
+  padding: 0;
+  transform: none;
+}
+[data-volume='focus'] .pt-hero__dots {
+  display: flex;
+}
+/* The frame's focus chip is the day focus ground; the card is light on both grounds. */
+[data-volume='focus'] .pt-hero__chip {
+  background: #ede4d1;
+}
+/* The scene still in the Right now slot (morning, Session starts, Last Run). */
+.pt-still {
+  appearance: none;
+  font: inherit;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  min-height: 233px;
+}
+.pt-still .sc-still {
+  flex-direction: row;
+  gap: 18px;
+}
+.pt-still .sc-mascot {
+  width: 120px;
+  height: 120px;
+}
+.pt-still .dk-title {
+  margin: 0;
+  font-size: 34px;
+}
+
+/* ---------- Today's stickers ---------- */
+.pt-rule {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.1;
+}
+.pt-rule::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 4px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.15;
+}
+.pt-stickers {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pt-stickers__grid {
+  display: grid;
+  grid-template-columns: repeat(max(3, var(--slots, 3)), minmax(0, 1fr));
+  gap: 14px;
+}
+.pt-slot {
+  appearance: none;
+  position: relative;
+  box-sizing: border-box;
+  min-width: 0;
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 22px;
+  border: 4px dashed var(--slot);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+.pt-slot--next,
+.pt-slot--pick {
+  background: var(--card);
+  color: var(--text-on-card);
+  border-color: var(--marker-on-card);
+}
+.pt-slot--earned,
+.pt-slot--done {
+  border-style: solid;
+  border-color: var(--ink);
+  background: var(--card);
+  color: var(--text-on-card);
+}
+.pt-slot__text {
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.pt-slot--next .pt-slot__sub,
+.pt-slot--pick .pt-slot__sub {
+  color: var(--marker-on-card);
+}
+.pt-q {
+  box-sizing: border-box;
+  width: 62px;
+  height: 62px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--yellow);
+  color: var(--ink);
+  border: 4px solid var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 26px;
+}
+/* Focus: the next slot gets a solid ink outline instead of the marker dash. */
+[data-volume='focus'] .pt-slot--next,
+[data-volume='focus'] .pt-slot--pick {
+  border: 4px solid var(--ink);
+}
+[data-volume='focus'] .pt-slot--next .pt-slot__sub,
+[data-volume='focus'] .pt-slot--pick .pt-slot__sub {
+  color: var(--text-muted-on-card);
+}
+
+/* ---------- My week ---------- */
+.pt-week {
+  position: relative;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 22px;
+  background: var(--card);
+  color: var(--text-on-card);
+  border: 4px solid var(--ink);
+  border-radius: 28px;
+  box-shadow: 0 7px 0 var(--ink);
+  margin-bottom: 7px;
+}
+.pt-week__open {
+  appearance: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.pt-week__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pt-week__title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 1;
+}
+.pt-week__sub {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-muted-on-card);
+}
+.pt-week__deck {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+.pt-week .dk-deck {
+  height: min(160px, 100%);
+}
+.pt--land .pt-week .dk-deck,
+.pt--pre .pt-week .dk-deck {
+  height: min(120px, 100%);
+}
+@media (orientation: portrait) {
+  .pt--pre .pt-week .dk-deck {
+    height: min(160px, 100%);
+  }
+}
+/* Pre-reader: today's sticker slots as large circles under the deck. */
+.pt-circles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+/* The hit area is bigger than the circle (80 pt for the pre-reader). */
+.pt-circle-hit {
+  appearance: none;
+  width: 80px;
+  height: 80px;
+  padding: 0;
+  border: 0;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.pt-circle-hit:active {
+  transform: translateY(3px);
+}
+.pt-circle {
+  box-sizing: border-box;
+  width: 62px;
+  height: 62px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 3px dashed var(--slot);
+  color: var(--text-muted-on-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pt-circle svg {
+  width: 26px;
+  height: 26px;
+}
+.pt-circle--next,
+.pt-circle--pick {
+  border: 0;
+}
+.pt-circle--earned {
+  border: 0;
+}
+
+/* ---------- The deck ---------- */
+.dk-deck {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 160px;
+  flex-shrink: 0;
+  border-radius: 85px;
+  border: 4px solid var(--ink);
+  box-shadow: 0 6px 0 var(--ink);
+}
+.dk-deck__paint {
+  position: absolute;
+  inset: 0;
+  border-radius: 81px;
+  overflow: hidden;
+}
+.dk-deck__halftone {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(10, 8, 24, 0.14) 1.6px, transparent 2.2px);
+  background-size: 11px 11px;
+  opacity: var(--halftone-on, 1);
+}
+.dk-deck__bolt {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  margin: -3px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 2px solid var(--cream);
+}
+.dk-deck__sticker {
+  position: absolute;
+  translate: -50% -50%;
+  line-height: 0;
+}
+
+/* ---------- Info cards ---------- */
+.pt-cards {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cards, 3), minmax(0, 1fr));
+  gap: 14px;
+}
+.pt-card {
+  appearance: none;
+  position: relative;
+  box-sizing: border-box;
+  height: 124px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  background: var(--card);
+  color: var(--text-on-card);
+  border: 4px solid var(--ink);
+  border-radius: 24px;
+  box-shadow: 0 7px 0 var(--ink);
+  margin-bottom: 7px;
+  text-align: center;
+  font: inherit;
+}
+button.pt-card {
+  cursor: pointer;
+}
+button.pt-card:active,
+.pt-week__open:active,
+.pt-slot:active {
+  transform: translateY(4px);
+}
+.pt-card__arrow {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  color: var(--text-muted-on-card);
+  line-height: 0;
+}
+.pt-card__art {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted-on-card);
+}
+.pt-card__art img,
+.pt-card__art svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.pt-card--rest .pt-card__art svg {
+  width: 70%;
+  height: 70%;
+}
+.pt-card__title {
+  font-family: var(--font-display);
+  font-size: 21px;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+.pt-card__line {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-muted-on-card);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Landscape (both bands) ---------- */
+.pt--land .pt-hero__label,
+.pt--pre .pt-hero__label {
+  font-size: 17px;
+}
+.pt--land .pt-cards,
+.pt--pre .pt-cards {
+  flex: 0 1 183px;
+  min-height: 0;
+}
+.pt--land .pt-card,
+.pt--pre .pt-card {
+  height: calc(100% - 7px);
+  min-height: 104px;
+  max-height: 176px;
+}
+.pt--land .pt-card__art,
+.pt--pre .pt-card__art {
+  width: 70px;
+  height: 70px;
+}
+.pt--land .pt-card__title,
+.pt--pre .pt-card__title {
+  font-size: 26px;
+}
+.pt--land .pt-card__line,
+.pt--pre .pt-card__line {
+  font-size: 17px;
+}
+.pt--land .pt-week {
+  gap: 14px;
+  padding: 18px 20px;
+}
+.pt--land .pt-week__head {
+  gap: 4px;
+}
+.pt--land .pt-rule {
+  font-size: 22px;
+}
+.pt--land .pt-stickers__grid {
+  gap: 12px;
+}
+.pt--land .pt-slot {
+  height: 112px;
+}
+.pt--land .pt-slot__text {
+  font-size: 15px;
+}
+.pt--land .pt-slot .pt-q {
+  width: 50px;
+  height: 50px;
+  font-size: 22px;
+}
+
+/* The pre-reader's invite row holds the speaker too: a little tighter so nothing wraps. */
+.pt--pre .pt-hero__row .pt-hero__go {
+  font-size: 26px;
+  padding-inline: 16px;
+}
+.pt--pre .pt-hero__row .pt-hero__later {
+  flex-basis: 128px;
+}
+
+/* A short dock (three or four places) keeps the frame's item width, centred, instead of
+   stretching each item to a third of the screen. */
+.dk-kidscreen .dk-dock:not(.dk-dock--slim) {
+  justify-content: center;
+}
+.dk-kidscreen .dk-dock:not(.dk-dock--slim) .dk-dock__item {
+  max-width: 180px;
+}
+.dk-kidscreen[data-age='prereader'] .dk-dock:not(.dk-dock--slim) .dk-dock__item {
+  max-width: 215px;
+}
+
+/* The reader's landscape dock: 96 px items (B2Land frame), padded in from the edges. */
+@media (orientation: landscape) {
+  .dk-kidscreen[data-age='reader'] .dk-dock:not(.dk-dock--slim) {
+    padding: 10px 60px max(18px, env(safe-area-inset-bottom));
+  }
+  .dk-kidscreen[data-age='reader'] .dk-dock:not(.dk-dock--slim) .dk-dock__item {
+    height: 96px;
+  }
+  .dk-kidscreen[data-age='reader'] .dk-dock:not(.dk-dock--slim) .dk-dock__label {
+    font-size: 15px;
+  }
+}
+
+/* ---------- My week screen (first cut; slice 8) ---------- */
+.pt-weekscreen__body {
+  justify-content: center;
+  gap: 24px;
+}
+.pt-weekscreen__sub {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+.pt-weekscreen__deck .dk-deck {
+  height: clamp(180px, 26vh, 280px);
+  border-radius: 140px;
+}
+.pt-weekscreen__deck .dk-deck__paint {
+  border-radius: 136px;
+}
+.pt-weekscreen__note {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* ---------- Narrow screens (a phone) ---------- */
+@media (max-width: 560px) {
+  .dk-kidscreen {
+    --gutter: 16px;
+  }
+  .pt-hero {
+    padding: 16px;
+  }
+  .pt-hero__title {
+    font-size: 28px;
+  }
+  .pt-hero__line {
+    font-size: 17px;
+  }
+  .pt-hero__go {
+    font-size: 24px;
+  }
+  .pt-hero__later {
+    flex-basis: 110px;
+  }
+  .pt-stickers__grid,
+  .pt-cards {
+    gap: 8px;
+  }
+  .pt-slot__text {
+    font-size: 14px;
+  }
+  .pt-card__title {
+    font-size: 17px;
+  }
+  .pt-card__line {
+    font-size: 12px;
+  }
+}

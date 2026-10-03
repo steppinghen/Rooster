@@ -42,8 +42,8 @@ test('parent builds Dawn Patrol; kid runs it step by step; device ground picker 
   await pinClock(k, SEVEN_AM);
   await k.goto(`/kid/${ids['Kid A']}`);
   await expect(k.locator('html')).toHaveAttribute('data-ground', 'night'); // the device setting wins over Auto
-  await k.getByTestId('tile-routines').click();
-  await k.getByTestId('routine-tile').filter({ hasText: 'Dawn Patrol' }).click();
+  // Since Phase 1.5 (The Point): Right now's "Keep going" opens the running routine.
+  await k.getByTestId('right-now').getByRole('button', { name: /Keep going/ }).click();
   await expect(k.getByTestId('step-text')).toHaveText('Wake up and potty');
   await expect(k.getByText('Step 1 of 7')).toBeVisible();
   // Home and Wave Check are one tap away on every kid screen.

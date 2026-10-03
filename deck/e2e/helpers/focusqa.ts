@@ -1,4 +1,4 @@
-import type { Browser, Page } from '@playwright/test';
+import { expect, type Browser, type Page } from '@playwright/test';
 import { lit, sql } from './db';
 import { pairDevice, useSession } from './fixtures';
 import type { Fam } from './kidqa';
@@ -34,6 +34,8 @@ export async function liveKidPage(
   const page = await ctx.newPage();
   await page.goto(`/kid/${f.ids[kid]}${opts.path ?? ''}`);
   await page.locator('main[data-audience="kid"]').first().waitFor({ timeout: 15_000 });
+  // The Point's once-a-day still (morning, Session starts, Last Run) hands back first.
+  await expect(page.getByTestId('point-still')).toHaveCount(0, { timeout: 6000 });
   await page.evaluate(() => document.fonts.ready);
   return { ctx, page, dev };
 }

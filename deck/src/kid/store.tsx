@@ -8,6 +8,7 @@ import type { FamilySettings } from '../lib/familySettings';
 import { familyDate, LEGACY_SNAPSHOT_KEYS, OUTBOX_KEY, SNAPSHOT_KEY } from './cache';
 import { ROUTINE_SELECT, toRoutine } from '../lib/routines';
 import { EVENT_SELECT, toEvent } from '../lib/events';
+import { weekStart, type Award, type CheckinMoment, type KidDeck } from './point';
 
 /**
  * Everything a paired iPad needs to run the kid screens, cached on the device.
@@ -33,6 +34,10 @@ export type Snapshot = {
   resetPlans: ResetPlan[];
   /** Each kid's own latest check-in from today (kids never see more than this). */
   checkins: CurrentCheckin[];
+  /** Phase 1.5 (absent in a snapshot cached before it): check-in moments, this week's decks and sticker awards. */
+  moments?: CheckinMoment[];
+  decks?: KidDeck[];
+  awards?: Award[];
 };
 
 export type ResetPlan = { kid_id: string; body_signs: string[]; tools: string[] };
@@ -88,9 +93,14 @@ async function fetchSnapshot(familyId: string, device: Snapshot['device']): Prom
   const fam = must(family) as Snapshot['family'];
   const today = familyDate(fam.timezone);
   const yesterday = familyDate(fam.timezone, new Date(Date.now() - 86400_000));
-  const completions = must(
-    await supabase.from('routine_completions').select('routine_id, kid_id, on_date, completed_steps, completed_at').eq('family_id', familyId).gte('on_date', yesterday).lte('on_date', today),
-  ) as Completion[];
+  const week = weekStart(today);
+  const [done, moments, decks, awards] = await Promise.all([
+    supabase.from('routine_completions').select('routine_id, kid_id, on_date, completed_steps, completed_at').eq('family_id', familyId).gte('on_date', yesterday).lte('on_date', today),
+    supabase.from('checkin_moments').select('id, kid_id, label, at_time, anchor_routine_id, sort_order').eq('family_id', familyId).order('sort_order'),
+    supabase.from('kid_decks').select('id, kid_id, week_start, design_key, colorway, world, holiday_key').eq('family_id', familyId).eq('week_start', week),
+    supabase.from('sticker_awards').select('id, kid_id, kid_deck_id, source_kind, source_id, award_date, sticker_key, x, y, size, tilt, placed_at').eq('family_id', familyId).gte('award_date', week),
+  ]);
+  const completions = must(done) as Completion[];
   const serverNow = new Date(must(now) as string).getTime();
   return {
     version: 3,
@@ -107,6 +117,9 @@ async function fetchSnapshot(familyId: string, device: Snapshot['device']): Prom
     completions,
     resetPlans: must(plans) as ResetPlan[],
     checkins,
+    moments: must(moments) as CheckinMoment[],
+    decks: must(decks) as KidDeck[],
+    awards: must(awards) as Award[],
   };
 }
 
